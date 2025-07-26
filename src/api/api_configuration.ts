@@ -1,5 +1,5 @@
 const PORT = 8000;
-const HOST_DOMAIN = '10.25.1.167';
+const HOST_DOMAIN = '10.215.105.229';
 const PROTOCOL = "http:";
 
 // WITH PORT
@@ -18,5 +18,5 @@ export const SCHOOL_NAME = "SURIGAO DEL NORTE STATE UNIVERSITY";
 export const SEMAPHORE_API_KEY="2db497e7dca562167ae58275bc4bf2c0"
 export const SEMAPHORE_API_SENDER_NAME="DJEMC"
 export const APP_NAME = "LearnSpace";
-export const TAGLINE = "Empowering Education, the SNSU Way."
+export const TAGLINE = "𝐹𝘰𝑟 𝑖𝘯𝑐𝘭𝑢𝘴𝑖𝘷𝑒 𝑔𝘳𝑜𝘸𝑡𝘩, 𝑒𝘮𝑝𝘰𝑤𝘦𝑟𝘦𝑑 𝑙𝘪𝑣𝘦𝑠 𝑎𝘯𝑑 𝑎 𝑠𝘦𝑟𝘷𝑖𝘤𝑒-𝑓𝘰𝑐𝘶𝑠𝘦𝑑 𝑓𝘶𝑡𝘶𝑟𝘦"
 export const SCHOOL_ID = 1;
