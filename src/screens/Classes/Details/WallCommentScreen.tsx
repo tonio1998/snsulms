@@ -1,4 +1,5 @@
 import {
+	ActivityIndicator,
 	Alert,
 	Image, Keyboard,
 	KeyboardAvoidingView, Platform, RefreshControl,
@@ -60,9 +61,9 @@ const WallCommentsScreen = ({ navigation, route }) => {
 			let totalPages = 1;
 
 			if (network?.isOnline) {
-				console.log('filter:', filter)
 				const res = await getWallComments(filter);
 				List = res.data ?? [];
+				console.log(List)
 				totalPages = res.data?.last_page ?? 1;
 
 			} else {
@@ -101,7 +102,7 @@ const WallCommentsScreen = ({ navigation, route }) => {
 	};
 
 	const handlePostComment = async () => {
-		if (!body.trim()) return Alert.alert("Body is required.");
+		if (!body.trim()) return false;
 
 		try {
 			setLoading(true);
@@ -117,19 +118,24 @@ const WallCommentsScreen = ({ navigation, route }) => {
 	};
 
 	return (
+		<>
 		<SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-				<View style={{ flex: 1 }}>
-					<ScrollView
-						contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-						keyboardShouldPersistTaps="handled"
-						refreshControl={
-							<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-						}
-					>
-						{comments.map((item, index) => (
-							<View key={index} style={styles.commentForm}>
-								<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+			<KeyboardAvoidingView
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				style={{ flex: 1 }}
+				keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 90}
+			>
+					<View style={{ flex: 1 }}>
+						<ScrollView
+							contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+							keyboardShouldPersistTaps="handled"
+							refreshControl={
+								<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+							}
+						>
+							{comments.map((item, index) => (
+								<View key={index} style={styles.commentForm}>
+									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
 										<Image
 											source={
 												item.created_by?.profile_pic
@@ -137,22 +143,23 @@ const WallCommentsScreen = ({ navigation, route }) => {
 													: item.created_by?.avatar
 														? { uri: item.created_by?.avatar }
 														: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-																	item.created_by?.name || 'User'
-																)}&background=random`
+																item.created_by?.name || 'User'
+															)}&background=random`
 														}
 											}
 											style={styles.avatar}
 										/>
 										<View>
-											<CText fontSize={16} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ item.created_by?.name }</CText>
+											<CText fontSize={15} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ item.created_by?.name }</CText>
 											<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -5 }}>{ formatDate(item?.created_at, 'relative') }</CText>
 										</View>
 									</View>
+									<View style={{ marginTop: 10}}>
+										<CText fontSize={15} style={{ color: '#000', marginLeft: 10 }}>{ item.content }</CText>
+									</View>
 								</View>
-								<CText fontSize={16} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ item.content }</CText>
-							</View>
-						))}
-					</ScrollView>
+							))}
+						</ScrollView>
 
 						<View
 							style={{
@@ -169,10 +176,6 @@ const WallCommentsScreen = ({ navigation, route }) => {
 								elevation: 5,
 							}}
 						>
-							<KeyboardAvoidingView
-								behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-								keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 150}
-							>
 							<View
 								style={{
 									flexDirection: 'row',
@@ -195,28 +198,42 @@ const WallCommentsScreen = ({ navigation, route }) => {
 										textAlignVertical: 'top',
 										marginRight: 8,
 										// borderWidth: 1,
-										marginBottom: 3,
+										marginBottom: 5,
 									}}
 								/>
-								<CButton
-									title={loading ? '...' : 'Post'}
-									disabled={loading}
-									onPress={handlePostComment}
-									type="success"
-									style={{
-										borderRadius: 15,
-										paddingVertical: 10,
-										paddingHorizontal: 16,
-										// marginTop: 10,
-										marginRight: 10,
-									}}
-									textStyle={{ color: '#fff', fontSize: 16 }}
-								/>
+								<View>
+									{loading ? (
+										<View style={{
+											borderRadius: 15,
+											paddingVertical: 10,
+											paddingHorizontal: 16,
+											marginRight: 10,
+										}}>
+											<ActivityIndicator size="small" color={theme.colors.light.primary} />
+										</View>
+									) : (
+										<CButton
+											title={loading ? '...' : 'Post'}
+											disabled={loading}
+											onPress={handlePostComment}
+											type="success"
+											style={{
+												borderRadius: 15,
+												paddingVertical: 10,
+												paddingHorizontal: 16,
+												// marginTop: 10,
+												marginRight: 10,
+											}}
+											textStyle={{ color: '#fff', fontSize: 16 }}
+										/>
+									)}
+								</View>
 							</View>
-							</KeyboardAvoidingView>
 						</View>
-				</View>
+					</View>
+			</KeyboardAvoidingView>
 		</SafeAreaView>
+		</>
 	);
 };
 
@@ -226,11 +243,12 @@ export default WallCommentsScreen;
 const styles = StyleSheet.create({
 	commentForm: {
 		backgroundColor: theme.colors.light.card,
-		padding: 5,
+		paddingVertical: 10,
 		borderRadius: 8,
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
+		borderBottomWidth: 1,
+		borderColor: theme.colors.light.primary + '22',
+		marginBottom: 10,
+
 	},
 	avatar: {
 		width: 35,

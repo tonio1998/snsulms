@@ -192,67 +192,76 @@ const WallScreen = ({ navigation, route }) => {
 							/>
 						</View>
 					</View>
-					<ScrollView contentContainerStyle={{ paddingBottom: 100 }} refreshControl={
+					<ScrollView contentContainerStyle={{ paddingBottom: 100, borderTopLeftRadius: 20, borderTopRightRadius: 20 }} refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
 					}>
-						{wall.map((item, index) => (
-							<View key={index} style={styles.card}>
-								<View style={{ padding: 16 }}>
-									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+						{loading ? (
+							<View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 100 }}>
+								<ActivityIndicator size="large" color={theme.colors.light.primary} />
+							</View>
+						) : (
+							wall.map((item, index) => (
+								<View key={index} style={styles.card}>
+									<View style={{ padding: 16 }}>
 										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-											<Image
-												source={
-													item.created_by?.profile_pic
-														? { uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}` }
-														: item.created_by?.avatar
-															? { uri: item.created_by?.avatar }
-															: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-																	item.created_by?.name || 'User'
-																)}&background=random`
-															}
-												}
-												style={styles.avatar}
-											/>
-											<View>
-												<CText fontSize={16} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ item.created_by?.name }</CText>
-												<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -5 }}>{ formatDate(item?.created_at, 'relative') }</CText>
+											<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+												<Image
+													source={
+														item.created_by?.profile_pic
+															? { uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}` }
+															: item.created_by?.avatar
+																? { uri: item.created_by?.avatar }
+																: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+																		item.created_by?.name || 'User'
+																	)}&background=random`
+																}
+													}
+													style={styles.avatar}
+												/>
+												<View>
+													<CText fontSize={16} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ item.created_by?.name }</CText>
+													<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -5 }}>{ formatDate(item?.created_at, 'relative') }</CText>
+												</View>
 											</View>
 										</View>
+										<View style={{ marginTop: 10 }}>
+											<CText fontSize={15} style={{ color: '#000', marginLeft: 10 }}>{ item.body }</CText>
+										</View>
 									</View>
-									<View style={{ marginTop: 10 }}>
-										<CText fontSize={15} style={{ color: '#000', marginLeft: 10 }}>{ item.body }</CText>
-									</View>
-								</View>
-								<View style={{ borderTopWidth: 1, borderColor: '#E2F8EC', marginTop: 10, padding: 16 }}>
-									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start'}}>
+									<View style={{ borderTopWidth: 1, borderColor: '#E2F8EC', marginTop: 10, padding: 16 }}>
+										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
 											<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
 												<TouchableOpacity onPress={() => handleReaction(item.id)}>
-													<Icon
-														name={item.is_react_by_you ? 'heart' : 'heart-outline'}
-														size={20}
-														color={item.is_react_by_you ? theme.colors.light.primary : '#ccc'}
-													/>
+													<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start'}}>
+
+														<Icon
+															name={item.is_react_by_you ? 'heart' : 'heart-outline'}
+															size={20}
+															color={item.is_react_by_you ? theme.colors.light.primary : '#ccc'}
+														/>
+														<CText fontSize={15} style={{ color: '#000', marginLeft: 5, fontWeight: 500 }}>{ item.reactions_count > 0 ? item.reactions_count : '' }</CText>
+													</View>
 												</TouchableOpacity>
 											</Animated.View>
-											<CText fontSize={12} style={{ color: '#000', marginLeft: 5 }}>{ item.reactions_count || 0 }</CText>
-										</View>
-										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
-											<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
+											<Animated.View>
 												<TouchableOpacity onPress={() => handleComment(item.id)}>
-													<Icon
-														name={'chatbubble-outline'}
-														size={20}
-														color={'#ccc'}
-													/>
+													<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
+
+														<Icon
+															name={'chatbubble-outline'}
+															size={20}
+															color={'#ccc'}
+														/>
+														<CText fontSize={15} style={{ color: '#000', marginLeft: 5, fontWeight: 500 }}>{ item.comments.length > 0 ? item.comments.length : '' }</CText>
+													</View>
 												</TouchableOpacity>
 											</Animated.View>
-											<CText fontSize={12} style={{ color: '#000', marginLeft: 5 }}>{ item.comments_count || 0 }</CText>
 										</View>
 									</View>
 								</View>
-							</View>
-						))}
+							))
+						)
+						}
 					</ScrollView>
 				</View>
 			</SafeAreaView>

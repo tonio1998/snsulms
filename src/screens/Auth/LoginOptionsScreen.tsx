@@ -23,6 +23,7 @@ import * as Keychain from 'react-native-keychain';
 import RNFS from 'react-native-fs';
 import { handleGoogleLogin } from '../../utils/authControl';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import {APP_NAME, TAGLINE} from "../../api/api_configuration.ts";
 
 export default function LoginOptionsScreen() {
 	const navigation = useNavigation();
@@ -103,12 +104,23 @@ export default function LoginOptionsScreen() {
 	return (
 		<SafeAreaView style={[styles.container, { flex: 1 }]}>
 			<ImageBackground
-				source={require('../../../assets/img/bg.jpg')}
+				source={require('../../../assets/img/bg.png')}
 				style={[styles.container]}
 				resizeMode="cover"
 				imageStyle={{ alignSelf: 'flex-start' }}
 			>
 				<View style={styles.topSection}>
+					<Image
+						source={require('../../../assets/img/ic_launcher.png')}
+						style={[
+							styles.logo,{
+								width: 120,
+								height: 120,
+								marginBottom: 5
+							}
+						]} />
+					<CText style={styles.title} fontStyle={'B'} fontSize={38} style={{ color: '#fff', marginBottom: 10 }}>{APP_NAME}</CText>
+					<CText fontStyle={'SB'} fontSize={13} style={{ color: '#fff', marginBottom: 10, marginTop: -20 }}>{TAGLINE}</CText>
 				</View>
 				<View style={styles.bottomSection}>
 					<Text style={styles.linkText}>Login with</Text>
@@ -128,7 +140,7 @@ export default function LoginOptionsScreen() {
 					</View>
 					{isBiometricEnabled && (
 						<View style={{ margin: 10, marginTop: 0}}>
-							<TouchableOpacity activeOpacity={.4} style={[{marginBottom: 30, marginTop: 20, alignItems: 'center', borderWidth: 1, borderColor:'#fff', padding: 12, borderRadius: 50}]} onPress={handleBiometricLogin}>
+							<TouchableOpacity activeOpacity={.4} style={[{marginBottom: 30, marginTop: 20, borderRadius: 8, alignItems: 'center', padding: 10 }]} onPress={handleBiometricLogin}>
 								<Icon name="finger-print-outline" size={40} color={theme.colors.light.card} />
 							</TouchableOpacity>
 						</View>
@@ -179,13 +191,13 @@ export default function LoginOptionsScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		// backgroundColor: theme.colors.light.primary,
+		backgroundColor: theme.colors.light.primary,
 		// paddingHorizontal: 40,
 		justifyContent: 'space-between',
 	},
 	topSection: {
 		alignItems: 'center',
-		marginTop: 150,
+		marginTop: 70,
 	},
 	devNote: {
 		fontSize: 14,
@@ -215,7 +227,7 @@ const styles = StyleSheet.create({
 		color: '#222',
 	},
 	bottomSection: {
-		marginBottom: 150,
+		marginBottom: 70,
 		color: '#fff',
 		alignItems: 'center',
 		// paddingHorizontal: 20,

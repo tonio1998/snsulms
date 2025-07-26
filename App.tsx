@@ -164,7 +164,6 @@ function AppNavigator() {
         return (
             <>
                 <SafeAreaProvider>
-                    <StatusBar backgroundColor={theme.colors.light.primary} barStyle="light-content" />
                     <AccessProvider>
                         <NavigationContainer
                             ref={navigationRef}

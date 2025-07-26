@@ -167,18 +167,30 @@ const ClassesScreen = ({ navigation }) => {
 								<TouchableOpacity activeOpacity={0.5}
 												  onPress={() => handleViewClass(item.ClassStudentID, item.class_info?.ClassID, item.class_info?.CourseName)}
 									style={{
-										padding: 12,
-										backgroundColor: theme.colors.light.muted_soft + '55',
+										padding: 16,
+										backgroundColor: theme.colors.light.card,
 										borderRadius: 8,
 										marginBottom: 10,
 									}}
 								>
 									<View>
-										<CText fontStyle={'SB'} fontSize={14} style={{ textTransform: 'uppercase' }} numberOfLines={2}>
+										<CText fontStyle={'SB'} fontSize={16} style={{ textTransform: 'uppercase' }} numberOfLines={2}>
 											{item.class_info?.CourseCode} - {item.class_info?.CourseName}
 										</CText>
+										<CText fontStyle={'SB'} fontSize={14} style={{ textTransform: 'uppercase' }} numberOfLines={2}>
+											{item.class_info?.Section}
+										</CText>
 									</View>
-									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+									<View style={{
+										flexDirection: 'row',
+										alignItems: 'center',
+										justifyContent: 'space-between',
+										backgroundColor: theme.colors.light.primary + '22',
+										padding: 5,
+										borderRadius: 10,
+										width: 200,
+										marginTop: 20,
+									}}>
 										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
 											<Image
 												source={
@@ -192,6 +204,8 @@ const ClassesScreen = ({ navigation }) => {
 													borderRadius: 30,
 													marginRight: 6,
 													backgroundColor: '#ccc',
+													borderWidth: 1,
+													borderColor: theme.colors.light.primary,
 												}}
 											/>
 											<CText fontStyle={'SB'} fontSize={12} style={{ textTransform: 'uppercase' }}>
@@ -209,7 +223,7 @@ const ClassesScreen = ({ navigation }) => {
 							ListFooterComponent={renderFooter}
 							ListEmptyComponent={
 								!loading && (
-									<Text style={{ textAlign: 'center', marginTop: 20 }}>No students found.</Text>
+									<Text style={{ textAlign: 'center', marginTop: 20 }}>No classes found.</Text>
 								)
 							}
 						/>

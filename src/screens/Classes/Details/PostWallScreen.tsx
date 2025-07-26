@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import {globalStyles} from "../../../theme/styles.ts";
 import {handleApiError} from "../../../utils/errorHandler.ts";
-import {useContext, useState} from "react";
+import React, {useContext, useState} from "react";
 import {useAuth} from "../../../context/AuthContext.tsx";
 import {NetworkContext} from "../../../context/NetworkContext.tsx";
 import styles from "react-native-webview/lib/WebView.styles";
@@ -18,6 +18,7 @@ import {CText} from "../../../components/CText.tsx";
 import {theme} from "../../../theme";
 import CButton from "../../../components/CButton.tsx";
 import {postWall} from "../../../api/modules/wallApi.ts";
+import {FILE_BASE_URL} from "../../../api/api_configuration.ts";
 
 const PostWallScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -29,7 +30,7 @@ const PostWallScreen = ({ navigation, route }) => {
 	const [loading, setLoading] = useState(false);
 
 	const handlePost = async () => {
-		if (!body.trim()) return Alert.alert("Body is required.");
+		if (!body.trim()) return false;
 
 		try {
 			setLoading(true);
@@ -50,6 +51,36 @@ const PostWallScreen = ({ navigation, route }) => {
 					behavior={Platform.OS === 'ios' ? 'padding' : undefined}
 					style={{ flex: 1 }}
 					>
+					<View style={[globalStyles.shadowBtn, { padding: 16}]}>
+						<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+							<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+								<Image
+									source={
+										user?.profile_pic
+											? { uri: `${FILE_BASE_URL}/${user?.profile_pic}` }
+											: user?.avatar
+												? { uri: user?.avatar }
+												: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+														user?.name || 'User'
+													)}&background=random`
+												}
+									}
+									style={{
+										width: 50,
+										height: 50,
+										borderRadius: 30,
+										marginRight: 6,
+										backgroundColor: '#ccc',
+										borderWidth: 1,
+									}}
+								/>
+								<View>
+									<CText fontSize={18} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ user?.name }</CText>
+									<CText fontSize={14} style={{ color: '#000', marginLeft: 10, marginTop: -5 }}>{ user?.email }</CText>
+								</View>
+							</View>
+						</View>
+					</View>
 					<View>
 						<TextInput
 							placeholder="What's on your mind?"
@@ -97,7 +128,7 @@ const PostWallScreen = ({ navigation, route }) => {
 							disabled={loading}
 							onPress={handlePost}
 							type="success"
-							style={{ borderRadius: 8 }}
+							style={{ borderRadius: 8, paddingVertical: 12 }}
 						/>
 					</View>
 				</KeyboardAvoidingView>

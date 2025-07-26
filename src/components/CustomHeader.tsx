@@ -26,19 +26,16 @@ const CustomHeader = ({
     return (
         <View style={styles.header}>
             <View style={styles.left}>
-                {/*<TouchableOpacity activeOpacity={.6} onPress={() => setSidebarVisible(true)}>*/}
-                {/*    <Icon name={"menu"} color={theme.colors.light.card} size={30} />*/}
-                {/*</TouchableOpacity>*/}
                 <CText
-                    fontSize={24}
+                    fontSize={30}
                     fontStyle={'SB'}
                     style={{
                         marginLeft: 10,
                         marginTop: 4,
-                        color: theme.colors.light.card,
-                        textShadowColor: theme.colors.light.primary_soft,
-                        textShadowOffset: { width: 1, height: 1 },
-                        textShadowRadius: 10,
+                        color: theme.colors.light.primary,
+                        textShadowColor: '#fff',
+                        textShadowOffset: { width: -1, height: 2 },
+                        textShadowRadius: 1,
                 }}
                 >{APP_NAME}</CText>
             </View>
