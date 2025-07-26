@@ -89,147 +89,11 @@ const HomeScreen = ({navigation}) => {
 					return;
 				}
 			}
-			// await getFCMToken();
+			await getFCMToken();
 		};
 
 		requestNotificationPermission();
 	}, []);
-
-	const RecentScanItem = ({ userName, mode, date, CText }) => {
-		const isIn = mode === 1;
-
-		return (
-			<View
-				style={{
-					marginTop: 12,
-					padding: 14,
-					backgroundColor: '#f5f5f5',
-					borderRadius: 12,
-					flexDirection: 'row',
-					justifyContent: 'space-between',
-					alignItems: 'center',
-				}}
-			>
-				<View>
-					<CText fontSize={16} fontStyle="B">{userName}</CText>
-					<CText fontSize={14} style={{ color: '#888' }}>{date}</CText>
-				</View>
-
-				{!loading && (
-					<CText
-						fontSize={14}
-						style={{
-							color: isIn ? 'green' : 'red',
-							fontWeight: 'bold',
-						}}
-					>
-						{isIn ? 'IN' : 'OUT'}
-					</CText>
-				)}
-			</View>
-		);
-	};
-
-
-
-	const renderAdminDashboard = () => {
-		const stats = {
-			totalStudents: dash_data?.totalStudents || 0,
-			totalTeachers: dash_data?.totalTeachers || 0,
-			totalParents: dash_data?.totalParents || 0,
-			totalScansToday: dash_data?.totalScansToday || 0,
-			studentsInsideToday: dash_data?.studentsInsideToday || 0
-		};
-
-		const recentScans = dash_data?.recentScans || [];
-		const TotalScans = dash_data?.totalScans || 0;
-
-		return (
-			<>
-
-				<ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-					<View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16 }}>
-						<SummaryCard
-							title="📊 Scans Summary"
-							loading={loading}
-							formatNumber={formatNumber}
-							CText={CText}
-							stats={[
-								{ label: 'Total Scans', value: TotalScans },
-								{ label: 'Scans Today', value: stats.totalScansToday },
-								{ label: 'Inside Today', value: stats.studentsInsideToday  },
-							]}
-							backgroundColor="#fff"
-							textColor="#259644"
-						/>
-
-						<SummaryCard
-							title="Students"
-							loading={loading}
-							formatNumber={formatNumber}
-							CText={CText}
-							stats={[
-								{ label: 'Total', value: stats.totalStudents },
-							]}
-							backgroundColor="#fff"
-							textColor="#D35230"
-						/>
-						<SummaryCard
-							title="Parents"
-							loading={loading}
-							formatNumber={formatNumber}
-							CText={CText}
-							stats={[
-								{ label: '', value: stats.totalParents },
-							]}
-							backgroundColor="#fff"
-							textColor="#FF2D90"
-						/>
-						<SummaryCard
-							title="Teachers"
-							loading={loading}
-							formatNumber={formatNumber}
-							CText={CText}
-							stats={[
-								{ label: '', value: stats.totalTeachers },
-							]}
-							backgroundColor="#fff"
-							textColor="#FFC107"
-						/>
-					</View>
-				</ScrollView>
-
-				<View style={globalStyles.p_3}>
-					<View style={{ marginTop: 1 }}>
-						<CText fontSize={18} fontStyle={'SB'}>Recent Scan Activity</CText>
-						{loading ? (
-							[...Array(3)].map((_, idx) => (
-								<ShimmerPlaceHolder
-									key={idx} loading={true} CText={CText}
-									LinearGradient={LinearGradient}
-									style={{ width: '100%', height: 80, borderRadius: 10, marginTop: 10 }}
-									shimmerStyle={{ borderRadius: 4 }}
-									autoRun
-								/>
-							))
-						) : (
-							recentScans.map((item, index) => (
-								<RecentScanItem
-									key={index}
-									userName={item.user?.name || '---'}
-									date={formatDate(item.created_at)}
-									mode={item.Mode}
-									CText={CText}
-								/>
-							))
-						)}
-
-					</View>
-				</View>
-
-			</>
-		);
-	};
 
 	const renderStudentDashboard = () => {
 		const stats = {
@@ -245,7 +109,7 @@ const HomeScreen = ({navigation}) => {
 				<ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
 					<View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16 }}>
 					<SummaryCard
-						title="Scans Today"
+						title="Classes"
 						loading={loading}
 						formatNumber={formatNumber}
 						CText={CText}
@@ -268,69 +132,9 @@ const HomeScreen = ({navigation}) => {
 					/>
 					</View>
 				</ScrollView>
-				<View style={globalStyles.p_3}>
-					<View style={{ marginTop: 20 }}>
-						{loading
-							? [...Array(3)].map((_, idx) => (
-								<RecentScanItem key={idx} loading={true} CText={CText} />
-							))
-							: recentScans.map((item, index) => (
-								<RecentScanItem
-									key={index}
-									userName={item.user?.name || '---'}
-									date={formatDate(item.created_at)}
-									mode={item?.Mode}
-									CText={CText}
-								/>
-							))}
-					</View>
-				</View>
 			</>
 		);
 	};
-
-	const renderTeacherDashboard = () => (
-		<>
-			<View style={globalStyles.p_3}>
-				<CText fontSize={16} style={{ marginTop: 4, color: 'gray' }}>
-					Monitor your advisory class scans.
-				</CText>
-				<View style={{ marginTop: 20 }}>
-					{[
-						{ name: 'Jasmin Lazo', time: '7:12 AM', status: 'IN' },
-						{ name: 'Claire Domingo', time: '12:01 PM', status: 'OUT' },
-					].map((item, index) => (
-						<View
-							key={index}
-							style={{
-								marginTop: 12,
-								padding: 14,
-								backgroundColor: '#fff',
-								borderRadius: 12,
-								flexDirection: 'row',
-								justifyContent: 'space-between',
-								alignItems: 'center'
-							}}
-						>
-							<View>
-								<CText fontSize={16} fontStyle={'B'}>{item.name}</CText>
-								<CText fontSize={14} style={{ color: '#888' }}>{item.time}</CText>
-							</View>
-							<CText
-								fontSize={14}
-								style={{
-									color: item.status === 'IN' ? 'green' : 'red',
-									fontWeight: 'bold'
-								}}
-							>
-								{item.status}
-							</CText>
-						</View>
-					))}
-				</View>
-			</View>
-		</>
-	);
 
 
 	return (
@@ -348,10 +152,7 @@ const HomeScreen = ({navigation}) => {
 						<View style={globalStyles.p_3}>
 							<CText fontSize={18} fontStyle={'B'}>Welcome, {user?.name || ''}</CText>
 						</View>
-						{hasRole('admin') && renderAdminDashboard()}
-						{hasRole('teachers') && renderTeacherDashboard()}
-						{hasRole('students') && renderStudentDashboard()}
-						{hasRole('parents') && renderStudentDashboard()}
+						{hasRole('STUD') && renderStudentDashboard()}
 					</ScrollView>
 				</SafeAreaView>
 			</BackgroundWrapper>

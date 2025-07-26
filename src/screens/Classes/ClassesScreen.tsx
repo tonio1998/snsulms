@@ -21,6 +21,8 @@ import NetInfo from '@react-native-community/netinfo';
 import { NetworkContext } from '../../context/NetworkContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
 import { getMyClasses } from '../../api/modules/classesApi.ts';
+import {ShimmerList} from "../../components/ShimmerList.tsx";
+import {useLoading} from "../../context/LoadingContext.tsx";
 
 const ClassesScreen = ({ navigation }) => {
 	const network = useContext(NetworkContext);
@@ -31,11 +33,13 @@ const ClassesScreen = ({ navigation }) => {
 	const [refreshing, setRefreshing] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [yearLevel, setYearLevel] = useState('');
+	const { showLoading, hideLoading } = useLoading();
 
 	const fetch = async (pageNumber = 1, filters = {}) => {
 		try {
 			if (loading) return;
 			setLoading(true);
+			showLoading("Loading...")
 
 			const filter = {
 				page: pageNumber,
@@ -64,6 +68,7 @@ const ClassesScreen = ({ navigation }) => {
 			handleApiError(error, "Failed to load students");
 		} finally {
 			setLoading(false);
+			hideLoading()
 		}
 	};
 
@@ -87,11 +92,6 @@ const ClassesScreen = ({ navigation }) => {
 	const handleSearch = (text) => {
 		setSearchQuery(text);
 		fetch(1, { search: text });
-	};
-
-	const handleYearFilter = (level) => {
-		setYearLevel(level);
-		fetch(1, { YearLevel: level });
 	};
 
 	const handleLoadMore = () => {
@@ -155,17 +155,25 @@ const ClassesScreen = ({ navigation }) => {
 										fetch(1);
 									}}
 								>
-									<Text style={{ fontSize: 16, color: '#888' }}>✕</Text>
+									<Icon name={'close'} size={25} color={'#000'} />
 								</TouchableOpacity>
 							)}
 						</View>
 
-						<FlatList
+						<ShimmerList
 							data={students}
+							loading={loading}
 							keyExtractor={(item) => item.ClassStudentID.toString()}
 							renderItem={({ item }) => (
-								<TouchableOpacity activeOpacity={0.5}
-												  onPress={() => handleViewClass(item.ClassStudentID, item.class_info?.ClassID, item.class_info?.CourseName)}
+								<TouchableOpacity
+									activeOpacity={0.5}
+									onPress={() =>
+										handleViewClass(
+											item.ClassStudentID,
+											item.class_info?.ClassID,
+											item.class_info?.CourseName
+										)
+									}
 									style={{
 										padding: 16,
 										backgroundColor: theme.colors.light.card,
@@ -174,28 +182,48 @@ const ClassesScreen = ({ navigation }) => {
 									}}
 								>
 									<View>
-										<CText fontStyle={'SB'} fontSize={16} style={{ textTransform: 'uppercase' }} numberOfLines={2}>
+										<CText
+											fontStyle={'SB'}
+											fontSize={16}
+											style={{ textTransform: 'uppercase' }}
+											numberOfLines={2}
+										>
 											{item.class_info?.CourseCode} - {item.class_info?.CourseName}
 										</CText>
-										<CText fontStyle={'SB'} fontSize={14} style={{ textTransform: 'uppercase' }} numberOfLines={2}>
+										<CText
+											fontStyle={'SB'}
+											fontSize={14}
+											style={{ textTransform: 'uppercase' }}
+											numberOfLines={2}
+										>
 											{item.class_info?.Section}
 										</CText>
 									</View>
-									<View style={{
-										flexDirection: 'row',
-										alignItems: 'center',
-										justifyContent: 'space-between',
-										backgroundColor: theme.colors.light.primary + '22',
-										padding: 5,
-										borderRadius: 10,
-										width: 200,
-										marginTop: 20,
-									}}>
-										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+									<View
+										style={{
+											flexDirection: 'row',
+											alignItems: 'center',
+											justifyContent: 'space-between',
+											backgroundColor: theme.colors.light.primary + '22',
+											padding: 5,
+											borderRadius: 10,
+											width: 200,
+											marginTop: 20,
+										}}
+									>
+										<View
+											style={{
+												flexDirection: 'row',
+												alignItems: 'center',
+												justifyContent: 'space-between',
+											}}
+										>
 											<Image
 												source={
 													item.class_info?.teacher?.avatar
-														? { uri: `${FILE_BASE_URL}/${item.class_info?.teacher?.avatar}` }
+														? {
+															uri: `${FILE_BASE_URL}/${item.class_info?.teacher?.avatar}`,
+														}
 														: require('../../../assets/img/ic_launcher.png')
 												}
 												style={{
@@ -208,25 +236,26 @@ const ClassesScreen = ({ navigation }) => {
 													borderColor: theme.colors.light.primary,
 												}}
 											/>
-											<CText fontStyle={'SB'} fontSize={12} style={{ textTransform: 'uppercase' }}>
+											<CText
+												fontStyle={'SB'}
+												fontSize={12}
+												style={{ textTransform: 'uppercase' }}
+											>
 												{item.class_info?.teacher?.name}
 											</CText>
 										</View>
 									</View>
 								</TouchableOpacity>
 							)}
-							refreshControl={
-								<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-							}
+							refreshing={refreshing}
+							onRefresh={handleRefresh}
 							onEndReached={handleLoadMore}
-							onEndReachedThreshold={0.3}
 							ListFooterComponent={renderFooter}
 							ListEmptyComponent={
-								!loading && (
-									<Text style={{ textAlign: 'center', marginTop: 20 }}>No classes found.</Text>
-								)
+								<Text style={{ textAlign: 'center', marginTop: 20 }}>No classes found.</Text>
 							}
 						/>
+
 						{/*<View style={styles.floatBtn}>*/}
 						{/*	<TouchableOpacity*/}
 						{/*		activeOpacity={0.8}*/}
