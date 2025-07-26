@@ -58,16 +58,8 @@ const HomeScreen = ({navigation}) => {
 			if (network?.isOnline) {
 				const res = await getDashData();
 				setData(res);
-				await saveDashboardData('dashboard'+user?.id, res);
 			} else {
-				const offlineData = await getOfflineDashboard('dashboard'+user?.id);
-				// console.log(offlineData)
-				if (offlineData) {
-					// console.log('📴 Loaded dashboard from SQLite');
-					setData(offlineData);
-				} else {
-					// console.warn('⚠️ No dashboard data in SQLite');
-				}
+
 			}
 		} catch (error) {
 			// handleApiError(error, 'Fetch Dashboard Data');

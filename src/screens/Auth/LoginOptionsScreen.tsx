@@ -125,16 +125,14 @@ export default function LoginOptionsScreen() {
 								<CText style={{ color:theme.colors.light.primary, marginTop: 5, marginHorizontal: 10, fontWeight: 'bold' }}>Password</CText>
 							</TouchableOpacity>
 						</View>
-						{isBiometricEnabled && (
-							<View style={{ margin: 10, marginTop: 0}}>
-								<TouchableOpacity activeOpacity={.4} style={[globalStyles.biometricBtn, globalStyles.shadowBtn, {marginBottom: 30, marginTop: 20, borderRadius: 8, alignItems: 'center', backgroundColor: '#fff', borderWidth: 0}]} onPress={handleBiometricLogin}>
-									<Icon name="finger-print-outline" size={30} color={theme.colors.light.primary} />
-									<CText style={{ color: theme.colors.light.primary, marginTop: 5, marginHorizontal: 10,  fontWeight: 'bold' }}>Biometric</CText>
-								</TouchableOpacity>
-							</View>
-						)}
-
 					</View>
+					{isBiometricEnabled && (
+						<View style={{ margin: 10, marginTop: 0}}>
+							<TouchableOpacity activeOpacity={.4} style={[{marginBottom: 30, marginTop: 20, alignItems: 'center', borderWidth: 1, borderColor:'#fff', padding: 12, borderRadius: 50}]} onPress={handleBiometricLogin}>
+								<Icon name="finger-print-outline" size={40} color={theme.colors.light.card} />
+							</TouchableOpacity>
+						</View>
+					)}
 				</View>
 				<View
 					style={[

@@ -18,7 +18,6 @@ import { CText } from '../../components/CText.tsx';
 import { theme } from '../../theme';
 import Icon from 'react-native-vector-icons/Ionicons';
 import NetInfo from '@react-native-community/netinfo';
-import { getOfflineStudents, saveStudentsOffline } from '../../utils/sqlite/students';
 import { NetworkContext } from '../../context/NetworkContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
 import { getMyClasses } from '../../api/modules/classesApi.ts';
@@ -50,11 +49,8 @@ const ClassesScreen = ({ navigation }) => {
 				console.log(res.data)
 				studentsList = res.data ?? [];
 				totalPages = res.data?.last_page ?? 1;
-
-				await saveStudentsOffline(studentsList);
 			} else {
 				console.log("fetch using local:", filter)
-				studentsList = await getOfflineStudents(filter);
 			}
 
 			setStudents(prev =>

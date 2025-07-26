@@ -41,12 +41,12 @@ export const getOfflineStudentById = async (id) => {
     }
 };
 
-export const saveOfflineStudent = async (student) => {
+export const saveClassesOffline = async (student) => {
     const db = await getDb();
     await initStudentsTable();
 
     await db.executeSql(
-        `INSERT OR REPLACE INTO students (id, name, qr_code, year_level, other_data, synced) VALUES (?, ?, ?, ?, ?, 0)`,
+        `INSERT OR REPLACE INTO lms_class_sections (ClassID, CourseCode, CourseName, year_level, other_data, synced) VALUES (?, ?, ?, ?, ?, 0)`,
         [
             student.id,
             `${student.FirstName} ${student.LastName}`,
