@@ -30,15 +30,15 @@ const CustomHeader = ({
                 {/*    <Icon name={"menu"} color={theme.colors.light.card} size={30} />*/}
                 {/*</TouchableOpacity>*/}
                 <CText
-                    fontSize={24}
+                    fontSize={30}
                     fontStyle={'SB'}
                     style={{
                         marginLeft: 10,
                         marginTop: 4,
-                        color: theme.colors.light.card,
-                        textShadowColor: theme.colors.light.primary_soft,
-                        textShadowOffset: { width: 1, height: 1 },
-                        textShadowRadius: 10,
+                        color: theme.colors.light.primary,
+                        // textShadowColor: theme.colors.light.primary_soft,
+                        // textShadowOffset: { width: 1, height: 1 },
+                        // textShadowRadius: 10,
                 }}
                 >{APP_NAME}</CText>
             </View>

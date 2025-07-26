@@ -10,8 +10,9 @@ interface ButtonProps {
     icon: string;
     onPress: () => void;
     padding?: number;
-    style?: ViewStyle;  // Allow user-defined button styles
-    textStyle?: TextStyle; // Allow custom text styles
+    style?: ViewStyle;
+    textStyle?: TextStyle;
+    iconSize?: number;
 }
 
 const CButton: React.FC<ButtonProps> = ({
@@ -21,7 +22,8 @@ const CButton: React.FC<ButtonProps> = ({
                                             onPress,
                                             padding = 8,
                                             style,
-                                            textStyle
+                                            textStyle,
+                                            iconSize = 20,
                                         }) => {
     const buttonColors: Record<string, string> = {
         danger: theme.colors.light.danger,
@@ -48,7 +50,7 @@ const CButton: React.FC<ButtonProps> = ({
         >
             <View style={styles.content}>
                 {icon && (
-                    <Icon name={icon} size={20} color={textStyle?.color || "#fff"} />
+                    <Icon name={icon} size={iconSize} color={textStyle?.color || "#fff"} />
                 )}
                 
                 {title && (

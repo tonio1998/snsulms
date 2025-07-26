@@ -116,10 +116,11 @@ export default function LoginOptionsScreen() {
 							styles.logo,{
 								width: 120,
 								height: 120,
+								marginBottom: 5
 							}
 						]} />
 					<CText style={styles.title} fontStyle={'B'} fontSize={38} style={{ color: '#fff', marginBottom: 10 }}>{APP_NAME}</CText>
-					<CText fontStyle={'SB'} fontSize={16} style={{ color: '#fff', marginBottom: 10 }}>{TAGLINE}</CText>
+					<CText fontStyle={'SB'} fontSize={16} style={{ color: '#fff', marginBottom: 10, marginTop: -20 }}>{TAGLINE}</CText>
 				</View>
 				<View style={styles.bottomSection}>
 					<Text style={styles.linkText}>Login with</Text>
@@ -136,16 +137,14 @@ export default function LoginOptionsScreen() {
 								<CText style={{ color:theme.colors.light.primary, marginTop: 5, marginHorizontal: 10, fontWeight: 'bold' }}>Password</CText>
 							</TouchableOpacity>
 						</View>
-						{isBiometricEnabled && (
-							<View style={{ margin: 10, marginTop: 0}}>
-								<TouchableOpacity activeOpacity={.4} style={[globalStyles.biometricBtn, globalStyles.shadowBtn, {marginBottom: 30, marginTop: 20, borderRadius: 8, alignItems: 'center', backgroundColor: '#fff', borderWidth: 0}]} onPress={handleBiometricLogin}>
-									<Icon name="finger-print-outline" size={30} color={theme.colors.light.primary} />
-									<CText style={{ color: theme.colors.light.primary, marginTop: 5, marginHorizontal: 10,  fontWeight: 'bold' }}>Biometric</CText>
-								</TouchableOpacity>
-							</View>
-						)}
-
 					</View>
+					{isBiometricEnabled && (
+						<View style={{ margin: 10, marginTop: 0}}>
+							<TouchableOpacity activeOpacity={.4} style={[{marginBottom: 30, marginTop: 20, borderRadius: 8, alignItems: 'center', padding: 10 }]} onPress={handleBiometricLogin}>
+								<Icon name="finger-print-outline" size={40} color={theme.colors.light.card} />
+							</TouchableOpacity>
+						</View>
+					)}
 				</View>
 				<View
 					style={[
@@ -198,7 +197,7 @@ const styles = StyleSheet.create({
 	},
 	topSection: {
 		alignItems: 'center',
-		marginTop: 150,
+		marginTop: 70,
 	},
 	devNote: {
 		fontSize: 14,
@@ -228,7 +227,7 @@ const styles = StyleSheet.create({
 		color: '#222',
 	},
 	bottomSection: {
-		marginBottom: 150,
+		marginBottom: 70,
 		color: '#fff',
 		alignItems: 'center',
 		// paddingHorizontal: 20,
