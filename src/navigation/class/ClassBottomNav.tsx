@@ -2,21 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Dimensions, StatusBar, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-
-import HomeScreen from '../screens/HomeScreen';
-import StudentScreen from '../screens/Students/StudentScreen.tsx';
-import { theme } from '../theme';
-import { globalStyles } from '../theme/styles.ts';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useAuth } from '../context/AuthContext.tsx';
-import { useAccess } from '../hooks/useAccess.ts';
-import { CText } from '../components/CText.tsx';
-import UsersScreen from '../screens/user/UsersScreen.tsx';
-import ClassesScreen from '../screens/Classes/ClassesScreen.tsx';
-
+import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import {useAccess} from "../../hooks/useAccess.ts";
+import {theme} from "../../theme";
+import { CText } from '../../components/CText.tsx';
+import WallScreen from "../../screens/Classes/Details/WallScreen.tsx";
+import ActivityScreen from "../../screens/Classes/Details/ActivityScreen.tsx";
+import PostWallScreen from "../../screens/Classes/Details/PostWallScreen.tsx";
+import WallCommentsScreen from "../../screens/Classes/Details/WallCommentScreen.tsx";
 const Tab = createBottomTabNavigator();
-const ClassesStack = createNativeStackNavigator();
-const currentColors = theme.colors.light;
+const ClassesDetailsStack = createNativeStackNavigator();
 
 function useOrientation() {
 	const [isLandscape, setIsLandscape] = useState(
@@ -33,7 +28,18 @@ function useOrientation() {
 	return isLandscape;
 }
 
-export default function ClassBottomNav() {
+export default function ClassBottomNav({route, navigation}) {
+	const ClassID = route.params.ClassID;
+
+	navigation.setOptions({
+		headerTitle: route.params.Title,
+		headerTitleStyle: {
+			fontSize: 18,
+			color: '#fff',
+			fontWeight: 'bold',
+		},
+	});
+
 	const isLandscape = useOrientation();
 	const { hasRole, can } = useAccess();
 
@@ -43,20 +49,23 @@ export default function ClassBottomNav() {
 				tabBarIcon: ({ color, size, focused }) => {
 					let iconName = 'ellipse-outline';
 					switch (route.name) {
-						case 'Home':
+						case 'Wall':
 							iconName = focused ? 'home' : 'home-outline';
 							break;
 						case 'Activities':
-							iconName = focused ? 'school' : 'school-outline';
+							iconName = focused ? 'list' : 'list-outline';
 							break;
-						case 'Classes':
+						case 'People':
 							iconName = focused ? 'people' : 'people-outline';
 							break;
-						case 'Settings':
-							iconName = focused ? 'settings' : 'settings-outline';
+						case 'Progress':
+							iconName = focused ? 'bar-chart' : 'bar-chart-outline';
+							break;
+						case 'Calendar':
+							iconName = focused ? 'calendar' : 'calendar-outline';
 							break;
 						default:
-							break;
+							iconName = 'ellipse';
 					}
 					return <Icon name={iconName} size={20} color={color} />;
 				},
@@ -76,18 +85,14 @@ export default function ClassBottomNav() {
 					</View>
 				),
 				tabBarLabelPosition: isLandscape ? 'beside-icon' : 'below-icon',
-				tabBarActiveTintColor: currentColors.primary,
-				tabBarInactiveTintColor: currentColors.primary,
+				tabBarActiveTintColor: theme.colors.light.primary,
+				tabBarInactiveTintColor: theme.colors.light.primary,
 				headerShown: false,
 				tabBarStyle: {
-					backgroundColor: currentColors.card,
+					backgroundColor: theme.colors.light.card,
 					height: isLandscape ? 55 : 65,
 					paddingTop: 4,
 					paddingBottom: isLandscape ? 4 : 10,
-					// margin: 20,
-					// borderRadius: 20,
-					// position: 'absolute',
-					// elevation: 10,
 					shadowColor: '#000',
 					shadowOffset: { width: 0, height: -2 },
 					shadowOpacity: 0.1,
@@ -97,19 +102,31 @@ export default function ClassBottomNav() {
 				},
 			})}
 		>
-			<Tab.Screen name="Home" component={HomeScreen} />
-			<Tab.Screen name="Classes" component={ClassesStackScreen} />
+			<Tab.Screen name="Wall" component={WallStackScreen} initialParams={{ ClassID }}/>
+			<Tab.Screen name="Activities" component={ActivityScreen} initialParams={{ ClassID }}/>
+			<Tab.Screen name="People" component={WallScreen} initialParams={{ ClassID }}/>
+			<Tab.Screen name="Progress" component={WallScreen} initialParams={{ ClassID }}/>
+			<Tab.Screen name="Calendar" component={WallScreen} initialParams={{ ClassID }}/>
 		</Tab.Navigator>
 	);
 }
 
-function ClassesStackScreen() {
+function WallStackScreen({ route }) {
+	const { ClassID } = route.params;
+	console.log("ClassID", ClassID)
+
 	return (
-		<>
-			<StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-			<ClassesStack.Navigator screenOptions={{ headerShown: false }}>
-				<ClassesStack.Screen name="Classes" component={ClassesScreen} />
-			</ClassesStack.Navigator>
-		</>
+		<ClassesDetailsStack.Navigator screenOptions={{ headerShown: false }}>
+			<ClassesDetailsStack.Screen
+				name="Wall"
+				component={WallScreen}
+				initialParams={{ ClassID }}
+			/>
+			<ClassesDetailsStack.Screen
+				name="PostWall"
+				component={PostWallScreen}
+				initialParams={{ ClassID }}
+			/>
+		</ClassesDetailsStack.Navigator>
 	);
 }

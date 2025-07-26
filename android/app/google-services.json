@@ -1,0 +1,92 @@
+{
+  "project_info": {
+    "project_number": "51010046813",
+    "project_id": "fghemis2025",
+    "storage_bucket": "fghemis2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51010046813:android:c2d55e51545c31bbbcb6b4",
+        "android_client_info": {
+          "package_name": "com.fghemis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "51010046813-ifoa8di6p4qetspj61fak8tbjoi2u6f6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fghemis",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "51010046813-mdolbssk5rr7btbdr1qlbr0j79pnqasr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fghemis",
+            "certificate_hash": "a96b9f74691e1420ca031a1fa07905a66ff387ff"
+          }
+        },
+        {
+          "client_id": "51010046813-qes3dggin3pa5nhmdali9t8agvos4cmb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuBrCHmdsmaHwHeX4ULXkiNcKRLwAFybs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "51010046813-qes3dggin3pa5nhmdali9t8agvos4cmb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51010046813:android:6898baecdd05e9e1bcb6b4",
+        "android_client_info": {
+          "package_name": "com.snsulms"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "51010046813-fgao47gigk908hv7vusjpmish0q5c577.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.snsulms",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "51010046813-qes3dggin3pa5nhmdali9t8agvos4cmb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuBrCHmdsmaHwHeX4ULXkiNcKRLwAFybs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "51010046813-qes3dggin3pa5nhmdali9t8agvos4cmb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

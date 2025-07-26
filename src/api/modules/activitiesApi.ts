@@ -1,8 +1,8 @@
 import api from "../api.ts";
 
-export const getMyClasses = async ({ page = 1, search = '' }) => {
-    const response = await api.get('/lms/myclasses', {
-        params: { page, search }
+export const getActivities = async ({ page = 1, search = '', ClassID = '' }) => {
+    const response = await api.get('/lms/myclasses/activities', {
+        params: { page, search, ClassID }
     });
     return response.data;
 };

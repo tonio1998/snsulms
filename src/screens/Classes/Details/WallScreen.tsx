@@ -1,255 +1,301 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
 	View,
+	TextInput,
+	FlatList,
 	Text,
-	Image,
-	StyleSheet,
-	ScrollView,
 	ActivityIndicator,
-	SafeAreaView,
-	TouchableOpacity, Alert, ToastAndroid
+	TouchableOpacity,
+	RefreshControl,
+	SafeAreaView, Image, ScrollView, StyleSheet, Animated, Easing
 } from 'react-native';
-import CustomHeader from '../../../components/CustomHeader.tsx';
-import { FILE_BASE_URL } from '../../../api/api_configuration.ts';
-import { CText } from '../../../components/CText.tsx';
-import { getStudentDetails } from '../../api/studentsApi.ts';
-import { handleApiError } from '../../../utils/errorHandler.ts';
-import { globalStyles } from '../../../theme/styles.ts';
-import BackgroundWrapper from '../../../utils/BackgroundWrapper';
-import { theme } from '../../../theme';
-import { useLoading } from '../../../context/LoadingContext.tsx';
-import NfcManager, { NfcEvents } from 'react-native-nfc-manager';
-import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
-import { navigate } from '../../../utils/navigation.ts';
-import CButton from '../../../components/CButton.tsx';
-import { resetUserPassword } from '../../../api/modules/userApi.ts';
-import { useAlert } from '../../../components/CAlert.tsx';
-import Toast from 'react-native-toast-message';
-import hide = Toast.hide;
-import BackHeader from '../../../components/BackHeader.tsx';
-import { useAccess } from '../../../hooks/useAccess.ts';
-import { getOfflineStudentById } from '../../../utils/sqlite/students';
-import NetInfo from '@react-native-community/netinfo';
-import { NetworkContext } from '../../../context/NetworkContext.tsx';
-const ClassDetailsScreen = ({ route, navigation }) => {
+import {NetworkContext} from "../../../context/NetworkContext.tsx";
+import CustomHeader from "../../../components/CustomHeader.tsx";
+import BackgroundWrapper from "../../../utils/BackgroundWrapper";
+import {globalStyles} from "../../../theme/styles.ts";
+import {theme} from "../../../theme";
+import {CText} from "../../../components/CText.tsx";
+import {handleApiError} from "../../../utils/errorHandler.ts";
+import {getOfflineStudents, saveStudentsOffline} from "../../../utils/sqlite/students";
+import {getWall, reactPost} from "../../../api/modules/wallApi.ts";
+import Icon from "react-native-vector-icons/Ionicons";
+import {FILE_BASE_URL} from "../../../api/api_configuration.ts";
+import {useAuth} from "../../../context/AuthContext.tsx";
+import CButton from "../../../components/CButton.tsx";
+import {formatDate} from "../../../utils/dateFormatter";
+import {useFocusEffect} from "@react-navigation/native";
+
+const WallScreen = ({ navigation, route }) => {
+	const ClassID = route.params.ClassID;
 	const network = useContext(NetworkContext);
-	const studentId = route.params.student;
-	console.log("studentId from StudentDetailsScreen", studentId)
-	const { hasRole, can } = useAccess();
-	const [student, setStudent] = useState(null);
-	const [loading, setLoading] = useState(true);
-	const { showAlert } = useAlert();
-	const [error, setError] = useState(null);
-	const { showLoading, hideLoading } = useLoading();
-	const scanningActive = useRef(false);
-	const lastScanTimeRef = useRef(Date.now());
-	const animationRef = useRef(null);
-	const isFocused = useIsFocused();
-	const CurrentUserID = useRef(studentId);
+	const { user } = useAuth();
+	const [wall, setWall] = useState([]);
+	const [page, setPage] = useState(1);
+	const [hasMore, setHasMore] = useState(true);
+	const [loading, setLoading] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
+	const [searchQuery, setSearchQuery] = useState('');
+	const heartScales = useRef({}).current;
 
 
-	const fetchStudentData = async () => {
-		showLoading("Please wait...");
+	const fetch = async (pageNumber = 1, filters = {}) => {
 		try {
-			let studentData;
-			if (network?.isOnline) {
-				const response = await getStudentDetails(studentId);
-				studentData = response;
-				setStudent(studentData);
-			} else {
-				studentData = await getOfflineStudentById(studentId);
-				setStudent(studentData);
+			if (loading) return;
+			setLoading(true);
 
-				if (!studentData) {
-				}
+			const filter = {
+				page: pageNumber,
+				...(filters.search !== undefined ? { search: filters.search } : searchQuery ? { search: searchQuery } : {}),
+				ClassID: ClassID,
+			};
+			let List = [];
+			let totalPages = 1;
+
+			if (network?.isOnline) {
+				const res = await getWall(filter);
+				List = res.data ?? [];
+				setWall(List)
+				totalPages = res.data?.last_page ?? 1;
+
+				await saveStudentsOffline(List);
+			} else {
+				List = await getOfflineStudents(filter);
 			}
-		} catch (err) {
-			handleApiError(err, "Failed to load student details.");
+
+			setWall(prev =>
+				pageNumber === 1 ? List : [...prev, ...List]
+			);
+			setPage(pageNumber);
+			setHasMore(pageNumber < totalPages);
+
+		} catch (error) {
+			handleApiError(error, "Failed to load students");
 		} finally {
 			setLoading(false);
-			hideLoading();
 		}
 	};
 
 	useEffect(() => {
-		fetchStudentData();
-	}, [studentId]);
-
+		fetch(1);
+	}, []);
 
 	useFocusEffect(
 		useCallback(() => {
-			fetchStudentData();
-			scanningActive.current = false;
-		}, [studentId])
+			fetch(1);
+		}, [])
 	);
 
+	const handleRefresh = async () => {
+		setRefreshing(true);
+		await fetch(1);
+		setRefreshing(false);
+	};
 
-	const startScanLoop = async () => {
-		if (scanningActive.current) return;
-		scanningActive.current = true;
 
+	const getHeartScale = (postId) => {
+		if (!heartScales[postId]) {
+			heartScales[postId] = new Animated.Value(1);
+		}
+		return heartScales[postId];
+	};
+
+	const bounceHeart = (postId) => {
+		const scale = getHeartScale(postId);
+		Animated.sequence([
+			Animated.timing(scale, {
+				toValue: 1.8,
+				duration: 100,
+				easing: Easing.out(Easing.ease),
+				useNativeDriver: true,
+			}),
+			Animated.timing(scale, {
+				toValue: 1,
+				duration: 100,
+				easing: Easing.out(Easing.ease),
+				useNativeDriver: true,
+			}),
+		]).start();
+	}
+
+	const handleReaction = async (postId) => {
 		try {
-			await fetchStudentData();
+			bounceHeart(postId);
+			setWall(prevWall =>
+				prevWall.map(item => {
+					if (item.id === postId) {
+						const isReacted = item.is_react_by_you;
+						return {
+							...item,
+							is_react_by_you: !isReacted,
+							reactions_count: isReacted
+								? Math.max((item.reactions_count || 1) - 1, 0)
+								: (item.reactions_count || 0) + 1,
+						};
+					}
+					return item;
+				})
+			);
 
-			const onTagDiscovered = async tag => {
-				const now = Date.now();
-				const elapsed = now - lastScanTimeRef.current;
-				if (elapsed < 1000) return;
-
-				lastScanTimeRef.current = now;
-				const tagId = tag?.id;
-
-				if (tagId) {
-					await NfcManager.unregisterTagEvent();
-					NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
-					scanningActive.current = false;
-
-					navigate('NFCRegister', {
-						params: {
-							student: CurrentUserID.current,
-							tagId: tagId
-						},
-					});
-
-					animationRef.current?.play?.();
-				}
-			};
-
-			NfcManager.setEventListener(NfcEvents.DiscoverTag, onTagDiscovered);
-
-			await NfcManager.start();
-			await NfcManager.registerTagEvent();
-		} catch (err) {
-			Alert.alert('Scan Error', err.message || 'Unexpected error');
-			handleApiError(err, "sd");
-			scanningActive.current = false;
+			await reactPost(postId);
+		} catch (e) {
+			setWall(prevWall =>
+				prevWall.map(item => {
+					if (item.id === postId) {
+						const isReacted = item.is_react_by_you;
+						return {
+							...item,
+							is_react_by_you: !isReacted,
+							reactions_count: isReacted
+								? Math.max((item.reactions_count || 1) - 1, 0)
+								: (item.reactions_count || 0) + 1,
+						};
+					}
+					return item;
+				})
+			);
 		}
 	};
 
-
-	const handleConnectNFC = async () => {
-		const supported = await NfcManager.isSupported();
-		if (!supported) {
-			showAlert('warning', 'NFC Not Supported', 'This device does not support NFC')
-			return;
-		}
-
-		await startScanLoop();
-		ToastAndroid.show('Please tap NFC card near the device.', ToastAndroid.LONG);
-	};
-
-	if (loading) {
-		return (
-			<View style={styles.centered}>
-				<ActivityIndicator size="large" color="#000" />
-			</View>
-		);
+	const handleComment = async (postId) => {
+		navigation.navigate('WallComments', {
+			postId
+		});
 	}
 
-	if (error || !student) {
-		return (
-			<View style={styles.centered}>
-				<Text>{error || 'No student data available.'}</Text>
-			</View>
-		);
-	}
-
-	const handleResetPass = () => {
-		doResetPassword();
-	};
-
-	const doResetPassword = () => {
-		Alert.alert(
-			'Reset Password',
-			'Are you sure you want to reset the password?',
-			[
-				{
-					text: 'Cancel',
-					style: 'cancel',
-				},
-				{
-					text: 'Yes, Reset',
-					style: 'destructive',
-					onPress: async () => {
-						showLoading('Resetting Password...')
-						try {
-							const response = await resetUserPassword(
-								studentId,
-								student?.student_user?.id || 0,
-								'students'
-							);
-
-							showAlert(
-								'success',
-								'Password Reset',
-								`${response.username}\n${response.password}`
-							);
-							navigation.goBack();
-						} catch (error) {
-							console.error('Password reset error:', error);
-							handleApiError(error, 'ds');
-						} finally {
-							hideLoading();
-						}
-					},
-				},
-			]
-		);
-	};
 
 	return (
 		<>
-			<BackHeader />
-			<BackgroundWrapper>
-				<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 40}]}>
-					<ScrollView contentContainerStyle={styles.container}>
-						<View style={[globalStyles.cardRow, {marginBottom: 10}]}>
-							{((hasRole('admin') || can('resetpassword')) && network?.isOnline ) && (
-								<CButton
-									title={'Reset Password'}
-									type={'success_soft'}
-									icon={'key'}
-									textStyle={{
-										color: theme.colors.light.primary
-									}}
-									onPress={handleResetPass} />
-							)}
+			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 0}]}>
+				<View style={{ flex: 1, padding: 10 }}>
+					<View style={[styles.card, globalStyles.shadowBtn, { padding: 16}]}>
+						<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+							<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+								<Image
+									source={
+										user?.profile_pic
+											? { uri: `${FILE_BASE_URL}/${user?.profile_pic}` }
+											: user?.avatar
+												? { uri: user?.avatar }
+												: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+														user?.name || 'User'
+													)}&background=random`
+												}
+									}
+									style={styles.avatar}
+								/>
+								<View>
+									<CText fontSize={16} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ user?.name }</CText>
+									<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -5 }}>{ user?.email }</CText>
+								</View>
+							</View>
+							<CButton
+								icon={'add'}
+								type="success"
+								onPress={() => navigation.navigate('PostWall')}
+								style={[ globalStyles.shadowBtn, { marginTop: 10, borderRadius: 20 }]}
+							/>
 						</View>
+					</View>
+					<ScrollView contentContainerStyle={{ paddingBottom: 100 }} refreshControl={
+						<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+					}>
+						{wall.map((item, index) => (
+							<View key={index} style={styles.card}>
+								<View style={{ padding: 16 }}>
+									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+											<Image
+												source={
+													item.created_by?.profile_pic
+														? { uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}` }
+														: item.created_by?.avatar
+															? { uri: item.created_by?.avatar }
+															: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+																	item.created_by?.name || 'User'
+																)}&background=random`
+															}
+												}
+												style={styles.avatar}
+											/>
+											<View>
+												<CText fontSize={16} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ item.created_by?.name }</CText>
+												<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -5 }}>{ formatDate(item?.created_at, 'relative') }</CText>
+											</View>
+										</View>
+									</View>
+									<View style={{ marginTop: 10 }}>
+										<CText fontSize={15} style={{ color: '#000', marginLeft: 10 }}>{ item.body }</CText>
+									</View>
+								</View>
+								<View style={{ borderTopWidth: 1, borderColor: '#E2F8EC', marginTop: 10, padding: 16 }}>
+									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start'}}>
+											<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
+												<TouchableOpacity onPress={() => handleReaction(item.id)}>
+													<Icon
+														name={item.is_react_by_you ? 'heart' : 'heart-outline'}
+														size={20}
+														color={item.is_react_by_you ? theme.colors.light.primary : '#ccc'}
+													/>
+												</TouchableOpacity>
+											</Animated.View>
+											<CText fontSize={12} style={{ color: '#000', marginLeft: 5 }}>{ item.reactions_count || 0 }</CText>
+										</View>
+										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
+											<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
+												<TouchableOpacity onPress={() => handleComment(item.id)}>
+													<Icon
+														name={'chatbubble-outline'}
+														size={20}
+														color={'#ccc'}
+													/>
+												</TouchableOpacity>
+											</Animated.View>
+											<CText fontSize={12} style={{ color: '#000', marginLeft: 5 }}>{ item.comments_count || 0 }</CText>
+										</View>
+									</View>
+								</View>
+							</View>
+						))}
 					</ScrollView>
-				</SafeAreaView>
-			</BackgroundWrapper>
+				</View>
+			</SafeAreaView>
 		</>
 	);
 };
 
 const styles = StyleSheet.create({
-	container: {
-		padding: 20,
-		alignItems: 'center',
-	},
-	centered: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
+	card: {
+		backgroundColor: theme.colors.light.card,
+		// padding: 16,
+		borderRadius: 8,
+		marginBottom: 10,
 	},
 	avatar: {
-		width: 150,
-		height: 150,
-		borderWidth: 1,
-		borderRadius: 100,
-		backgroundColor: theme.colors.light.primary + '55',
-		marginBottom: 20,
+		width: 35,
+		height: 35,
+		borderRadius: 60,
+		// borderWidth: 2,
+		borderColor: theme.colors.light.primary,
 	},
-	infoBox: {
-		width: '100%',
-		backgroundColor: theme.colors.light.primary + '11',
-		padding: 16,
-		borderRadius: 10,
+	floatBtn: {
+		position: 'absolute',
+		right: 20,
+		bottom: 20,
 	},
-	label: {
-		fontSize: 16,
-		marginBottom: 8,
-	},
+	fab: {
+		backgroundColor: theme.colors.light.primary,
+		width: 60,
+		height: 60,
+		borderRadius: 30,
+		alignItems: 'center',
+		justifyContent: 'center',
+		elevation: 5,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 3,
+	}
 });
 
-export default ClassDetailsScreen;
+export default WallScreen;
