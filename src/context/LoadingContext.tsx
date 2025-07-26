@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import Loading from '../components/Loading.tsx';
+import {Alert, ToastAndroid} from "react-native";
 
 interface LoadingContextType {
     showLoading: (text?: string) => void;
@@ -24,7 +25,16 @@ export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children })
     return (
         <LoadingContext.Provider value={{ showLoading, hideLoading }}>
             {children}
-            <Loading loading={loading} text={loadingText} />
+            {/*<Loading loading={loading} text={loadingText} />*/}
+            <Loading
+                loading={loading}
+                text={loadingText}
+                onTimeout={(msg) => {
+                    ToastAndroid.show(msg, ToastAndroid.SHORT);
+                    setLoading(false);
+                }}
+            />
+
         </LoadingContext.Provider>
     );
 };
