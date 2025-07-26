@@ -229,8 +229,8 @@ const WallScreen = ({ navigation, route }) => {
 								</View>
 								<View style={{ borderTopWidth: 1, borderColor: '#E2F8EC', marginTop: 10, padding: 16 }}>
 									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+										<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
 										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start'}}>
-											<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
 												<TouchableOpacity onPress={() => handleReaction(item.id)}>
 													<Icon
 														name={item.is_react_by_you ? 'heart' : 'heart-outline'}
@@ -238,11 +238,11 @@ const WallScreen = ({ navigation, route }) => {
 														color={item.is_react_by_you ? theme.colors.light.primary : '#ccc'}
 													/>
 												</TouchableOpacity>
-											</Animated.View>
-											<CText fontSize={12} style={{ color: '#000', marginLeft: 5 }}>{ item.reactions_count || 0 }</CText>
+											<CText fontSize={15} style={{ color: '#000', marginLeft: 5, fontWeight: 500 }}>{ item.reactions_count || 0 }</CText>
 										</View>
+										</Animated.View>
+										<Animated.View>
 										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
-											<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
 												<TouchableOpacity onPress={() => handleComment(item.id)}>
 													<Icon
 														name={'chatbubble-outline'}
@@ -250,9 +250,9 @@ const WallScreen = ({ navigation, route }) => {
 														color={'#ccc'}
 													/>
 												</TouchableOpacity>
-											</Animated.View>
-											<CText fontSize={12} style={{ color: '#000', marginLeft: 5 }}>{ item.comments_count || 0 }</CText>
+											<CText fontSize={15} style={{ color: '#000', marginLeft: 5, fontWeight: 500 }}>{ item.comments.length }</CText>
 										</View>
+										</Animated.View>
 									</View>
 								</View>
 							</View>

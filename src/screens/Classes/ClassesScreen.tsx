@@ -171,8 +171,8 @@ const ClassesScreen = ({ navigation }) => {
 								<TouchableOpacity activeOpacity={0.5}
 												  onPress={() => handleViewClass(item.ClassStudentID, item.class_info?.ClassID, item.class_info?.CourseName)}
 									style={{
-										padding: 12,
-										backgroundColor: theme.colors.light.muted_soft + '55',
+										padding: 16,
+										backgroundColor: theme.colors.light.primary + '12',
 										borderRadius: 8,
 										marginBottom: 10,
 									}}
@@ -182,7 +182,12 @@ const ClassesScreen = ({ navigation }) => {
 											{item.class_info?.CourseCode} - {item.class_info?.CourseName}
 										</CText>
 									</View>
-									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+									<View style={{
+										flexDirection: 'row',
+										alignItems: 'center',
+										justifyContent: 'space-between',
+										marginTop: 4,
+									}}>
 										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
 											<Image
 												source={
@@ -196,6 +201,8 @@ const ClassesScreen = ({ navigation }) => {
 													borderRadius: 30,
 													marginRight: 6,
 													backgroundColor: '#ccc',
+													borderWidth: 1,
+													borderColor: theme.colors.light.primary,
 												}}
 											/>
 											<CText fontStyle={'SB'} fontSize={12} style={{ textTransform: 'uppercase' }}>
