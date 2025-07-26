@@ -9,7 +9,6 @@ import {
 	RefreshControl,
 	SafeAreaView, Image, ScrollView, StyleSheet
 } from 'react-native';
-import { getStudents } from '../../api/studentsApi.ts';
 import { handleApiError } from '../../utils/errorHandler.ts';
 import CustomHeader from '../../components/CustomHeader.tsx';
 import { globalStyles } from '../../theme/styles.ts';
@@ -22,8 +21,9 @@ import NetInfo from '@react-native-community/netinfo';
 import { getOfflineStudents, saveStudentsOffline } from '../../utils/sqlite/students';
 import { NetworkContext } from '../../context/NetworkContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
+import { getMyClasses } from '../../api/modules/classesApi.ts';
 
-const StudentScreen = ({ navigation }) => {
+const ClassesScreen = ({ navigation }) => {
 	const network = useContext(NetworkContext);
 	const [students, setStudents] = useState([]);
 	const [page, setPage] = useState(1);
@@ -33,7 +33,7 @@ const StudentScreen = ({ navigation }) => {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [yearLevel, setYearLevel] = useState('');
 
-	const fetchStudents = async (pageNumber = 1, filters = {}) => {
+	const fetch = async (pageNumber = 1, filters = {}) => {
 		try {
 			if (loading) return;
 			setLoading(true);
@@ -41,15 +41,14 @@ const StudentScreen = ({ navigation }) => {
 			const filter = {
 				page: pageNumber,
 				...(filters.search !== undefined ? { search: filters.search } : searchQuery ? { search: searchQuery } : {}),
-				...(filters.YearLevel !== undefined ? { YearLevel: filters.YearLevel } : yearLevel ? { YearLevel: yearLevel } : {}),
 			};
 			let studentsList = [];
 			let totalPages = 1;
 
 			if (network?.isOnline) {
-				const res = await getStudents(filter);
-				console.log(res)
-				studentsList = res.data?.data ?? [];
+				const res = await getMyClasses(filter);
+				console.log(res.data)
+				studentsList = res.data ?? [];
 				totalPages = res.data?.last_page ?? 1;
 
 				await saveStudentsOffline(studentsList);
@@ -74,34 +73,34 @@ const StudentScreen = ({ navigation }) => {
 
 
 	useEffect(() => {
-		fetchStudents(1);
+		fetch(1);
 	}, []);
 
 	useFocusEffect(
 		useCallback(() => {
-			fetchStudents(1);
+			fetch(1);
 		}, [])
 	);
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
-		await fetchStudents(1);
+		await fetch(1);
 		setRefreshing(false);
 	};
 
 	const handleSearch = (text) => {
 		setSearchQuery(text);
-		fetchStudents(1, { search: text });
+		fetch(1, { search: text });
 	};
 
 	const handleYearFilter = (level) => {
 		setYearLevel(level);
-		fetchStudents(1, { YearLevel: level });
+		fetch(1, { YearLevel: level });
 	};
 
 	const handleLoadMore = () => {
 		if (hasMore && !loading) {
-			fetchStudents(page + 1);
+			fetch(page + 1);
 		}
 	};
 
@@ -112,7 +111,7 @@ const StudentScreen = ({ navigation }) => {
 		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 
 		debounceTimeout.current = setTimeout(() => {
-			fetchStudents(1, { search: text });
+			fetch(1, { search: text });
 		}, 500);
 	};
 
@@ -120,12 +119,8 @@ const StudentScreen = ({ navigation }) => {
 		return loading ? <ActivityIndicator size="large" color={theme.colors.light.primary} /> : null;
 	};
 
-	const handleViewStudent = (student) => {
-		navigation.navigate('StudentDetails', { student });
-	};
-
-	const handleAddStudent = () => {
-		navigation.navigate('AddStudent');
+	const handleViewClass = (ClassStudentID, ClassID, Title) => {
+		navigation.navigate('ClassDetails', { ClassStudentID, ClassID, Title });
 	};
 
 	return (
@@ -136,11 +131,11 @@ const StudentScreen = ({ navigation }) => {
 					<View style={{ flex: 1, paddingHorizontal: 16 }}>
 						<View style={{ position: 'relative', marginBottom: 10}}>
 							<TextInput
-								placeholder="Search by name"
+								placeholder="Search ..."
 								placeholderTextColor="#000"
 								value={searchQuery}
 								onChangeText={handleSearchTextChange}
-								onSubmitEditing={() => fetchStudents(1)}
+								onSubmitEditing={() => fetch(1)}
 								style={{
 									borderWidth: 1,
 									borderColor: '#ccc',
@@ -161,7 +156,7 @@ const StudentScreen = ({ navigation }) => {
 									}}
 									onPress={() => {
 										handleSearch('');
-										fetchStudents(1);
+										fetch(1);
 									}}
 								>
 									<Text style={{ fontSize: 16, color: '#888' }}>✕</Text>
@@ -169,76 +164,44 @@ const StudentScreen = ({ navigation }) => {
 							)}
 						</View>
 
-						<ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-							<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-								{['', 6,7,8,9,10,11,12].map((level, idx) => (
-									<TouchableOpacity
-										key={idx}
-										onPress={() => handleYearFilter(level)}
-										style={{
-											backgroundColor: yearLevel === level ? theme.colors.light.primary : '#ccc',
-											paddingVertical: 5,
-											paddingHorizontal: 20,
-											borderRadius: 7,
-											marginRight: 8,
-											alignItems: 'center',
-											justifyContent: 'center',
-											minHeight: 35,
-											maxHeight: 35
-										}}
-									>
-										<CText style={{ color: '#fff' }} numberOfLines={1} fontSize={16}>
-											{level === '' ? 'All' : `Grade ${level}`}
-										</CText>
-									</TouchableOpacity>
-
-								))}
-							</View>
-						</ScrollView>
-
-
 						<FlatList
 							data={students}
-							keyExtractor={(item) => item.id.toString()}
+							keyExtractor={(item) => item.ClassStudentID.toString()}
 							renderItem={({ item }) => (
 								<TouchableOpacity activeOpacity={0.5}
-												  onPress={() => handleViewStudent(item.id)}
+												  onPress={() => handleViewClass(item.ClassStudentID, item.class_info?.ClassID, item.class_info?.CourseName)}
 									style={{
-										flexDirection: 'row',
-										alignItems: 'center',
 										padding: 12,
-										backgroundColor: '#f5f5f5',
+										backgroundColor: theme.colors.light.muted_soft + '55',
 										borderRadius: 8,
 										marginBottom: 10,
 									}}
 								>
-									<Image
-										source={
-											item.filepath
-												? { uri: FILE_BASE_URL + item.filepath }
-												: require('../../../assets/img/ic_launcher.png')
-										}
-										style={{
-											width: 60,
-											height: 60,
-											borderRadius: 30,
-											marginRight: 12,
-											backgroundColor: '#ccc',
-										}}
-									/>
 									<View>
-										<CText fontStyle={'SB'} fontSize={14} style={{ textTransform: 'uppercase' }}>
-											{item.FirstName} {item.MiddleName ? item.MiddleName.charAt(0) + '.' : ''} {item.LastName}
+										<CText fontStyle={'SB'} fontSize={14} style={{ textTransform: 'uppercase' }} numberOfLines={2}>
+											{item.class_info?.CourseCode} - {item.class_info?.CourseName}
 										</CText>
-
-										<Text>LRN: {item.LRN} | Grade: {item.YearLevel}</Text>
-										<Text>Section: {item.Section} | {item.id}</Text>
-										{item?.guardian && (
-											<Text>Guardian: {item?.guardian?.FirstName} {item?.guardian?.LastName}</Text>
-										)}
-										{item?.student_user?.nfc_code  && (
-											<Text>NFC: ✅</Text>
-										)}
+									</View>
+									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+											<Image
+												source={
+													item.class_info?.teacher?.avatar
+														? { uri: `${FILE_BASE_URL}/${item.class_info?.teacher?.avatar}` }
+														: require('../../../assets/img/ic_launcher.png')
+												}
+												style={{
+													width: 20,
+													height: 20,
+													borderRadius: 30,
+													marginRight: 6,
+													backgroundColor: '#ccc',
+												}}
+											/>
+											<CText fontStyle={'SB'} fontSize={12} style={{ textTransform: 'uppercase' }}>
+												{item.class_info?.teacher?.name}
+											</CText>
+										</View>
 									</View>
 								</TouchableOpacity>
 							)}
@@ -254,14 +217,14 @@ const StudentScreen = ({ navigation }) => {
 								)
 							}
 						/>
-						<View style={styles.floatBtn}>
-							<TouchableOpacity
-								activeOpacity={0.8}
-								style={styles.fab}
-								onPress={handleAddStudent}>
-								<Icon name={'add'} size={25} color={'#fff'} />
-							</TouchableOpacity>
-						</View>
+						{/*<View style={styles.floatBtn}>*/}
+						{/*	<TouchableOpacity*/}
+						{/*		activeOpacity={0.8}*/}
+						{/*		style={styles.fab}*/}
+						{/*		onPress={handleAddStudent}>*/}
+						{/*		<Icon name={'add'} size={25} color={'#fff'} />*/}
+						{/*	</TouchableOpacity>*/}
+						{/*</View>*/}
 					</View>
 				</SafeAreaView>
 			</BackgroundWrapper>
@@ -276,7 +239,7 @@ const styles = StyleSheet.create({
 		bottom: 20,
 	},
 	fab: {
-		backgroundColor: theme.colors.light.secondary,
+		backgroundColor: theme.colors.light.primary,
 		width: 60,
 		height: 60,
 		borderRadius: 30,
@@ -290,4 +253,4 @@ const styles = StyleSheet.create({
 	}
 });
 
-export default StudentScreen;
+export default ClassesScreen;
