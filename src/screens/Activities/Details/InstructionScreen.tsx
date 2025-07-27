@@ -28,151 +28,140 @@ import {getStudenActivityDetails} from "../../../api/modules/activitiesApi.ts";
 import {formatNumber} from "../../../utils/format.ts";
 import LinearGradient from "react-native-linear-gradient";
 import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
+import BackHeader from "../../../components/BackHeader.tsx";
+import {getOfflineActivities, getOfflineActivityById} from "../../../utils/sqlite/offlineActivityService.ts";
 
 const InstructionScreen = ({ navigation, route }) => {
 	const StudentActivityID = route.params.StudentActivityID;
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const [activity, setActivity] = useState([]);
-	const [hasMore, setHasMore] = useState(true);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 	const { showLoading, hideLoading } = useLoading();
 
-	const fetch = async (pageNumber = 1, filters = {}) => {
+	const fetch = async () => {
 		try {
 			if (loading) return;
 			setLoading(true);
-			showLoading("Loading...")
+			showLoading("Loading...");
 
 			if (network?.isOnline) {
 				const res = await getStudenActivityDetails(StudentActivityID);
-				setActivity(res)
+				setActivity(res);
 			} else {
+				const local = await getOfflineActivityById(StudentActivityID);
+				if (local) {
+					setActivity(local);
+					console.log("Loaded from offline:", local);
+				} else {
+					console.warn("No offline data found for StudentActivityID:", StudentActivityID);
+				}
 			}
 		} catch (error) {
 			handleApiError(error, "Failed to load students");
 		} finally {
 			setLoading(false);
-			hideLoading()
+			hideLoading();
 		}
 	};
 
 	useEffect(() => {
-		fetch(1);
+		fetch();
 	}, []);
 
-	useEffect(() => {
-		const unsub = navigation.addListener('focus', () => {
-			navigation.getParent()?.setOptions({ title: 'Instruction' });
-		});
-		return unsub;
-	}, [navigation]);
-
-
-
-
-	useFocusEffect(
-		useCallback(() => {
-			fetch(1);
-		}, [])
-	);
+	useFocusEffect(useCallback(() => { fetch(); }, []));
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
-		await fetch(1);
+		await fetch();
 		setRefreshing(false);
 	};
 
+	const renderShimmer = () => (
+		<>
+			{[1, 2].map((_, index) => (
+				<ShimmerPlaceHolder
+					key={index}
+					loading={true}
+					CText={CText}
+					LinearGradient={LinearGradient}
+					style={{ width: '100%', height: 100, borderRadius: 12, marginVertical: 10 }}
+					shimmerStyle={{ borderRadius: 12 }}
+					autoRun
+				/>
+			))}
+		</>
+	);
+
+	const renderContent = () => (
+		<>
+			<View style={styles.card}>
+				<CText fontSize={14} style={styles.label}>Topic:</CText>
+				<CText fontSize={16} fontStyle="SB" style={styles.title}>
+					{activity?.activity?.topic?.Title}
+				</CText>
+
+				<CText fontSize={14} style={styles.label}>Instruction:</CText>
+				<CText style={styles.text}>{activity?.activity?.Description}</CText>
+
+				{activity?.activity?.DueDate && (
+					<>
+						<CText fontSize={14} style={styles.label}>Due Date:</CText>
+						<CText style={styles.text}>{formatDate(activity?.activity?.DueDate)}</CText>
+					</>
+				)}
+
+				{activity?.activity?.Points > 0 && (
+					<View style={styles.pointsRow}>
+						<CText fontSize={18} fontStyle="SB">{formatNumber(activity?.activity?.Points)}</CText>
+						<CText fontSize={13} style={styles.pointsLabel}>Points</CText>
+					</View>
+				)}
+			</View>
+
+			<View style={styles.card}>
+				<View style={styles.profileRow}>
+					<Image
+						source={
+							activity?.activity?.teacher?.users?.avatar
+								? { uri: activity?.activity?.teacher?.users?.avatar }
+								: {
+									uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+										activity?.activity?.teacher?.users?.name || 'User'
+									)}&background=random`
+								}
+						}
+						style={styles.avatar}
+					/>
+					<View style={styles.profileInfo}>
+						<CText fontSize={14} fontStyle="SB" style={globalStyles.textUppercase}>
+							{(activity?.activity?.teacher?.Title || '') + ' ' + (activity?.activity?.teacher?.users?.name || '')}
+						</CText>
+						<CText fontSize={12} style={{ color: '#555' }}>
+							{activity?.activity?.teacher?.users?.email}
+						</CText>
+					</View>
+				</View>
+			</View>
+		</>
+	);
+
 	return (
 		<>
-			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 0}]}>
-				<View style={{ flex: 1, paddingHorizontal: 10, paddingTop: 10 }}>
-					<ScrollView contentContainerStyle={{ paddingBottom: 100, borderTopLeftRadius: 20, borderTopRightRadius: 20 }} refreshControl={
-						<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-					}>
-						{loading ? (
-							<>
-								<ShimmerPlaceHolder loading={true} CText={CText}
-									LinearGradient={LinearGradient}
-									style={{ width: '100%', height: 100, borderRadius: 10, marginTop: 10 }}
-									shimmerStyle={{ borderRadius: 4 }}
-									autoRun
-								/>
-								<ShimmerPlaceHolder loading={true} CText={CText}
-													LinearGradient={LinearGradient}
-													style={{ width: '100%', height: 100, borderRadius: 10, marginTop: 10 }}
-													shimmerStyle={{ borderRadius: 4 }}
-													autoRun
-								/>
-							))
-							</>
-						) : (
-							<>
-								<View style={[styles.card, { padding: 16}]}>
-									<CText fontSize={14} style={{ color: '#000', marginTop: 6 }}>
-										Topic: { activity?.activity?.topic?.Title }
-									</CText>
-									<CText fontSize={16} fontStyle={'SB'} style={{ color: '#000' }}>{ activity?.activity?.Title }</CText>
-									<CText style={{ color: '#6F6F6F', marginTop: 10 }}>{'Instruction:'}</CText>
-									<CText fontSize={14} style={{ color: '#000', }}>{ activity?.activity?.Description }</CText>
-
-									{activity?.activity?.DueDate && (
-										<>
-											<CText style={{ color: '#6F6F6F', marginTop: 10 }}>{'Due Date:'}</CText>
-											<CText fontSize={14} style={{ color: '#000'}}>
-												{ formatDate(activity?.activity?.DueDate) }
-											</CText>
-										</>
-									)}
-									<View style={{ borderTopWidth: 1, borderColor: '#ccc', marginTop: 10 }}>
-										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-											{activity?.activity?.Points > 0 && (
-												<View>
-													<CText fontSize={16} fontStyle={'SB'} style={{  marginTop: 6 }}>
-														{formatNumber(activity?.activity?.Points)}
-													</CText>
-													<CText fontSize={14} style={{ color: '#999', marginTop: 0 }}>
-														Points
-													</CText>
-												</View>
-											)}
-										</View>
-									</View>
-								</View>
-								<View style={[styles.card,{ padding: 16}]}>
-									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-											<Image
-												source={
-													activity?.activity?.teacher?.users?.avatar
-														? { uri: activity?.activity?.teacher?.users?.avatar }
-														: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-																activity?.activity?.teacher?.users?.name || 'User'
-															)}&background=random`
-														}
-												}
-												style={styles.avatar}
-											/>
-											<View>
-												<CText
-													fontSize={14}
-													fontStyle={'SB'}
-													style={[globalStyles.textUppercase, { color: '#000', marginLeft: 10 ,width: '100%' }]}
-												>
-													{(activity?.activity?.teacher?.Title || '') + ' ' + (activity?.activity?.teacher?.users?.name || '')}
-												</CText>
-
-												<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -0 }}>{ activity?.activity?.teacher?.users?.email}</CText>
-											</View>
-										</View>
-									</View>
-								</View>
-							</>
-						)}
-					</ScrollView>
-				</View>
-			</SafeAreaView>
+			<BackHeader title="Instruction" />
+			<BackgroundWrapper>
+				<SafeAreaView style={globalStyles.safeArea}>
+					<View style={{ flex: 1, padding: 12 }}>
+						<ScrollView
+							contentContainerStyle={{ paddingBottom: 100 }}
+							refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+						>
+							{loading ? renderShimmer() : renderContent()}
+						</ScrollView>
+					</View>
+				</SafeAreaView>
+			</BackgroundWrapper>
 		</>
 	);
 };
@@ -180,35 +169,53 @@ const InstructionScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
 	card: {
 		backgroundColor: theme.colors.light.card,
-		// padding: 16,
-		borderRadius: 8,
-		marginBottom: 10,
+		borderRadius: 12,
+		padding: 16,
+		marginBottom: 12,
+		elevation: 2,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.1,
+		shadowRadius: 2,
+	},
+	title: {
+		color: '#000',
+		marginBottom: 8,
+	},
+	label: {
+		color: '#6F6F6F',
+		marginTop: 10,
+		marginBottom: 4,
+	},
+	text: {
+		color: '#000',
+		fontSize: 14,
+		lineHeight: 20,
+	},
+	pointsRow: {
+		marginTop: 14,
+		borderTopWidth: 1,
+		borderColor: '#eee',
+		paddingTop: 10,
+	},
+	pointsLabel: {
+		color: '#888',
+		marginTop: 2,
+	},
+	profileRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	profileInfo: {
+		marginLeft: 10,
+		flex: 1,
 	},
 	avatar: {
-		width: 35,
-		height: 35,
-		borderRadius: 60,
-		// borderWidth: 2,
-		borderColor: theme.colors.light.primary,
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		backgroundColor: '#ccc',
 	},
-	floatBtn: {
-		position: 'absolute',
-		right: 20,
-		bottom: 20,
-	},
-	fab: {
-		backgroundColor: theme.colors.light.primary,
-		width: 60,
-		height: 60,
-		borderRadius: 30,
-		alignItems: 'center',
-		justifyContent: 'center',
-		elevation: 5,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.3,
-		shadowRadius: 3,
-	}
 });
 
 export default InstructionScreen;

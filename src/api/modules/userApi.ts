@@ -52,8 +52,8 @@ export const userFavorites = async (id: number) => {
     return response.data;
 };
 
-export const userAccessUpdate = async() => {
-	const response = await api.get('user/access');
+export const userAccessUpdate = async(id) => {
+	const response = await api.get('user/access/' + id);
 	return response.data;
 };
 

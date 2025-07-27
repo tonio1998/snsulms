@@ -1,6 +1,8 @@
 import React, { createContext, useEffect, useState, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { userAccessUpdate } from '../api/modules/userApi.ts';
+import {handleApiError} from "../utils/errorHandler.ts";
+import {useAuth} from "./AuthContext.tsx";
 
 type AccessContextType = {
     roles: string[];
@@ -14,6 +16,7 @@ const AccessContext = createContext<AccessContextType | undefined>(undefined);
 
 export const AccessProvider = ({ children }: { children: React.ReactNode }) => {
     const [roles, setRoles] = useState<string[]>([]);
+    const { user } = useAuth();
     const [permissions, setPermissions] = useState<string[]>([]);
 
     const loadFromStorage = async () => {
@@ -27,8 +30,7 @@ export const AccessProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         const fetchAccess = async () => {
             try {
-                const token = await AsyncStorage.getItem('token');
-                const res = await userAccessUpdate();
+                const res = await userAccessUpdate(user?.id);
                 const data = res;
                 setRoles([...data.roles || []]);
                 setPermissions([...data.permissions || []]);
@@ -37,6 +39,7 @@ export const AccessProvider = ({ children }: { children: React.ReactNode }) => {
                 await AsyncStorage.setItem('permissions', JSON.stringify(data.permissions));
             } catch (err) {
                 console.warn('Access sync failed:', err);
+                handleApiError(err, "df")
             }
         };
 

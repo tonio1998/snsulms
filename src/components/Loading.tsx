@@ -4,32 +4,47 @@ import {
     StyleSheet,
     Animated,
     Easing,
+    Text, ToastAndroid,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { theme } from '../theme';
 
 interface LoadingProps {
     loading: boolean;
-    timeout?: number; // default: 6000ms
+    timeout?: number; // Optional timeout in ms, default: 6000
     onTimeout?: (errorMessage: string) => void;
+    bottom?: number; // Optional bottom offset, default: 65
 }
 
-const Loading: React.FC<LoadingProps> = ({ loading, timeout = 6000, onTimeout }) => {
+const Loading: React.FC<LoadingProps> = ({
+                                             loading,
+                                             timeout = 6000,
+                                             onTimeout,
+                                             bottom = 65,
+                                         }) => {
     const [shouldShow, setShouldShow] = useState(false);
-    const widthAnim = useRef(new Animated.Value(0)).current;
+    const translateX = useRef(new Animated.Value(-100)).current;
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+
+    const startIndeterminateAnimation = () => {
+        translateX.setValue(-100);
+        animationRef.current = Animated.loop(
+            Animated.timing(translateX, {
+                toValue: 500,
+                duration: 700,
+                easing: Easing.linear,
+                useNativeDriver: true,
+            })
+        );
+        animationRef.current.start();
+    };
 
     useEffect(() => {
         if (loading) {
+            // ToastAndroid.show('Opening file...' + bottom, ToastAndroid.SHORT);
             setShouldShow(true);
-            widthAnim.setValue(0);
-
-            Animated.timing(widthAnim, {
-                toValue: 100,
-                duration: timeout,
-                easing: Easing.linear,
-                useNativeDriver: false,
-            }).start();
+            startIndeterminateAnimation();
 
             timeoutRef.current = setTimeout(() => {
                 NetInfo.fetch().then(state => {
@@ -47,27 +62,28 @@ const Loading: React.FC<LoadingProps> = ({ loading, timeout = 6000, onTimeout })
                 clearTimeout(timeoutRef.current);
                 timeoutRef.current = null;
             }
-            widthAnim.setValue(0); // Reset animation if done early
+            if (animationRef.current) {
+                animationRef.current.stop();
+            }
         }
 
         return () => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            if (animationRef.current) animationRef.current.stop();
         };
     }, [loading]);
 
     if (!shouldShow) return null;
 
-    const progressBarWidth = widthAnim.interpolate({
-        inputRange: [0, 100],
-        outputRange: ['0%', '100%'],
-    });
-
     return (
-        <View style={styles.progressContainer}>
+        <View style={[styles.progressContainer]}>
             <Animated.View
                 style={[
-                    styles.progressBar,
-                    { width: progressBarWidth, backgroundColor: theme.colors.light.primary },
+                    styles.indicator,
+                    {
+                        transform: [{ translateX }],
+                        backgroundColor: theme.colors.light.primary,
+                    },
                 ]}
             />
         </View>
@@ -79,13 +95,16 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 0,
         right: 0,
-        height: 4,
         bottom: 65,
+        height: 4,
         backgroundColor: '#e0e0e0',
+        overflow: 'hidden',
         zIndex: 9999,
     },
-    progressBar: {
+    indicator: {
+        width: 100,
         height: '100%',
+        borderRadius: 2,
     },
 });
 

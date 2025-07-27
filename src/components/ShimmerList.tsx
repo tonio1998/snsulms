@@ -37,7 +37,7 @@ export function ShimmerList<T>({
                                    ListFooterComponent,
                                    ListEmptyComponent,
                                    containerStyle,
-                                   shimmerCount = 6,
+                                   shimmerCount = 2,
                                }: ShimmerListProps<T>) {
     const shimmerItems = Array.from({ length: shimmerCount });
 
@@ -70,22 +70,24 @@ export function ShimmerList<T>({
     );
 
     return (
-        <FlatList
-            data={loading ? shimmerItems : data}
-            keyExtractor={(item, index) =>
-                loading ? `shimmer-${index}` : keyExtractor(item as T, index)
-            }
-            renderItem={loading ? renderShimmer : renderItem}
-            refreshControl={
-                !loading && onRefresh ? (
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                ) : undefined
-            }
-            onEndReached={!loading ? onEndReached : undefined}
-            onEndReachedThreshold={0.3}
-            ListFooterComponent={!loading ? ListFooterComponent : null}
-            ListEmptyComponent={!loading ? ListEmptyComponent : null}
-            contentContainerStyle={containerStyle}
-        />
+        <>
+            <FlatList
+                data={loading ? shimmerItems : data}
+                keyExtractor={(item, index) =>
+                    loading ? `shimmer-${index}` : keyExtractor(item as T, index)
+                }
+                renderItem={loading ? renderShimmer : renderItem}
+                refreshControl={
+                    !loading && onRefresh ? (
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    ) : undefined
+                }
+                onEndReached={!loading ? onEndReached : undefined}
+                onEndReachedThreshold={0.3}
+                ListFooterComponent={!loading ? ListFooterComponent : null}
+                ListEmptyComponent={!loading ? ListEmptyComponent : null}
+                contentContainerStyle={containerStyle}
+            />
+        </>
     );
 }

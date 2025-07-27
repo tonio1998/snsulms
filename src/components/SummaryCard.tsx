@@ -1,16 +1,17 @@
-import { StyleSheet, View } from 'react-native';
-import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
-import LinearGradient from 'react-native-linear-gradient';
+import {View} from "react-native";
+import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
+import LinearGradient from "react-native-linear-gradient";
 
 export const SummaryCard = ({
-                         title,
-                         stats,
-                         loading,
-                         formatNumber = v => v,
-                         CText,
-                         backgroundColor = '#28a74515',
-                                textColor = '#259644'
-                     }) => {
+                                title,
+                                stats,
+                                loading,
+                                formatNumber = v => v,
+                                CText,
+                                backgroundColor = '#28a74515',
+                                textColor = '#259644',
+                                cardStyle = {} // 🔥 dynamic style here
+                            }) => {
     return (
         <View
             style={[
@@ -28,7 +29,8 @@ export const SummaryCard = ({
                     shadowRadius: 6,
                     elevation: 6,
                     marginVertical: 5
-                }
+                },
+                cardStyle // 👈 override or extend
             ]}
         >
             {title && (
@@ -52,7 +54,7 @@ export const SummaryCard = ({
                                 style={{ width: 80, height: 28, borderRadius: 4, marginTop: 4 }}
                                 shimmerStyle={{ borderRadius: 4 }}
                                 autoRun
-                                />
+                            />
                         ) : (
                             <CText fontSize={24} fontStyle="B" style={{ color: textColor }}>
                                 {formatNumber(stat.value)}
@@ -64,13 +66,3 @@ export const SummaryCard = ({
         </View>
     );
 };
-
-
-const styles = StyleSheet.create({
-    card: {
-        position: 'absolute',
-        width: 200,
-        height: 100,
-        backgroundColor: '#ccc'
-    },
-});

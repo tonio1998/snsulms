@@ -1,294 +1,236 @@
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
 	ActivityIndicator,
-	Alert,
-	Image, Keyboard,
-	KeyboardAvoidingView, Platform, RefreshControl,
+	Image,
+	KeyboardAvoidingView,
+	Platform,
 	SafeAreaView,
-	ScrollView,
+	FlatList,
+	RefreshControl,
 	StyleSheet,
 	TextInput,
-	TouchableOpacity, TouchableWithoutFeedback,
+	TouchableOpacity,
 	View
-} from "react-native";
-import {globalStyles} from "../../../theme/styles.ts";
-import {handleApiError} from "../../../utils/errorHandler.ts";
-import {useCallback, useContext, useEffect, useState} from "react";
-import {useAuth} from "../../../context/AuthContext.tsx";
-import {NetworkContext} from "../../../context/NetworkContext.tsx";
-import {CText} from "../../../components/CText.tsx";
-import {theme} from "../../../theme";
-import CButton from "../../../components/CButton.tsx";
-import {getWallComments, postWall, postWallComment} from "../../../api/modules/wallApi.ts";
-import {getMyClasses} from "../../../api/modules/classesApi.ts";
-import {useFocusEffect} from "@react-navigation/native";
-import {formatDate} from "../../../utils/dateFormatter";
-import {FILE_BASE_URL} from "../../../api/api_configuration.ts";
+} from 'react-native';
+import { globalStyles } from '../../../theme/styles';
+import { handleApiError } from '../../../utils/errorHandler';
+import { useAuth } from '../../../context/AuthContext';
+import { NetworkContext } from '../../../context/NetworkContext';
+import { CText } from '../../../components/CText';
+import { theme } from '../../../theme';
+import CButton from '../../../components/CButton';
+import { getWallComments, postWallComment } from '../../../api/modules/wallApi';
+import { useFocusEffect } from '@react-navigation/native';
+import { formatDate } from '../../../utils/dateFormatter';
+import { FILE_BASE_URL } from '../../../api/api_configuration';
 
-const WallCommentsScreen = ({ navigation, route }) => {
+const WallCommentsScreen = ({ route, navigation }) => {
 	const postId = route.params.postId;
-	const network = useContext(NetworkContext);
 	const { user } = useAuth();
+	const network = useContext(NetworkContext);
 
-	const [body, setBody] = useState('');
-	const [remark, setRemark] = useState('post');
-	const [loading, setLoading] = useState(false);
 	const [comments, setComments] = useState([]);
-	const [page, setPage] = useState(1);
-	const [hasMore, setHasMore] = useState(true);
-	const [searchQuery, setSearchQuery] = useState('');
+	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
+	const [body, setBody] = useState('');
 
-	navigation.setOptions({
-		headerTitle: 'Comments',
-		headerTitleStyle: {
-			fontSize: 18,
-			color: '#fff',
-			fontWeight: 'bold',
-		},
-	});
+	useEffect(() => {
+		navigation.setOptions({ title: 'Comments' });
+	}, [navigation]);
 
-	const fetch = async (pageNumber = 1, filters = {}) => {
+	useEffect(() => {
+		navigation.setOptions({ title: 'Comments' });
+	}, [navigation]);
+
+	const fetchComments = async () => {
+		if (loading) return;
 		try {
-			if (loading) return;
 			setLoading(true);
-
-			const filter = {
-				page: pageNumber,
+			const res = await getWallComments({
+				page: 1,
 				commentable_type: 'App\\Models\\LMS\\ClassFeed',
 				commentable_id: postId,
-			};
-			let List = [];
-			let totalPages = 1;
-
-			if (network?.isOnline) {
-				const res = await getWallComments(filter);
-				List = res.data ?? [];
-				console.log(List)
-				totalPages = res.data?.last_page ?? 1;
-
-			} else {
-				console.log("fetch using local:", filter)
-			}
-
-			setComments(prev =>
-				pageNumber === 1 ? List : [...prev, ...List]
-			);
-			setPage(pageNumber);
-			setHasMore(pageNumber < totalPages);
-
-		} catch (error) {
-			console.error("Failed to fetch students:", error);
-			handleApiError(error, "Failed to load students");
+			});
+			setComments(res.data || []);
+		} catch (err) {
+			handleApiError(err, 'Failed to load comments');
 		} finally {
 			setLoading(false);
 		}
 	};
 
-
 	useEffect(() => {
-		fetch(1);
+		const loadComments = async () => {
+			await fetchComments();
+		};
+		loadComments();
 	}, []);
 
-	useFocusEffect(
-		useCallback(() => {
-			fetch(1);
-		}, [])
-	);
+	useFocusEffect(useCallback(() => {
+		fetchComments();
+	}, []));
 
-	const handleRefresh = async () => {
+	const onRefresh = async () => {
 		setRefreshing(true);
-		await fetch(1);
+		await fetchComments();
 		setRefreshing(false);
 	};
 
-	const handlePostComment = async () => {
-		if (!body.trim()) return false;
-
+	const postComment = async () => {
+		if (!body.trim()) return;
 		try {
 			setLoading(true);
-			const payload = { content: body, commentable_type: 'App\\Models\\LMS\\ClassFeed', commentable_id: postId };
-			await postWallComment(payload);
-			fetch(1);
-			setBody('')
-		} catch (e) {
-			handleApiError(e, "Failed to submit post");
+			await postWallComment({
+				content: body,
+				commentable_type: 'App\\Models\\LMS\\ClassFeed',
+				commentable_id: postId
+			});
+			setBody('');
+			await fetchComments();
+		} catch (err) {
+			handleApiError(err, 'Failed to post comment');
 		} finally {
 			setLoading(false);
 		}
 	};
 
+	const renderComment = ({ item }) => (
+		<View style={styles.commentBubble}>
+			<Image
+				source={
+					item.created_by?.profile_pic
+						? { uri: `${FILE_BASE_URL}/${item.created_by.profile_pic}` }
+						: item.created_by?.avatar
+							? { uri: item.created_by.avatar }
+							: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.created_by?.name || 'User')}&background=random` }
+				}
+				style={styles.avatar}
+			/>
+			<View style={styles.textContent}>
+				<View style={styles.headerRow}>
+					<CText fontStyle="SB" fontSize={14}>{item.created_by?.name}</CText>
+					<CText fontSize={12} style={styles.timeText}>{formatDate(item.created_at, 'relative')}</CText>
+				</View>
+				<CText fontSize={14} style={styles.commentText}>{item.content}</CText>
+			</View>
+		</View>
+	);
+
 	return (
-		<>
-		<SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-			<KeyboardAvoidingView
-				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-				style={{ flex: 1 }}
-				keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 90}
-			>
-					<View style={{ flex: 1 }}>
-						<ScrollView
-							contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-							keyboardShouldPersistTaps="handled"
-							refreshControl={
-								<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-							}
-						>
-							{comments && comments.length > 0 ? (
-								comments.map((item, index) => (
-									<View key={index} style={styles.commentForm}>
-										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
-											<Image
-												source={
-													item.created_by?.profile_pic
-														? { uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}` }
-														: item.created_by?.avatar
-															? { uri: item.created_by?.avatar }
-															: {
-																uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-																	item.created_by?.name || 'User'
-																)}&background=random`
-															}
-												}
-												style={styles.avatar}
-											/>
-											<View>
-												<CText fontSize={15} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>
-													{item.created_by?.name}
-												</CText>
-												<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -5 }}>
-													{formatDate(item?.created_at, 'relative')}
-												</CText>
-											</View>
-										</View>
-										<View style={{ marginTop: 10 }}>
-											<CText fontSize={15} style={{ color: '#000', marginLeft: 10 }}>
-												{item.content}
-											</CText>
-										</View>
-									</View>
-								))
-							) : (
-								<View style={{ padding: 20, alignItems: 'center' }}>
-									<CText fontSize={14} style={{ color: '#888' }}>
-										No comments yet.
-									</CText>
-								</View>
-							)}
-
-						</ScrollView>
-
-						<View
-							style={{
-								position: 'absolute',
-								bottom: 0,
-								left: 0,
-								right: 0,
-								padding: 5,
-								backgroundColor: '#fff',
-								margin: 10,
-								borderWidth: 1,
-								borderColor: '#ccc',
-								borderRadius: 20,
-								elevation: 5,
-							}}
-						>
-							<View
-								style={{
-									flexDirection: 'row',
-									alignItems: 'flex-end',
-								}}
-							>
-								<TextInput
-									placeholder="What's on your mind?"
-									placeholderTextColor="#616161"
-									multiline
-									numberOfLines={3}
-									value={body}
-									onChangeText={setBody}
-									style={{
-										borderColor: '#ccc',
-										borderRadius: 8,
-										padding: 10,
-										fontSize: 16,
-										flex: 1,
-										textAlignVertical: 'top',
-										marginRight: 8,
-										// borderWidth: 1,
-										marginBottom: 5,
-									}}
-								/>
-								<View>
-									{loading ? (
-										<View style={{
-											borderRadius: 15,
-											paddingVertical: 10,
-											paddingHorizontal: 16,
-											marginRight: 10,
-										}}>
-											<ActivityIndicator size="small" color={theme.colors.light.primary} />
-										</View>
-									) : (
-										<CButton
-											icon={loading ? '...' : 'send'}
-											disabled={loading}
-											onPress={handlePostComment}
-											type="success"
-											style={{
-												borderRadius: 15,
-												paddingVertical: 10,
-												paddingHorizontal: 16,
-												// marginTop: 10,
-												marginRight: 10,
-											}}
-											textStyle={{ color: '#fff', fontSize: 16 }}
-										/>
-									)}
-								</View>
-							</View>
+		<SafeAreaView style={{ flex: 1, backgroundColor: '#f0f2f5' }}>
+			<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+								  style={{ flex: 1 }}
+								  keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 90}>
+				<FlatList
+					data={comments}
+					keyExtractor={(item, idx) => idx.toString()}
+					renderItem={renderComment}
+					contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
+					ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+					ListEmptyComponent={!loading && (
+						<View style={styles.emptyContainer}>
+							<CText style={styles.emptyText}>No comments yet. Be the first!</CText>
 						</View>
-					</View>
+					)}
+				/>
+
+				<View style={styles.inputContainer}>
+					<TextInput
+						value={body}
+						onChangeText={setBody}
+						style={styles.input}
+						placeholder="Write a comment..."
+						placeholderTextColor="#777"
+						multiline
+						numberOfLines={2}
+					/>
+					{loading
+						? <ActivityIndicator size="small" color={theme.colors.light.primary} style={styles.sendLoader} />
+						: <CButton icon="send" onPress={postComment} disabled={!body.trim()} type="success" style={styles.sendBtn} textStyle={styles.sendText} />}
+				</View>
 			</KeyboardAvoidingView>
 		</SafeAreaView>
-		</>
 	);
 };
-
 
 export default WallCommentsScreen;
 
 const styles = StyleSheet.create({
-	commentForm: {
-		backgroundColor: theme.colors.light.card,
-		paddingVertical: 10,
-		borderRadius: 8,
-		borderBottomWidth: 1,
-		borderColor: theme.colors.light.primary + '22',
-		marginBottom: 10,
-
+	commentBubble: {
+		flexDirection: 'row',
+		backgroundColor: '#fff',
+		padding: 12,
+		borderRadius: 12,
+		shadowColor: '#000',
+		shadowOpacity: 0.03,
+		shadowOffset: { width: 0, height: 1 },
+		shadowRadius: 2,
+		elevation: 1,
 	},
 	avatar: {
-		width: 35,
-		height: 35,
-		borderRadius: 60,
-		// borderWidth: 2,
-		borderColor: theme.colors.light.primary,
+		width: 38,
+		height: 38,
+		borderRadius: 19,
+		marginRight: 10,
 	},
-	floatBtn: {
-		position: 'absolute',
-		right: 20,
-		bottom: 20,
+	textContent: {
+		flex: 1,
 	},
-	fab: {
-		backgroundColor: theme.colors.light.primary,
-		width: 60,
-		height: 60,
-		borderRadius: 30,
+	headerRow: {
+		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'center',
-		elevation: 5,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.3,
-		shadowRadius: 3,
+		justifyContent: 'space-between',
+	},
+	timeText: {
+		color: '#888',
+		fontSize: 12,
+	},
+	commentText: {
+		marginTop: 4,
+		color: '#222',
+		fontSize: 14,
+	},
+	emptyContainer: {
+		alignItems: 'center',
+		marginTop: 50,
+	},
+	emptyText: {
+		color: '#666',
+		fontSize: 14,
+	},
+	inputContainer: {
+		position: 'absolute',
+		bottom: 0,
+		left: 0,
+		right: 0,
+		flexDirection: 'row',
+		paddingVertical: 10,
+		paddingHorizontal: 12,
+		backgroundColor: '#fff',
+		borderTopWidth: 1,
+		borderColor: '#ddd'
+	},
+	input: {
+		flex: 1,
+		backgroundColor: '#f5f5f5',
+		borderRadius: 20,
+		paddingHorizontal: 16,
+		paddingVertical: Platform.OS === 'ios' ? 8 : 4,
+		fontSize: 15,
+		maxHeight: 80,
+	},
+	sendBtn: {
+		marginLeft: 8,
+		padding: 10,
+		borderRadius: 20,
+	},
+	sendText: {
+		color: '#fff',
+		fontSize: 16,
+	},
+	sendLoader: {
+		marginLeft: 8,
+		alignSelf: 'center'
 	}
 });

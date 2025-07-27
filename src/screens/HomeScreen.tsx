@@ -2,7 +2,15 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
 	View,
 	StyleSheet,
-	ScrollView, SafeAreaView, Platform, PermissionsAndroid, RefreshControl, Text, ActivityIndicator, TouchableOpacity
+	ScrollView,
+	SafeAreaView,
+	Platform,
+	PermissionsAndroid,
+	RefreshControl,
+	Text,
+	ActivityIndicator,
+	TouchableOpacity,
+	Dimensions
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { globalStyles } from '../theme/styles.ts';
@@ -36,6 +44,8 @@ const HomeScreen = ({navigation}) => {
 	const [refreshing, setRefreshing] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const { can, hasRole } = useAccess();
+	const window = Dimensions.get('window');
+
 	const getFCMToken = async () => {
 		try {
 			const app = getApp();
@@ -97,44 +107,109 @@ const HomeScreen = ({navigation}) => {
 
 	const renderStudentDashboard = () => {
 		const stats = {
-			totalScans: dash_data?.total_scans || 0,
-			todayScans: Array.isArray(dash_data?.scans) ? dash_data.scans.length : 0
+			totalSubjects: dash_data?.total_classes || 0,
+			totalActivities: dash_data?.total_activities || 0,
+			dueToday: dash_data?.due_today || 0,
 		};
 
-
-		const recentScans = dash_data?.scans || [];
+		const recentActivities = dash_data?.recent_activities || [];
 
 		return (
-			<>
-				<ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-					<View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16 }}>
-					<SummaryCard
-						title="Classes"
-						loading={loading}
-						formatNumber={formatNumber}
-						CText={CText}
-						stats={[
-							{ label: '', value: stats.todayScans },
-						]}
-						backgroundColor="#fff"
-						textColor="#37A954"
-					/>
-					<SummaryCard
-						title="Total Scans"
-						loading={loading}
-						formatNumber={formatNumber}
-						CText={CText}
-						stats={[
-							{ label: '', value: stats.totalScans },
-						]}
-						backgroundColor="#fff"
-						textColor="#FFC107"
-					/>
+			<View style={{ marginTop: 10 }}>
+				<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+					<View style={{ flexDirection: 'row', gap: 16, paddingHorizontal: 16 }}>
+						<SummaryCard
+							title="My Classes"
+							loading={loading}
+							formatNumber={formatNumber}
+							CText={CText}
+							stats={[{ label: '', value: stats.totalSubjects }]}
+							backgroundColor="#e0f7fa"
+							textColor="#00796b"
+							cardStyle={{
+								width: window.width * 0.75,
+								padding: 20,
+								borderRadius: 20,
+							}}
+						/>
+
+						<SummaryCard
+							title="Activities"
+							loading={loading}
+							formatNumber={formatNumber}
+							CText={CText}
+							stats={[{ label: '', value: stats.totalActivities }]}
+							backgroundColor="#f1f8e9"
+							textColor="#689f38"
+							cardStyle={{
+								width: window.width * 0.75,
+								padding: 20,
+								borderRadius: 20,
+							}}
+						/>
+
+						<SummaryCard
+							title="Due Today"
+							loading={loading}
+							formatNumber={formatNumber}
+							CText={CText}
+							stats={[{ label: '', value: stats.dueToday }]}
+							backgroundColor="#fff3e0"
+							textColor="#ef6c00"
+							cardStyle={{
+								width: window.width * 0.75,
+								padding: 20,
+								borderRadius: 20,
+							}}
+						/>
 					</View>
 				</ScrollView>
-			</>
+
+				<View style={{ marginTop: 30, paddingHorizontal: 16 }}>
+					<CText fontSize={18} fontStyle={'B'} style={{ marginBottom: 10 }}>
+						Recent Activities
+					</CText>
+
+					{loading ? (
+						[...Array(3)].map((_, i) => (
+							<ShimmerPlaceHolder
+								key={i}
+								LinearGradient={LinearGradient}
+								style={{
+									height: 70,
+									borderRadius: 16,
+									marginBottom: 12,
+								}}
+							/>
+						))
+					) : recentActivities.length === 0 ? (
+						<View style={{ alignItems: 'center', marginTop: 20 }}>
+							<Icon name="school-outline" size={48} color="#bbb" />
+							<CText style={{ color: '#888', marginTop: 10 }}>
+								No recent activity yet.
+							</CText>
+						</View>
+					) : (
+						recentActivities.slice(0, 5).map((activity, index) => (
+							<View key={index} style={styles.updateItem}>
+								<View style={styles.iconCircle}>
+									<Icon name="document-text-outline" size={22} color={theme.colors.light.primary} />
+								</View>
+								<View style={styles.updateText}>
+									<Text style={styles.updateLabel}>{activity?.title || 'Untitled Activity'}</Text>
+									<Text style={styles.updateDate}>
+										{formatDate(activity?.due_date || '', 'MMM dd, yyyy')}
+									</Text>
+								</View>
+							</View>
+						))
+					)}
+				</View>
+			</View>
 		);
 	};
+
+
 
 
 	return (

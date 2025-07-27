@@ -13,6 +13,7 @@ const NetworkProvider: React.FC = ({ children }) => {
 	useEffect(() => {
 		const unsubscribe = NetInfo.addEventListener(state => {
 			setIsOnline(state.isConnected ?? state.isInternetReachable ?? true);
+			// setIsOnline(false);
 		});
 
 		return () => unsubscribe();
@@ -23,7 +24,7 @@ const NetworkProvider: React.FC = ({ children }) => {
 	//
 	// 	return () => unsubscribe();
 	// }, []);
-	//
+
 	return (
 		<NetworkContext.Provider value={{ isOnline }}>
 			{children}

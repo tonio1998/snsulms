@@ -3,7 +3,7 @@ import Loading from '../components/Loading.tsx';
 import {Alert, ToastAndroid} from "react-native";
 
 interface LoadingContextType {
-    showLoading: (text?: string) => void;
+    showLoading: (text?: string, bottom?: number) => void;
     hideLoading: () => void;
 }
 
@@ -12,11 +12,14 @@ const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [loadingText, setLoadingText] = useState('');
+    const [bottom, setBottom] = useState(65);
 
-    const showLoading = (text: string) => {
+    const showLoading = (text = '', newBottom?: number) => {
+        if (newBottom !== undefined) setBottom(newBottom);
         setLoadingText(text);
         setLoading(true);
     };
+
 
     const hideLoading = () => {
         setLoading(false);
@@ -29,6 +32,13 @@ export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children })
             <Loading
                 loading={loading}
                 text={loadingText}
+                bottom={
+                    bottom > 0
+                        ? 65
+                        : bottom === -1
+                            ? 0
+                            : 65
+                }
                 onTimeout={(msg) => {
                     ToastAndroid.show(msg, ToastAndroid.SHORT);
                     setLoading(false);

@@ -5,7 +5,7 @@ import {
 	StyleSheet,
 	Image,
 	TouchableOpacity, ActivityIndicator,
-	SafeAreaView, ImageBackground, Alert
+	SafeAreaView, ImageBackground, Alert, ToastAndroid
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -24,6 +24,7 @@ import RNFS from 'react-native-fs';
 import { handleGoogleLogin } from '../../utils/authControl';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {APP_NAME, TAGLINE} from "../../api/api_configuration.ts";
+import NetInfo from "@react-native-community/netinfo";
 
 export default function LoginOptionsScreen() {
 	const navigation = useNavigation();
@@ -31,6 +32,27 @@ export default function LoginOptionsScreen() {
 	const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 	const { showLoading, hideLoading } = useLoading();
 
+	const checkSession = async () => {
+		try {
+			const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
+			const cachedSession = await Keychain.getGenericPassword();
+			if (isLoggedIn && cachedSession) {
+				const username = JSON.parse(cachedSession.username)
+				const password = await AsyncStorage.getItem("mobile");
+				const sessionData = {
+					user: username,
+					roles: username.roles,
+					permissions: username.permissions,
+					token: password
+				};
+
+				console.log("sessionData: ", sessionData)
+
+				await loginAuth(sessionData);
+			}
+		} catch (err) {
+		}
+	};
 
 	const init = async () => {
 		const email = await AsyncStorage.getItem('biometricUserEmail');
@@ -40,8 +62,6 @@ export default function LoginOptionsScreen() {
 		const isSupported = result.supported;
 		const isEnabled = flag === 'true';
 
-		console.log("isSupportedss: ", isSupported)
-
 		setIsBiometricEnabled(isSupported && isEnabled);
 	};
 
@@ -49,20 +69,24 @@ export default function LoginOptionsScreen() {
 
 	useEffect(() => {
 		init();
+		checkSession();
 		// showLoading('Logging in...');
 	}, []);
-	
+
 	const handleBiometricLogin = async () => {
 		try {
 			const session = await loginWithBiometric();
+
 			if(session){
-				console.log('session:', session)
+				showLoading('Logging in...', -1);
 				await loginAuth(session);
 				await AsyncStorage.setItem('isLoggedIn', 'true');
 				await AsyncStorage.setItem("mobile", session.token);
 			}
 		} catch (err) {
 			handleApiError(err, 'BIo');
+		} finally {
+			hideLoading();
 		}
 	};
 
@@ -71,7 +95,7 @@ export default function LoginOptionsScreen() {
 		await GoogleSignin.signOut();
 		try {
 			const userInfo = await GoogleSignin.signIn();
-			showLoading('Logging in...');
+			showLoading('Logging in...', -1);
 			const user = userInfo?.data?.user;
 			const idToken = userInfo?.data?.idToken;
 
@@ -88,20 +112,18 @@ export default function LoginOptionsScreen() {
 				error?.message ||
 				'Something went wrong during Google login.';
 
-			Alert.alert('Login Failed', message);
+			ToastAndroid.show(message, ToastAndroid.SHORT);
 
 			if (error?.response?.status === 404) {
 				console.warn('User not found.');
 			}
-
-			handleApiError(error, 'Login');
 		} finally {
 			hideLoading();
 		}
 	};
 
 	const imagePath = `${RNFS.MainBundlePath}/img/launcher_icon.png`;
-	
+
 	return (
 		<SafeAreaView style={[styles.container, { flex: 1 }]}>
 			<ImageBackground
@@ -239,7 +261,7 @@ const styles = StyleSheet.create({
 		color: '#222',
 	},
 	bottomSection: {
-		marginBottom: 60,
+		marginBottom: 80,
 		color: '#fff',
 		alignItems: 'center',
 		// paddingHorizontal: 20,
@@ -259,7 +281,7 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: 800,
 	},
-	
+
 	linkText: {
 		color: theme.colors.light.card,
 		fontWeight: 'bold',

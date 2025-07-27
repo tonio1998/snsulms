@@ -7,6 +7,33 @@ export function formatPeso(amount: number | string): string {
   }).format(num);
 }
 
+export function formatAcad(sem, from, to) {
+  if (!sem || !from || !to) return ''; // fail-safe
+
+  let semText = '';
+  switch (sem) {
+    case '1':
+    case '1st':
+    case 'First':
+      semText = '1st Sem';
+      break;
+    case '2':
+    case '2nd':
+    case 'Second':
+      semText = '2nd Sem';
+      break;
+    case '3':
+    case '3rd':
+    case 'Third':
+    case 'Midyear':
+      semText = 'Midyear';
+      break;
+    default:
+      semText = `${sem} Sem`;
+  }
+
+  return `${semText}, ${from}-${to}`;
+}
 
 export function formatNumber(amount: number | string): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
