@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     background: {
         flex: 1,
         // paddingHorizontal: 40,
-        backgroundColor: theme.colors.light.primary + '88',
+        backgroundColor: theme.colors.light.primary + '99',
         justifyContent: 'space-between',
         // paddingTop: 100
     },

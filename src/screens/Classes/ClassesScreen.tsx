@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
 import {
 	View,
 	TextInput,
@@ -43,22 +43,24 @@ const ClassesScreen = ({ navigation }) => {
 
 	useFocusEffect(
 		useCallback(() => {
+			let isActive = true;
 			(async () => {
 				const acadInfo = await getAcademicInfo();
-				setAcad(`${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`);
-				setAcadRaw(acadInfo);
+				const acadStr = `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
+				if (isActive) {
+					setAcad(acadStr);
+					setAcadRaw(acadInfo);
+					await fetchClasses(1, {}, acadStr, acadInfo); // fetch with up-to-date data
+				}
 			})();
+			return () => {
+				isActive = false;
+			};
 		}, [])
 	);
 
-	useEffect(() => {
-		if (acad) {
-			fetchClasses(1);
-		}
-	}, [acad]);
-
-	const fetchClasses = async (pageNumber = 1, filters = {}) => {
-		if (loading) return;
+	const fetchClasses = async (pageNumber = 1, filters = {}, currentAcad = acad, currentAcadRaw = acadRaw) => {
+		if (!currentAcad || !currentAcadRaw || loading) return;
 		try {
 			setLoading(true);
 			showLoading('Loading classes...');
@@ -70,7 +72,7 @@ const ClassesScreen = ({ navigation }) => {
 					: searchQuery
 						? { search: searchQuery }
 						: {}),
-				AcademicYear: acad,
+				AcademicYear: currentAcad,
 			};
 
 			let classesList = [];
@@ -82,16 +84,16 @@ const ClassesScreen = ({ navigation }) => {
 				totalPages = res.data?.last_page ?? 1;
 
 				await saveClassesOffline(classesList, {
-					from: acadRaw?.from,
-					to: acadRaw?.to,
-					semester: acadRaw?.semester,
+					from: currentAcadRaw.from,
+					to: currentAcadRaw.to,
+					semester: currentAcadRaw.semester,
 				});
 			} else {
 				const offlineFilter = {
 					...filters,
-					Semester: acadRaw?.semester,
-					AYFrom: acadRaw?.from,
-					AYTo: acadRaw?.to,
+					Semester: currentAcadRaw.semester,
+					AYFrom: currentAcadRaw.from,
+					AYTo: currentAcadRaw.to,
 				};
 				const offlineList = await getOfflineClasses(offlineFilter);
 				classesList = offlineList ?? [];
@@ -180,7 +182,7 @@ const ClassesScreen = ({ navigation }) => {
 		<>
 			<CustomHeader />
 			<BackgroundWrapper>
-				<SafeAreaView style={[globalStyles.safeArea]}>
+				<SafeAreaView style={globalStyles.safeArea}>
 					<View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 10 }}>
 						<View style={styles.searchWrapper}>
 							<TextInput

@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Dimensions, StatusBar, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StatusBar } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 import HomeScreen from '../screens/HomeScreen';
-import StudentScreen from '../screens/Students/StudentScreen.tsx';
+import ClassesScreen from '../screens/Classes/ClassesScreen.tsx';
+
 import { theme } from '../theme';
-import { globalStyles } from '../theme/styles.ts';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useAuth } from '../context/AuthContext.tsx';
 import { useAccess } from '../hooks/useAccess.ts';
 import { CText } from '../components/CText.tsx';
-import UsersScreen from '../screens/user/UsersScreen.tsx';
-import ClassesScreen from '../screens/Classes/ClassesScreen.tsx';
+import GradesScreen from "./Grades/GradesScreen.tsx";
 
 const Tab = createBottomTabNavigator();
 const ClassesStack = createNativeStackNavigator();
@@ -35,7 +33,7 @@ function useOrientation() {
 
 export default function BottomTabNav() {
 	const isLandscape = useOrientation();
-	const { hasRole, can } = useAccess();
+	const { hasRole } = useAccess();
 
 	return (
 		<Tab.Navigator
@@ -46,36 +44,23 @@ export default function BottomTabNav() {
 						case 'Home':
 							iconName = focused ? 'home' : 'home-outline';
 							break;
-						case 'Activities':
-							iconName = focused ? 'school' : 'school-outline';
-							break;
 						case 'Classes':
 							iconName = focused ? 'people' : 'people-outline';
 							break;
-						case 'Settings':
-							iconName = focused ? 'settings' : 'settings-outline';
+						case 'Grades':
+							iconName = focused ? 'bar-chart' : 'bar-chart-outline';
 							break;
 						default:
 							break;
 					}
-					return <Icon name={iconName} size={20} color={focused ? theme.colors.light.primary : '#9F9F9F'} />;
+					return <Icon name={iconName} size={20} color={focused ? currentColors.primary : '#9F9F9F'} />;
 				},
 				tabBarLabel: ({ color, focused }) => (
-					focused ? <CText
+					<CText
 						numberOfLines={1}
 						style={{
-							color,
-							fontWeight: 'bold',
-							fontSize: 12,
-							textAlign: 'center',
-						}}
-					>
-						{route.name}
-					</CText> : <CText
-						numberOfLines={1}
-						style={{
-							color: '#9F9F9F',
-							fontWeight: 'normal',
+							color: focused ? currentColors.primary : '#9F9F9F',
+							fontWeight: focused ? 'bold' : 'normal',
 							fontSize: 12,
 							textAlign: 'center',
 						}}
@@ -85,17 +70,13 @@ export default function BottomTabNav() {
 				),
 				tabBarLabelPosition: isLandscape ? 'beside-icon' : 'below-icon',
 				tabBarActiveTintColor: currentColors.primary,
-				tabBarInactiveTintColor: currentColors.primary,
+				tabBarInactiveTintColor: '#9F9F9F',
 				headerShown: false,
 				tabBarStyle: {
 					backgroundColor: currentColors.card,
 					height: isLandscape ? 55 : 65,
 					paddingTop: 4,
 					paddingBottom: isLandscape ? 4 : 10,
-					// margin: 20,
-					// borderRadius: 20,
-					// position: 'absolute',
-					// elevation: 10,
 					shadowColor: '#000',
 					shadowOffset: { width: 0, height: -2 },
 					shadowOpacity: 0.1,
@@ -107,6 +88,7 @@ export default function BottomTabNav() {
 		>
 			<Tab.Screen name="Home" component={HomeScreen} />
 			<Tab.Screen name="Classes" component={ClassesStackScreen} />
+			<Tab.Screen name="Grades" component={GradesScreen} />
 		</Tab.Navigator>
 	);
 }
