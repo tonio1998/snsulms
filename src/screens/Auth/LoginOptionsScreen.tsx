@@ -49,6 +49,7 @@ export default function LoginOptionsScreen() {
 
 	useEffect(() => {
 		init();
+		// showLoading('Logging in...');
 	}, []);
 	
 	const handleBiometricLogin = async () => {

@@ -10,7 +10,6 @@ import {
 	SafeAreaView, Image, ScrollView, StyleSheet
 } from 'react-native';
 import {getActivities} from "../../../api/modules/activitiesApi.ts";
-import {getOfflineStudents, saveStudentsOffline} from "../../../utils/sqlite/students";
 import {handleApiError} from "../../../utils/errorHandler.ts";
 import {useFocusEffect} from "@react-navigation/native";
 import CustomHeader from "../../../components/CustomHeader.tsx";

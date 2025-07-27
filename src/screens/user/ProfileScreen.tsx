@@ -37,6 +37,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import BackHeader from '../../components/BackHeader.tsx';
 import { NetworkContext } from '../../context/NetworkContext.tsx';
 import * as net from 'node:net';
+import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
+import LinearGradient from "react-native-linear-gradient";
 
 function getAge(dob: string | undefined): string {
 	if (!dob) return '';
@@ -65,8 +67,8 @@ export default function ProfileScreen({ navigation }) {
 	} = useAuth();
 
 	const fetchUserData = async () => {
-		showLoading();
-
+		// showLoading();
+		setLoading(true)
 		try {
 			const sdsdd = await AsyncStorage.getItem('roles');
 			const roles = JSON.parse(sdsdd);
@@ -89,7 +91,8 @@ export default function ProfileScreen({ navigation }) {
 			console.error('Failed to fetch user data:', e);
 			handleApiError(e, 'User Details');
 		} finally {
-			hideLoading();
+			// hideLoading();
+			setLoading(false)
 		}
 	};
 	
@@ -157,25 +160,32 @@ export default function ProfileScreen({ navigation }) {
 							<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 						}
 					>
-						{loading && (
-							<View style={{ alignItems: 'center'}}>
-								<ActivityIndicator size="large" color={theme.colors.light.primary} />
-							</View>
-						)}
-
 						<View style={{ alignItems: 'center', }}>
 							<View style={{ position: 'relative' }}>
 								<TouchableOpacity onPress={handleChangeProfilePic}>
-									<Image
-										source={
-											userData?.profile_pic
-												? { uri: `${FILE_BASE_URL}/${userData.profile_pic}` }
-												: userData?.avatar
-													? { uri: userData.avatar } // Google avatar
-													: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.name || 'User')}&background=random` } // Auto-gen avatar
-										}
-										style={styles.avatar}
-									/>
+									{loading ? (
+										<ShimmerPlaceHolder
+											LinearGradient={LinearGradient}
+											style={{
+												width: 150,
+												height: 150,
+												borderRadius: 100,
+										}}
+											shimmerStyle={{ borderRadius: 4 }}
+											autoRun
+										/>
+									) : (
+										<Image
+											source={
+												userData?.profile_pic
+													? { uri: `${FILE_BASE_URL}/${userData.profile_pic}` }
+													: userData?.avatar
+														? { uri: userData.avatar } // Google avatar
+														: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.name || 'User')}&background=random` } // Auto-gen avatar
+											}
+											style={styles.avatar}
+										/>
+									)}
 								</TouchableOpacity>
 								{/*<TouchableOpacity*/}
 								{/*	onPress={() => navigation.navigate('EditProfile')}*/}
@@ -193,33 +203,80 @@ export default function ProfileScreen({ navigation }) {
 								{/*</TouchableOpacity>*/}
 							</View>
 
-							<CText fontSize={22} style={[globalStyles.fw_3, globalStyles.mt_4, { fontWeight: 'bold' }]}>
-								{userData?.name || 'Unnamed User'}
-							</CText>
-							<CText fontSize={16} style={globalStyles.mt_4}>
-								{userData?.email || 'No email'}
-							</CText>
-
+							{loading ? (
+								<>
+									<ShimmerPlaceHolder
+										LinearGradient={LinearGradient}
+										style={{
+											width: '50%',
+											height: 20,
+											borderRadius: 10,
+											marginBottom: 10,
+											marginTop: 10
+										}}
+										shimmerStyle={{ borderRadius: 4 }}
+										autoRun
+									/>
+									<ShimmerPlaceHolder
+										LinearGradient={LinearGradient}
+										style={{
+											width: '20%',
+											height: 20,
+											borderRadius: 10,
+										}}
+										shimmerStyle={{ borderRadius: 4 }}
+										autoRun
+									/>
+								</>
+							) : (
+								<>
+									<CText fontSize={22} style={[globalStyles.fw_3, globalStyles.mt_4, { fontWeight: 'bold' }]}>
+										{userData?.name || 'Unnamed User'}
+									</CText>
+									<CText fontSize={16} style={globalStyles.mt_4}>
+										{userData?.email || 'No email'}
+									</CText>
+								</>
+							)}
 						</View>
 
 						<View style={[globalStyles.cardRow, {margin: 10, flexDirection: 'center'}]}>
-							<TouchableOpacity
-								style={[globalStyles.actionButton, { backgroundColor: theme.colors.light.danger }]}
-								onPress={handleLogout}
-							>
-								<Icon name="log-out-outline" size={20} color="#fff" />
-								<CText fontSize={16} style={{ marginLeft: 5, color: '#fff' }}>Logout</CText>
-							</TouchableOpacity>
-							{/*<TouchableOpacity*/}
-							{/*	style={[globalStyles.actionButton, { backgroundColor: theme.colors.light.muted, elevation: 0 }]}*/}
-							{/*	onPress={() => navigation.navigate('ChangePassword')}*/}
-							{/*>*/}
-							{/*	<Icon name="key-outline" size={20} color="#000" />*/}
-							{/*	<CText fontSize={16} style={{ marginLeft: 5, color: '#000' }}>Change Password</CText>*/}
-							{/*</TouchableOpacity>*/}
+						{loading ? (
+							<>
+								<ShimmerPlaceHolder
+									LinearGradient={LinearGradient}
+									style={{
+										width: '40%',
+										height: 40,
+										borderRadius: 10,
+									}}
+									shimmerStyle={{ borderRadius: 4 }}
+									autoRun
+								/>
+							</>
+							) : (
+								<>
+
+										<TouchableOpacity
+											style={[globalStyles.actionButton, { backgroundColor: theme.colors.light.danger }]}
+											onPress={handleLogout}
+										>
+											<Icon name="log-out-outline" size={20} color="#fff" />
+											<CText fontSize={16} style={{ marginLeft: 5, color: '#fff' }}>Logout</CText>
+										</TouchableOpacity>
+										{/*<TouchableOpacity*/}
+										{/*	style={[globalStyles.actionButton, { backgroundColor: theme.colors.light.muted, elevation: 0 }]}*/}
+										{/*	onPress={() => navigation.navigate('ChangePassword')}*/}
+										{/*>*/}
+										{/*	<Icon name="key-outline" size={20} color="#000" />*/}
+										{/*	<CText fontSize={16} style={{ marginLeft: 5, color: '#000' }}>Change Password</CText>*/}
+										{/*</TouchableOpacity>*/}
+								</>
+						)}
 						</View>
 
 						<HorizontalLine/>
+
 						<View style={globalStyles.p_3}>
 							<View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
 								<CText
@@ -236,61 +293,99 @@ export default function ProfileScreen({ navigation }) {
 
 								<CButton title={'Set'} type={'success'} onPress={() => navigation.navigate('AcademicYear')} />
 							</View>
-							<View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-								<CText
-									fontSize={15}
-									style={{
-										fontWeight: 'bold',
-										color: '#333',
-										marginRight: 8,
-										width: '50%',
-									}}
-								>
-									Roles:
-								</CText>
-
-								<CText
-									fontSize={15}
-									style={{
-										fontWeight: 'bold',
-										flexShrink: 1,
-									}}
-								>
-									{roles?.map(role => role.toUpperCase()).join(', ')}
-								</CText>
-							</View>
-
-							{isBiometricSupported && (
-								<View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-									<CText
-										fontSize={15}
-										style={{
-											fontWeight: 'bold',
-											color: '#333',
-										}}
-									>
-										Enable Biometric Login
-									</CText>
-									<Switch
-										value={biometricEnabled}
-										onValueChange={async (val) => {
-											try {
-												if (val) {
-													await enableBiometricLogin();
-												} else {
-													await disableBiometricLogin();
-												}
-											} catch (e) {
-												ToastAndroid.show('Failed to update biometric settings.', ToastAndroid.SHORT);
-											}
-										}}
-										trackColor={{ false: '#767577', true: theme.colors.light.primary }}
-										thumbColor={biometricEnabled ? theme.colors.light.primary : '#f4f3f4'}
-									/>
-								</View>
-							)}
-
 						</View>
+
+						{loading ? (
+							<>
+							<View style={globalStyles.p_3}>
+								<View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+									<View>
+										<ShimmerPlaceHolder
+											LinearGradient={LinearGradient}
+											style={{
+												width: '60%',
+												height: 30,
+												borderRadius: 10,
+											}}
+											shimmerStyle={{ borderRadius: 4 }}
+											autoRun
+										/>
+									</View>
+									<View>
+										<ShimmerPlaceHolder
+											LinearGradient={LinearGradient}
+											style={{
+												width: '60%',
+												height: 30,
+												borderRadius: 10,
+											}}
+											shimmerStyle={{ borderRadius: 4 }}
+											autoRun
+										/>
+									</View>
+								</View>
+							</View>
+							</>
+						) : (
+							<>
+								<View style={globalStyles.p_3}>
+									<View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+										<CText
+											fontSize={15}
+											style={{
+												fontWeight: 'bold',
+												color: '#333',
+												marginRight: 8,
+												width: '50%',
+											}}
+										>
+											Roles:
+										</CText>
+
+										<CText
+											fontSize={15}
+											style={{
+												fontWeight: 'bold',
+												flexShrink: 1,
+											}}
+										>
+											{roles?.map(role => role.toUpperCase()).join(', ')}
+										</CText>
+									</View>
+
+									{isBiometricSupported && (
+										<View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+											<CText
+												fontSize={15}
+												style={{
+													fontWeight: 'bold',
+													color: '#333',
+												}}
+											>
+												Enable Biometric Login
+											</CText>
+											<Switch
+												value={biometricEnabled}
+												onValueChange={async (val) => {
+													try {
+														if (val) {
+															await enableBiometricLogin();
+														} else {
+															await disableBiometricLogin();
+														}
+													} catch (e) {
+														ToastAndroid.show('Failed to update biometric settings.', ToastAndroid.SHORT);
+													}
+												}}
+												trackColor={{ false: '#767577', true: theme.colors.light.primary }}
+												thumbColor={biometricEnabled ? theme.colors.light.primary : '#f4f3f4'}
+											/>
+										</View>
+									)}
+
+								</View>
+							</>
+						)}
 
 
 					</ScrollView>

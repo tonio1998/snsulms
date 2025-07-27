@@ -20,7 +20,6 @@ import {theme} from "../../../theme";
 import CButton from "../../../components/CButton.tsx";
 import {getWallComments, postWall, postWallComment} from "../../../api/modules/wallApi.ts";
 import {getMyClasses} from "../../../api/modules/classesApi.ts";
-import {getOfflineStudents, saveStudentsOffline} from "../../../utils/sqlite/students";
 import {useFocusEffect} from "@react-navigation/native";
 import {formatDate} from "../../../utils/dateFormatter";
 import {FILE_BASE_URL} from "../../../api/api_configuration.ts";
@@ -67,10 +66,8 @@ const WallCommentsScreen = ({ navigation, route }) => {
 				console.log(List)
 				totalPages = res.data?.last_page ?? 1;
 
-				await saveStudentsOffline(List);
 			} else {
 				console.log("fetch using local:", filter)
-				List = await getOfflineStudents(filter);
 			}
 
 			setComments(prev =>

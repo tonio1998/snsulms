@@ -17,7 +17,7 @@ export const SummaryCard = ({
                 {
                     backgroundColor,
                     padding: 16,
-                    paddingVertical: 5,
+                    paddingVertical: 16,
                     borderRadius: 8,
                     minWidth: 280,
                     flex: 1,

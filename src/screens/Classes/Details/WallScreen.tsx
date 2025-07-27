@@ -16,7 +16,6 @@ import {globalStyles} from "../../../theme/styles.ts";
 import {theme} from "../../../theme";
 import {CText} from "../../../components/CText.tsx";
 import {handleApiError} from "../../../utils/errorHandler.ts";
-import {getOfflineStudents, saveStudentsOffline} from "../../../utils/sqlite/students";
 import {getWall, reactPost} from "../../../api/modules/wallApi.ts";
 import Icon from "react-native-vector-icons/Ionicons";
 import {FILE_BASE_URL} from "../../../api/api_configuration.ts";
@@ -56,10 +55,7 @@ const WallScreen = ({ navigation, route }) => {
 				List = res.data ?? [];
 				setWall(List)
 				totalPages = res.data?.last_page ?? 1;
-
-				await saveStudentsOffline(List);
 			} else {
-				List = await getOfflineStudents(filter);
 			}
 
 			setWall(prev =>
