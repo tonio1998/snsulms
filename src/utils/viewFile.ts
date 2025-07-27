@@ -1,44 +1,42 @@
-import { Alert, Linking, Platform, ToastAndroid } from 'react-native';
 import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
-import { handleApiError } from './errorHandler.ts';
-import { FILE_BASE_URL } from '../api/api_configuration.ts';
-import { useAlert } from '../components/CAlert.tsx';
+import { ToastAndroid, Alert, Platform } from 'react-native';
+import {API_BASE_URL} from "../api/api_configuration.ts";
+import {handleApiError} from "./errorHandler.ts";
+import api from "../api/api.ts";
 
 export const viewFile = async (filePath: string, fileName: string) => {
+    // ToastAndroid.show('Please wait...', ToastAndroid.SHORT);
     try {
-        const FILE_LOCATION = `${FILE_BASE_URL}/${filePath}`;
+        const response = await api.get(`${API_BASE_URL}/temp-url`, {
+            params: { path: filePath },
+        });
+
+        const FILE_LOCATION = response.data.url;
         const localPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-        const exists = await RNFS.exists(localPath);
+        console.log('Downloading from:', FILE_LOCATION);
 
-        if (!exists) {
-            if (Platform.OS === 'android') {
-                ToastAndroid.show('Downloading file...', ToastAndroid.SHORT);
-            } else {
-                Alert.alert('Downloading', 'Your file is being downloaded.');
-            }
+        // Step 2: Download file
+        const result = await RNFS.downloadFile({
+            fromUrl: FILE_LOCATION,
+            toFile: localPath,
+        }).promise;
 
-            const result = await RNFS.downloadFile({
-                fromUrl: FILE_LOCATION,
-                toFile: localPath,
-            }).promise;
-
-            if (result.statusCode !== 200) throw new Error('Download failed');
+        if (result.statusCode !== 200) {
+            throw new Error(`Download failed: ${result.statusCode}`);
         }
 
-        if (Platform.OS === 'android') {
-            ToastAndroid.show('File ready, opening...', ToastAndroid.SHORT);
-        } else {
-            Alert.alert('Ready', 'The file is ready to view.');
+        const stats = await RNFS.stat(localPath);
+        if (!stats || stats.size === 0) {
+            throw new Error('Downloaded file is empty.');
         }
 
+        ToastAndroid.show('Opening file...', ToastAndroid.SHORT);
         await FileViewer.open(localPath, {
             showOpenWithDialog: false,
         });
+
     } catch (error) {
-        // console.error('Error opening file:', error);
-        Alert.alert('Error', 'Cannot open file. Make sure you have an app installed that can handle this file type.');
-        // showAlert('error', 'Error', 'Cannot open file. Make sure you have an app installed that can handle this file type.');
-        // handleApiError(error);
+        handleApiError(error, 'Download');
     }
 };

@@ -1,11 +1,11 @@
 const PORT = 8000;
-const HOST_DOMAIN = '10.215.105.229';
+const HOST_DOMAIN = '10.25.1.167';
 const PROTOCOL = "http:";
 
 // WITH PORT
 export const API_BASE_URL = PROTOCOL+'//'+HOST_DOMAIN+':'+PORT+'/api';
 export const API_BASE = PROTOCOL+'//'+HOST_DOMAIN+':'+PORT;
-export const FILE_BASE_URL = API_BASE+'/storage';
+export const FILE_BASE_URL = API_BASE+'/storage/app';
 
 // WITHOUT PORT
 // export const API_BASE_URL = PROTOCOL+'//'+HOST_DOMAIN+'/api';

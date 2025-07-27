@@ -187,7 +187,9 @@ const styles2 = StyleSheet.create({
   image_195: { width: 195, height: 195 },
   image_200: { width: 200, height: 200 },
 
-
+textUppercase: {
+    textTransform: 'uppercase',
+},
   card: {
     borderRadius: 10,
     overflow: 'hidden',

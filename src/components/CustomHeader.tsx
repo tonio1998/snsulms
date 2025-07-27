@@ -8,6 +8,7 @@ import { navigate } from '../utils/navigation.ts';
 import { CText } from './CText.tsx';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSidebar } from '../context/SidebarContext.tsx';
+import {globalStyles} from "../theme/styles.ts";
 
 const CustomHeader = ({
                           title = '',
@@ -29,14 +30,11 @@ const CustomHeader = ({
                 <CText
                     fontSize={30}
                     fontStyle={'SB'}
-                    style={{
+                    style={[globalStyles.shadowText, {
                         marginLeft: 10,
                         marginTop: 4,
-                        color: theme.colors.light.primary,
-                        textShadowColor: '#fff',
-                        textShadowOffset: { width: -1, height: 2 },
-                        textShadowRadius: 1,
-                }}
+                        color: theme.colors.light.card,
+                    }]}
                 >{APP_NAME}</CText>
             </View>
 

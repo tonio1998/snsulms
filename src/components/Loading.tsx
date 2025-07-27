@@ -6,59 +6,30 @@ import {
     Easing,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import { CText } from './CText';
 import { theme } from '../theme';
 
 interface LoadingProps {
     loading: boolean;
-    text?: string;
-    timeout?: number; // optional timeout in ms (default: 10s)
-    onTimeout?: (errorMessage: string) => void; // optional callback on fail
+    timeout?: number; // default: 6000ms
+    onTimeout?: (errorMessage: string) => void;
 }
 
-const Ball = ({ delay }: { delay: number }) => {
-    const translateY = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(translateY, {
-                    toValue: -12,
-                    duration: 400,
-                    delay,
-                    easing: Easing.inOut(Easing.ease),
-                    useNativeDriver: true,
-                }),
-                Animated.timing(translateY, {
-                    toValue: 0,
-                    duration: 400,
-                    easing: Easing.inOut(Easing.ease),
-                    useNativeDriver: true,
-                }),
-            ])
-        ).start();
-    }, []);
-
-    return (
-        <Animated.View
-            style={[
-                styles.ball,
-                {
-                    transform: [{ translateY }],
-                    backgroundColor: theme.colors.light.primary,
-                },
-            ]}
-        />
-    );
-};
-
-const Loading: React.FC<LoadingProps> = ({ loading, text, timeout = 6000, onTimeout }) => {
+const Loading: React.FC<LoadingProps> = ({ loading, timeout = 6000, onTimeout }) => {
     const [shouldShow, setShouldShow] = useState(false);
+    const widthAnim = useRef(new Animated.Value(0)).current;
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         if (loading) {
             setShouldShow(true);
+            widthAnim.setValue(0);
+
+            Animated.timing(widthAnim, {
+                toValue: 100,
+                duration: timeout,
+                easing: Easing.linear,
+                useNativeDriver: false,
+            }).start();
 
             timeoutRef.current = setTimeout(() => {
                 NetInfo.fetch().then(state => {
@@ -76,6 +47,7 @@ const Loading: React.FC<LoadingProps> = ({ loading, text, timeout = 6000, onTime
                 clearTimeout(timeoutRef.current);
                 timeoutRef.current = null;
             }
+            widthAnim.setValue(0); // Reset animation if done early
         }
 
         return () => {
@@ -85,62 +57,35 @@ const Loading: React.FC<LoadingProps> = ({ loading, text, timeout = 6000, onTime
 
     if (!shouldShow) return null;
 
-    return (
-        <View style={styles.overlay}>
-            <View style={styles.loaderBox}>
-                <View style={styles.ballRow}>
-                    <Ball delay={0} />
-                    <Ball delay={150} />
-                    <Ball delay={300} />
-                </View>
+    const progressBarWidth = widthAnim.interpolate({
+        inputRange: [0, 100],
+        outputRange: ['0%', '100%'],
+    });
 
-                {text && (
-                    <CText fontSize={14} numberOfLines={2} style={styles.text}>
-                        {text}
-                    </CText>
-                )}
-            </View>
+    return (
+        <View style={styles.progressContainer}>
+            <Animated.View
+                style={[
+                    styles.progressBar,
+                    { width: progressBarWidth, backgroundColor: theme.colors.light.primary },
+                ]}
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    overlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
+    progressContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        height: 4,
+        bottom: 65,
+        backgroundColor: '#e0e0e0',
         zIndex: 9999,
     },
-    loaderBox: {
-        backgroundColor: '#fff',
-        paddingVertical: 25,
-        paddingHorizontal: 100,
-        borderRadius: 12,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 8,
-        gap: 16,
-    },
-    ballRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-        gap: 12,
-        height: 24,
-    },
-    ball: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-    },
-    text: {
-        marginTop: 8,
-        textAlign: 'center',
-        color: theme.colors.light.primary,
+    progressBar: {
+        height: '100%',
     },
 });
 

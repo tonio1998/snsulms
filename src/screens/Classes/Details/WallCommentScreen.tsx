@@ -133,32 +133,48 @@ const WallCommentsScreen = ({ navigation, route }) => {
 								<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
 							}
 						>
-							{comments.map((item, index) => (
-								<View key={index} style={styles.commentForm}>
-									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
-										<Image
-											source={
-												item.created_by?.profile_pic
-													? { uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}` }
-													: item.created_by?.avatar
-														? { uri: item.created_by?.avatar }
-														: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-																item.created_by?.name || 'User'
-															)}&background=random`
-														}
-											}
-											style={styles.avatar}
-										/>
-										<View>
-											<CText fontSize={15} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ item.created_by?.name }</CText>
-											<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -5 }}>{ formatDate(item?.created_at, 'relative') }</CText>
+							{comments && comments.length > 0 ? (
+								comments.map((item, index) => (
+									<View key={index} style={styles.commentForm}>
+										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
+											<Image
+												source={
+													item.created_by?.profile_pic
+														? { uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}` }
+														: item.created_by?.avatar
+															? { uri: item.created_by?.avatar }
+															: {
+																uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+																	item.created_by?.name || 'User'
+																)}&background=random`
+															}
+												}
+												style={styles.avatar}
+											/>
+											<View>
+												<CText fontSize={15} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>
+													{item.created_by?.name}
+												</CText>
+												<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -5 }}>
+													{formatDate(item?.created_at, 'relative')}
+												</CText>
+											</View>
+										</View>
+										<View style={{ marginTop: 10 }}>
+											<CText fontSize={15} style={{ color: '#000', marginLeft: 10 }}>
+												{item.content}
+											</CText>
 										</View>
 									</View>
-									<View style={{ marginTop: 10}}>
-										<CText fontSize={15} style={{ color: '#000', marginLeft: 10 }}>{ item.content }</CText>
-									</View>
+								))
+							) : (
+								<View style={{ padding: 20, alignItems: 'center' }}>
+									<CText fontSize={14} style={{ color: '#888' }}>
+										No comments yet.
+									</CText>
 								</View>
-							))}
+							)}
+
 						</ScrollView>
 
 						<View
@@ -213,7 +229,7 @@ const WallCommentsScreen = ({ navigation, route }) => {
 										</View>
 									) : (
 										<CButton
-											title={loading ? '...' : 'Post'}
+											icon={loading ? '...' : 'send'}
 											disabled={loading}
 											onPress={handlePostComment}
 											type="success"

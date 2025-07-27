@@ -50,7 +50,6 @@ const ClassesScreen = ({ navigation }) => {
 
 			if (network?.isOnline) {
 				const res = await getMyClasses(filter);
-				console.log(res.data)
 				studentsList = res.data ?? [];
 				totalPages = res.data?.last_page ?? 1;
 			} else {
@@ -179,12 +178,14 @@ const ClassesScreen = ({ navigation }) => {
 										backgroundColor: theme.colors.light.card,
 										borderRadius: 8,
 										marginBottom: 10,
+										borderWidth: 1,
+										borderColor: theme.colors.light.primary + '22',
 									}}
 								>
 									<View>
 										<CText
 											fontStyle={'SB'}
-											fontSize={16}
+											fontSize={13}
 											style={{ textTransform: 'uppercase' }}
 											numberOfLines={2}
 										>
@@ -238,7 +239,7 @@ const ClassesScreen = ({ navigation }) => {
 											/>
 											<CText
 												fontStyle={'SB'}
-												fontSize={12}
+												fontSize={10}
 												style={{ textTransform: 'uppercase' }}
 											>
 												{item.class_info?.teacher?.name}
