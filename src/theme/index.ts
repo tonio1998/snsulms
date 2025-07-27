@@ -63,13 +63,23 @@ const fontSizes = {
     xxxl: 40,
 };
 
+// export const font = {
+//     regular: 'Poppins-Regular',
+//     medium: 'Poppins-Medium',
+//     semiBold: 'Poppins-SemiBold',
+//     bold: 'Poppins-Bold',
+//     italic: 'Poppins-Italic',
+// };
+
 export const font = {
-    regular: 'Poppins-Regular',
+    regular: 'MazzardSoftH-Regular',
     medium: 'Poppins-Medium',
-    semiBold: 'Poppins-SemiBold',
+    semiBold: 'MazzardSoftH-SemiBold',
     bold: 'Poppins-Bold',
     italic: 'Poppins-Italic',
 };
+export const FontFamily = 'MazzardSoftH-SemiBold';
+export const FontFamilyNormal = 'MazzardSoftH-Regular';
 
 export const radius = {
     none: 0,

@@ -10,7 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { theme } from '../../theme';
+import {FontFamily, theme} from '../../theme';
 import { loginWithBiometric } from '../../hooks/useBiometrics.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { globalStyles } from '../../theme/styles.ts';
@@ -120,8 +120,8 @@ export default function LoginOptionsScreen() {
 								marginBottom: 5
 							}
 						]} />
-					<CText style={styles.title} fontStyle={'B'} fontSize={38} style={[globalStyles.shadowText, { color: '#fff', marginBottom: 10 }]}>{APP_NAME}</CText>
-					<CText fontStyle={'SB'} fontSize={13} style={[globalStyles.shadowText, { color: '#fff', marginBottom: 10, marginTop: -20 }]}>{TAGLINE}</CText>
+					<CText style={styles.title} fontStyle={'B'} fontSize={38} style={[globalStyles.shadowText, { color: '#fff', marginBottom: 10, fontFamily: FontFamily }]}>{APP_NAME}</CText>
+					<CText fontStyle={'SB'} fontSize={13} style={[globalStyles.shadowText, { color: '#fff', marginBottom: 10, marginTop: -10 }]}>{TAGLINE}</CText>
 				</View>
 				<View style={styles.bottomSection}>
 					<Text style={styles.linkText}>Login with</Text>

@@ -226,7 +226,7 @@ const SigninForm = ({ navigation }: any) => {
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 105}
 			>
 				<ImageBackground
-					source={require('../../../assets/img/bg2.png')}
+					source={require('../../../assets/img/bg.png')}
 					style={styles.container}
 					resizeMode="cover"
 				>

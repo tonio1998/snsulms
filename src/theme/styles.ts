@@ -6,6 +6,9 @@ let WhiteColor = '#fff';
 let FontFamily = 'Poppins';
 let PrimaryColorHex = theme.colors.light.primary;
 export const globalStyles = StyleSheet.create({
+    textUppercase: {
+        textTransform: 'uppercase',
+    },
     container: {
         flex: 1,
         backgroundColor: '#fff',
