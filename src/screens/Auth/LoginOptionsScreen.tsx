@@ -139,7 +139,7 @@ export default function LoginOptionsScreen() {
 						</View>
 					</View>
 					{isBiometricEnabled && (
-						<View style={{ margin: 10, marginTop: 0}}>
+						<View style={{ margin: 10, marginTop: -30}}>
 							<TouchableOpacity activeOpacity={.4} style={[{marginBottom: 30, marginTop: 20, borderRadius: 8, alignItems: 'center', padding: 10 }]} onPress={handleBiometricLogin}>
 								<Icon name="finger-print-outline" size={40} color={theme.colors.light.card} />
 							</TouchableOpacity>
@@ -169,7 +169,18 @@ export default function LoginOptionsScreen() {
 								textAlign: 'center'
 							}}
 						>
-							Developed by SNSU - ICT fgWorkz
+							Developed and Maintained by
+						</CText>
+						<CText
+							fontSize={14}
+							style={{
+								marginLeft: 10,
+								color: theme.colors.light.card,
+								fontWeight: 'bold',
+								textAlign: 'center'
+							}}
+						>
+							SNSU - ICT fgWorkz
 						</CText>
 						<CText
 							fontSize={14}
@@ -227,7 +238,7 @@ const styles = StyleSheet.create({
 		color: '#222',
 	},
 	bottomSection: {
-		marginBottom: 70,
+		marginBottom: 60,
 		color: '#fff',
 		alignItems: 'center',
 		// paddingHorizontal: 20,
