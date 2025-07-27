@@ -10,7 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { theme } from '../../theme';
+import {FontFamily, theme} from '../../theme';
 import { loginWithBiometric } from '../../hooks/useBiometrics.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { globalStyles } from '../../theme/styles.ts';
@@ -105,7 +105,7 @@ export default function LoginOptionsScreen() {
 	return (
 		<SafeAreaView style={[styles.container, { flex: 1 }]}>
 			<ImageBackground
-				source={require('../../../assets/img/bg.png')}
+				source={require('../../../assets/img/bg2.png')}
 				style={[styles.container]}
 				resizeMode="cover"
 				imageStyle={{ alignSelf: 'flex-start' }}
@@ -120,8 +120,8 @@ export default function LoginOptionsScreen() {
 								marginBottom: 5
 							}
 						]} />
-					<CText style={styles.title} fontStyle={'B'} fontSize={38} style={{ color: '#fff', marginBottom: 10 }}>{APP_NAME}</CText>
-					<CText fontStyle={'SB'} fontSize={13} style={{ color: '#fff', marginBottom: 10, marginTop: -20 }}>{TAGLINE}</CText>
+					<CText style={styles.title} fontStyle={'B'} fontSize={38} style={[globalStyles.shadowText, { color: '#fff', marginBottom: 10, fontFamily: FontFamily }]}>{APP_NAME}</CText>
+					<CText fontStyle={'SB'} fontSize={13} style={[globalStyles.shadowText, { color: '#fff', marginBottom: 10, marginTop: -10 }]}>{TAGLINE}</CText>
 				</View>
 				<View style={styles.bottomSection}>
 					<Text style={styles.linkText}>Login with</Text>
@@ -140,7 +140,7 @@ export default function LoginOptionsScreen() {
 						</View>
 					</View>
 					{isBiometricEnabled && (
-						<View style={{ margin: 10, marginTop: 0}}>
+						<View style={{ margin: 10, marginTop: -30}}>
 							<TouchableOpacity activeOpacity={.4} style={[{marginBottom: 30, marginTop: 20, borderRadius: 8, alignItems: 'center', padding: 10 }]} onPress={handleBiometricLogin}>
 								<Icon name="finger-print-outline" size={40} color={theme.colors.light.card} />
 							</TouchableOpacity>
@@ -170,7 +170,18 @@ export default function LoginOptionsScreen() {
 								textAlign: 'center'
 							}}
 						>
-							Developed by SNSU - ICT fgWorkz
+							Developed and Maintained by
+						</CText>
+						<CText
+							fontSize={14}
+							style={{
+								marginLeft: 10,
+								color: theme.colors.light.card,
+								fontWeight: 'bold',
+								textAlign: 'center'
+							}}
+						>
+							SNSU - ICT fgWorkz
 						</CText>
 						<CText
 							fontSize={14}
@@ -228,7 +239,7 @@ const styles = StyleSheet.create({
 		color: '#222',
 	},
 	bottomSection: {
-		marginBottom: 70,
+		marginBottom: 60,
 		color: '#fff',
 		alignItems: 'center',
 		// paddingHorizontal: 20,

@@ -41,6 +41,8 @@ import { triggerAllSyncs } from './src/utils/sqlite/syncManager';
 import AcademicYearScreen from "./src/screens/AcademicYearScreen.tsx";
 import ClassBottomNav from "./src/navigation/class/ClassBottomNav.tsx";
 import WallCommentsScreen from "./src/screens/Classes/Details/WallCommentScreen.tsx";
+import PostWallScreen from "./src/screens/Classes/Details/PostWallScreen.tsx";
+import ActivityBottomNav from "./src/navigation/activity/ActivityBottomNav.tsx";
 const Stack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
 LogBox.ignoreLogs([
@@ -182,11 +184,36 @@ function AppNavigator() {
                                             color: '#fff'
                                         },
                                         headerTintColor: '#fff',
-                                        title: 's',
                                     }} />
+                                    <Stack.Screen name="ActivityDetails" component={ActivityBottomNav} options={{
+                                        headerShown: true,
+                                        headerStyle:{
+                                            backgroundColor: theme.colors.light.primary,
+                                        },
+                                        headerTitleStyle:{
+                                            color: '#fff'
+                                        },
+                                        headerTintColor: '#fff',
+                                    }} />
+
                                     <Stack.Screen
                                         name="WallComments"
                                         component={WallCommentsScreen}
+                                        options={{
+                                            headerShown: true,
+                                            headerStyle:{
+                                                backgroundColor: theme.colors.light.primary,
+                                            },
+                                            headerTitleStyle:{
+                                                color: '#fff'
+                                            },
+                                            headerTintColor: '#fff',
+                                            title: 's',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="PostWall"
+                                        component={PostWallScreen}
                                         options={{
                                             headerShown: true,
                                             headerStyle:{

@@ -51,7 +51,7 @@ const PostWallScreen = ({ navigation, route }) => {
 					behavior={Platform.OS === 'ios' ? 'padding' : undefined}
 					style={{ flex: 1 }}
 					>
-					<View style={[globalStyles.shadowBtn, { padding: 16}]}>
+					<View style={[{ padding: 16}]}>
 						<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
 							<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
 								<Image
@@ -96,8 +96,8 @@ const PostWallScreen = ({ navigation, route }) => {
 								padding: 10,
 								textAlignVertical: 'top',
 								marginBottom: 16,
-								minHeight: 300,
-								fontSize: 18,
+								minHeight: 150,
+								fontSize: 16,
 								fontWeight: 'semibold'
 							}}
 						/>

@@ -58,22 +58,30 @@ export default function BottomTabNav() {
 						default:
 							break;
 					}
-					return <Icon name={iconName} size={20} color={color} />;
+					return <Icon name={iconName} size={20} color={focused ? theme.colors.light.primary : '#9F9F9F'} />;
 				},
 				tabBarLabel: ({ color, focused }) => (
-					<View style={{ maxWidth: 80, alignItems: 'center' }}>
-						<CText
-							numberOfLines={1}
-							style={{
-								color,
-								fontWeight: focused ? 'bold' : 'normal',
-								fontSize: 12,
-								textAlign: 'center',
-							}}
-						>
-							{route.name}
-						</CText>
-					</View>
+					focused ? <CText
+						numberOfLines={1}
+						style={{
+							color,
+							fontWeight: 'bold',
+							fontSize: 12,
+							textAlign: 'center',
+						}}
+					>
+						{route.name}
+					</CText> : <CText
+						numberOfLines={1}
+						style={{
+							color: '#9F9F9F',
+							fontWeight: 'normal',
+							fontSize: 12,
+							textAlign: 'center',
+						}}
+					>
+						{route.name}
+					</CText>
 				),
 				tabBarLabelPosition: isLandscape ? 'beside-icon' : 'below-icon',
 				tabBarActiveTintColor: currentColors.primary,
