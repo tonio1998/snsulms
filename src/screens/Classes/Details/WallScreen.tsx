@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, {useCallback, useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {
 	View,
 	TextInput,
@@ -24,6 +24,8 @@ import CButton from "../../../components/CButton.tsx";
 import {formatDate} from "../../../utils/dateFormatter";
 import {useFocusEffect} from "@react-navigation/native";
 import {useLoading} from "../../../context/LoadingContext.tsx";
+import BackHeader from "../../../components/BackHeader.tsx";
+import {getOfflineWall, saveWallOffline} from "../../../utils/sqlite/offlineWallService.ts";
 
 const WallScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -38,6 +40,11 @@ const WallScreen = ({ navigation, route }) => {
 	const heartScales = useRef({}).current;
 	const { showLoading, hideLoading } = useLoading();
 
+	useLayoutEffect(() => {
+		navigation.setOptions({
+			title: route.params?.customTitle || 'Default Title',
+		});
+	}, [navigation, route.params?.customTitle]);
 
 	const fetch = async (pageNumber = 1, filters = {}) => {
 		try {
@@ -56,10 +63,15 @@ const WallScreen = ({ navigation, route }) => {
 			if (network?.isOnline) {
 				const res = await getWall(filter);
 				List = res.data ?? [];
-				setWall(List)
 				totalPages = res.data?.last_page ?? 1;
+
+				await saveWallOffline(List, ClassID);
 			} else {
+				const offlineList = await getOfflineWall({ ClassID, ...filters });
+				List = offlineList ?? [];
+				totalPages = 1;
 			}
+
 
 			setWall(prev =>
 				pageNumber === 1 ? List : [...prev, ...List]
@@ -165,114 +177,151 @@ const WallScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 0}]}>
-				<View style={{ flex: 1, paddingHorizontal: 10, paddingTop: 10 }}>
-					<View style={[styles.card, globalStyles.shadowBtn, { padding: 16}]}>
-						<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-							<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+			<BackHeader title={'Wall'} />
+			<BackgroundWrapper>
+				<SafeAreaView style={[globalStyles.safeArea]}>
+					<View style={{ flex: 1, paddingHorizontal: 10 }}>
+						<View style={[styles.card, globalStyles.shadowBtn, { padding: 16 }]}>
+							<View style={{ flexDirection: 'row', alignItems: 'center' }}>
 								<Image
 									source={
 										user?.profile_pic
 											? { uri: `${FILE_BASE_URL}/${user?.profile_pic}` }
-											: user?.avatar
-												? { uri: user?.avatar }
-												: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-														user?.name || 'User'
-													)}&background=random`
-												}
+											: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random` }
 									}
-									style={styles.avatar}
+									style={styles.avatarLarge}
 								/>
-								<View>
-									<CText fontSize={14} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ user?.name }</CText>
-									<CText fontSize={12} style={{ color: '#000', marginLeft: 10, marginTop: -0 }}>{ user?.email }</CText>
+								<View style={{ flex: 1, marginLeft: 10 }}>
+									<CText fontSize={15} fontStyle="SB">{user?.name}</CText>
+									<CText fontSize={12} color="#888">{user?.email}</CText>
 								</View>
+								<TouchableOpacity
+									style={styles.createPostBtn}
+									onPress={() => navigation.navigate('PostWall', { ClassID })}
+								>
+									<Icon name="add" size={22} color="#fff" />
+								</TouchableOpacity>
 							</View>
-							<CButton
-								icon={'add'}
-								type="success"
-								iconSize={25}
-								onPress={() => navigation.navigate('PostWall')}
-								style={[ globalStyles.shadowBtn, { marginTop: 10, borderRadius: 20 }]}
-							/>
 						</View>
-					</View>
-					<ScrollView contentContainerStyle={{ paddingBottom: 100, borderTopLeftRadius: 20, borderTopRightRadius: 20 }} refreshControl={
-						<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-					}>
-						{wall.map((item, index) => (
-							<View key={index} style={styles.card}>
-								<View style={{ padding: 16 }}>
-									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-										<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-											<Image
-												source={
-													item.created_by?.profile_pic
-														? { uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}` }
-														: item.created_by?.avatar
-															? { uri: item.created_by?.avatar }
-															: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-																	item.created_by?.name || 'User'
-																)}&background=random`
-															}
-												}
-												style={styles.avatar}
-											/>
-											<View>
-												<CText fontSize={14} fontStyle={'SB'} style={{ color: '#000', marginLeft: 10 }}>{ item.created_by?.name }</CText>
-												<CText fontSize={11} style={{ color: '#000', marginLeft: 10, marginTop: -0 }}>{ formatDate(item?.created_at, 'relative') }</CText>
-											</View>
+
+						<ScrollView contentContainerStyle={{ paddingBottom: 100, borderTopLeftRadius: 20, borderTopRightRadius: 20 }} refreshControl={
+							<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+						}>
+							{wall.map((item, index) => (
+								<View key={index} style={styles.postCard}>
+									<View style={styles.postHeader}>
+										<Image
+											source={
+												item.created_by?.profile_pic
+													? { uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}` }
+													: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.created_by?.name || 'User')}&background=random` }
+											}
+											style={styles.avatar}
+										/>
+										<View style={{ marginLeft: 10, flex: 1 }}>
+											<CText fontSize={14.5} fontStyle="SB">{item.created_by?.name}</CText>
+											<CText fontSize={11} color="#777">{formatDate(item.created_at, 'relative')}</CText>
 										</View>
 									</View>
-									<View style={{ marginTop: 10 }}>
-										<CText fontSize={15} style={{ color: '#000', marginLeft: 10 }}>{ item.body }</CText>
+
+									<CText style={styles.postBody}>{item.body}</CText>
+
+									<View style={styles.postActions}>
+										<TouchableOpacity style={styles.actionBtn} onPress={() => handleReaction(item.id)}>
+											<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
+												<Icon name={item.is_react_by_you ? 'heart' : 'heart-outline'} size={20} color={item.is_react_by_you ? theme.colors.light.primary : '#aaa'} />
+											</Animated.View>
+											<CText fontSize={14} style={styles.reactionCount}>
+												{item.reactions_count > 0 ? item.reactions_count : ''}
+											</CText>
+										</TouchableOpacity>
+
+										<TouchableOpacity style={styles.actionBtn} onPress={() => handleComment(item.id)}>
+											<Icon name="chatbubble-outline" size={20} color="#aaa" />
+											<CText fontSize={14} style={styles.reactionCount}>
+												{item.comments?.length > 0 ? item.comments.length : ''}
+											</CText>
+										</TouchableOpacity>
 									</View>
 								</View>
-								<View style={{ borderTopWidth: 1, borderColor: '#E2F8EC', marginTop: 10, padding: 16 }}>
-									<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-										<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
-											<TouchableOpacity onPress={() => handleReaction(item.id)}>
-												<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start'}}>
 
-													<Icon
-														name={item.is_react_by_you ? 'heart' : 'heart-outline'}
-														size={20}
-														color={item.is_react_by_you ? theme.colors.light.primary : '#ccc'}
-													/>
-													<CText fontSize={15} style={{ color: '#000', marginLeft: 5, fontWeight: 500 }}>{ item.reactions_count > 0 ? item.reactions_count : '' }</CText>
-												</View>
-											</TouchableOpacity>
-										</Animated.View>
-										<Animated.View>
-											<TouchableOpacity onPress={() => handleComment(item.id)}>
-												<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
-
-													<Icon
-														name={'chatbubble-outline'}
-														size={20}
-														color={'#ccc'}
-													/>
-													<CText fontSize={15} style={{ color: '#000', marginLeft: 5, fontWeight: 500 }}>{ item.comments.length > 0 ? item.comments.length : '' }</CText>
-												</View>
-											</TouchableOpacity>
-										</Animated.View>
-									</View>
-								</View>
-							</View>
-						))}
-					</ScrollView>
-				</View>
-			</SafeAreaView>
+							))}
+						</ScrollView>
+					</View>
+				</SafeAreaView>
+			</BackgroundWrapper>
 		</>
 	);
 };
 
 const styles = StyleSheet.create({
+	avatarLarge: {
+		width: 50,
+		height: 50,
+		borderRadius: 25,
+		backgroundColor: '#ccc',
+	},
+
+	createPostBtn: {
+		backgroundColor: theme.colors.light.primary,
+		borderRadius: 20,
+		padding: 10,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+
+	postCard: {
+		backgroundColor: '#fff',
+		borderRadius: 12,
+		padding: 16,
+		marginBottom: 12,
+		marginHorizontal: 5,
+		elevation: 2,
+		shadowColor: '#000',
+		shadowOpacity: 0.05,
+		shadowOffset: { width: 0, height: 1 },
+		shadowRadius: 2,
+	},
+
+	postHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+
+	postBody: {
+		marginTop: 5,
+		marginBottom: 10,
+		fontSize: 14.5,
+		color: '#333',
+	},
+
+	postActions: {
+		flexDirection: 'row',
+		justifyContent: 'flex-start',
+		borderTopWidth: 1,
+		borderTopColor: '#eee',
+		paddingTop: 10,
+	},
+
+	actionBtn: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginRight: 20,
+	},
+
+	reactionCount: {
+		marginLeft: 6,
+		color: '#333',
+	},
+
 	card: {
 		backgroundColor: theme.colors.light.card,
 		// padding: 16,
 		borderRadius: 8,
 		marginBottom: 10,
+		marginHorizontal: 5,
+		elevation: 1
 	},
 	avatar: {
 		width: 35,

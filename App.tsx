@@ -38,11 +38,11 @@ import SignupForm from './src/screens/Auth/SignupForm.tsx';
 import SplashScreen from './src/screens/SplashScreen.tsx';
 import NetInfo from '@react-native-community/netinfo';
 import { triggerAllSyncs } from './src/utils/sqlite/syncManager';
-import AcademicYearScreen from "./src/screens/AcademicYearScreen.tsx";
 import ClassBottomNav from "./src/navigation/class/ClassBottomNav.tsx";
 import WallCommentsScreen from "./src/screens/Classes/Details/WallCommentScreen.tsx";
 import PostWallScreen from "./src/screens/Classes/Details/PostWallScreen.tsx";
 import ActivityBottomNav from "./src/navigation/activity/ActivityBottomNav.tsx";
+import AcademicYearScreen from "./src/screens/AcademicYearScreen.tsx";
 const Stack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
 LogBox.ignoreLogs([
@@ -176,7 +176,7 @@ function AppNavigator() {
                                 <Stack.Navigator screenOptions={{ headerShown: false }}>
                                     <Stack.Screen name="MainTabs" component={BottomTabNav} />
                                     <Stack.Screen name="ClassDetails" component={ClassBottomNav} options={{
-                                        headerShown: true,
+                                        headerShown: false,
                                         headerStyle:{
                                             backgroundColor: theme.colors.light.primary,
                                         },
@@ -186,7 +186,7 @@ function AppNavigator() {
                                         headerTintColor: '#fff',
                                     }} />
                                     <Stack.Screen name="ActivityDetails" component={ActivityBottomNav} options={{
-                                        headerShown: true,
+                                        headerShown: false,
                                         headerStyle:{
                                             backgroundColor: theme.colors.light.primary,
                                         },
@@ -215,7 +215,7 @@ function AppNavigator() {
                                         name="PostWall"
                                         component={PostWallScreen}
                                         options={{
-                                            headerShown: true,
+                                            headerShown: false,
                                             headerStyle:{
                                                 backgroundColor: theme.colors.light.primary,
                                             },

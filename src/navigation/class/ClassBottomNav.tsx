@@ -32,15 +32,6 @@ function useOrientation() {
 export default function ClassBottomNav({route, navigation}) {
 	const ClassID = route.params.ClassID;
 
-	navigation.setOptions({
-		headerTitle: route.params.Title,
-		headerTitleStyle: {
-			fontSize: 16,
-			color: '#fff',
-			fontWeight: 'bold',
-		},
-	});
-
 	const isLandscape = useOrientation();
 	const { hasRole, can } = useAccess();
 
@@ -54,7 +45,7 @@ export default function ClassBottomNav({route, navigation}) {
 							iconName = focused ? 'home' : 'home-outline';
 							break;
 						case 'Activities':
-							iconName = focused ? 'list' : 'list-outline';
+							iconName = focused ? 'reader' : 'reader-outline';
 							break;
 						case 'People':
 							iconName = focused ? 'people' : 'people-outline';
@@ -111,8 +102,10 @@ export default function ClassBottomNav({route, navigation}) {
 				},
 			})}
 		>
-			<Tab.Screen name="Wall" component={WallStackScreen} initialParams={{ ClassID }}/>
-			<Tab.Screen name="Activities" component={ActivityScreen} initialParams={{ ClassID }}/>
+			<Tab.Screen name="Wall" component={WallStackScreen} initialParams={{ ClassID }}
+						options={{ headerShown: false }}
+			/>
+			<Tab.Screen name="Activities" component={ActivityScreen} initialParams={{ ClassID }} options={{ headerShown: false }}/>
 			<Tab.Screen name="People" component={PeopleScreen} initialParams={{ ClassID }}/>
 			<Tab.Screen name="Progress" component={WallScreen} initialParams={{ ClassID }}/>
 			<Tab.Screen name="Calendar" component={WallScreen} initialParams={{ ClassID }}/>

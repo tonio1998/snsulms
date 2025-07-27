@@ -6,8 +6,9 @@ import {
 	Text,
 	ActivityIndicator,
 	TouchableOpacity,
-	RefreshControl,
-	SafeAreaView, Image, ScrollView, StyleSheet
+	SafeAreaView,
+	Image,
+	StyleSheet,
 } from 'react-native';
 import { handleApiError } from '../../utils/errorHandler.ts';
 import CustomHeader from '../../components/CustomHeader.tsx';
@@ -17,105 +18,162 @@ import { FILE_BASE_URL } from '../../api/api_configuration.ts';
 import { CText } from '../../components/CText.tsx';
 import { theme } from '../../theme';
 import Icon from 'react-native-vector-icons/Ionicons';
-import NetInfo from '@react-native-community/netinfo';
 import { NetworkContext } from '../../context/NetworkContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
 import { getMyClasses } from '../../api/modules/classesApi.ts';
-import {ShimmerList} from "../../components/ShimmerList.tsx";
-import {useLoading} from "../../context/LoadingContext.tsx";
+import { ShimmerList } from '../../components/ShimmerList.tsx';
+import { useLoading } from '../../context/LoadingContext.tsx';
+import { getAcademicInfo } from '../../utils/getAcademicInfo.ts';
+import { getOfflineClasses, saveClassesOffline } from '../../utils/sqlite/offlineClassesService.ts';
 
 const ClassesScreen = ({ navigation }) => {
 	const network = useContext(NetworkContext);
-	const [students, setStudents] = useState([]);
+	const { showLoading, hideLoading } = useLoading();
+
+	const [classes, setClasses] = useState([]);
 	const [page, setPage] = useState(1);
 	const [hasMore, setHasMore] = useState(true);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
-	const [yearLevel, setYearLevel] = useState('');
-	const { showLoading, hideLoading } = useLoading();
+	const [acad, setAcad] = useState(null);
+	const [acadRaw, setAcadRaw] = useState(null);
 
-	const fetch = async (pageNumber = 1, filters = {}) => {
+	const debounceTimeout = useRef(null);
+
+	useFocusEffect(
+		useCallback(() => {
+			(async () => {
+				const acadInfo = await getAcademicInfo();
+				setAcad(`${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`);
+				setAcadRaw(acadInfo);
+			})();
+		}, [])
+	);
+
+	useEffect(() => {
+		if (acad) {
+			fetchClasses(1);
+		}
+	}, [acad]);
+
+	const fetchClasses = async (pageNumber = 1, filters = {}) => {
+		if (loading) return;
 		try {
-			if (loading) return;
 			setLoading(true);
-			showLoading("Loading...")
+			showLoading('Loading classes...');
 
 			const filter = {
 				page: pageNumber,
-				...(filters.search !== undefined ? { search: filters.search } : searchQuery ? { search: searchQuery } : {}),
+				...(filters.search !== undefined
+					? { search: filters.search }
+					: searchQuery
+						? { search: searchQuery }
+						: {}),
+				AcademicYear: acad,
 			};
-			let studentsList = [];
+
+			let classesList = [];
 			let totalPages = 1;
 
 			if (network?.isOnline) {
 				const res = await getMyClasses(filter);
-				studentsList = res.data ?? [];
+				classesList = res.data ?? [];
 				totalPages = res.data?.last_page ?? 1;
+
+				await saveClassesOffline(classesList, {
+					from: acadRaw?.from,
+					to: acadRaw?.to,
+					semester: acadRaw?.semester,
+				});
 			} else {
-				console.log("fetch using local:", filter)
+				const offlineFilter = {
+					...filters,
+					Semester: acadRaw?.semester,
+					AYFrom: acadRaw?.from,
+					AYTo: acadRaw?.to,
+				};
+				const offlineList = await getOfflineClasses(offlineFilter);
+				classesList = offlineList ?? [];
+				totalPages = 1;
 			}
 
-			setStudents(prev =>
-				pageNumber === 1 ? studentsList : [...prev, ...studentsList]
-			);
+			setClasses(pageNumber === 1 ? classesList : [...classes, ...classesList]);
 			setPage(pageNumber);
 			setHasMore(pageNumber < totalPages);
-
 		} catch (error) {
-			console.error("Failed to fetch students:", error);
-			handleApiError(error, "Failed to load students");
+			handleApiError(error, 'Failed to load classes');
 		} finally {
 			setLoading(false);
-			hideLoading()
+			hideLoading();
 		}
 	};
-
-
-	useEffect(() => {
-		fetch(1);
-	}, []);
-
-	useFocusEffect(
-		useCallback(() => {
-			fetch(1);
-		}, [])
-	);
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
-		await fetch(1);
+		await fetchClasses(1);
 		setRefreshing(false);
 	};
-
-	const handleSearch = (text) => {
-		setSearchQuery(text);
-		fetch(1, { search: text });
-	};
-
-	const handleLoadMore = () => {
-		if (hasMore && !loading) {
-			fetch(page + 1);
-		}
-	};
-
-	const debounceTimeout = useRef(null);
 
 	const handleSearchTextChange = (text) => {
 		setSearchQuery(text);
 		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-
 		debounceTimeout.current = setTimeout(() => {
-			fetch(1, { search: text });
+			fetchClasses(1, { search: text });
 		}, 500);
 	};
 
-	const renderFooter = () => {
-		return loading ? <ActivityIndicator size="large" color={theme.colors.light.primary} /> : null;
+	const handleClearSearch = () => {
+		setSearchQuery('');
+		fetchClasses(1, { search: '' });
 	};
 
-	const handleViewClass = (ClassStudentID, ClassID, Title) => {
-		navigation.navigate('ClassDetails', { ClassStudentID, ClassID, Title });
+	const handleLoadMore = () => {
+		if (hasMore && !loading) {
+			fetchClasses(page + 1);
+		}
+	};
+
+	const renderFooter = () =>
+		loading ? (
+			<ActivityIndicator size="large" color={theme.colors.light.primary} style={{ marginVertical: 15 }} />
+		) : null;
+
+	const renderClassItem = ({ item }) => {
+		const teacher = item.class_info?.teacher || {};
+		const avatarUri = teacher.avatar
+			? teacher.avatar
+			: `https://ui-avatars.com/api/?name=${encodeURIComponent(teacher.name ?? 'User')}&background=random`;
+
+		return (
+			<TouchableOpacity
+				activeOpacity={0.6}
+				onPress={() =>
+					navigation.navigate('ClassDetails', {
+						ClassStudentID: item.ClassStudentID,
+						ClassID: item.class_info?.ClassID,
+						Title: item.class_info?.CourseName,
+					})
+				}
+				style={styles.card}
+			>
+				<View>
+					<CText fontStyle="SB" fontSize={14} style={{ textTransform: 'uppercase' }} numberOfLines={2}>
+						{item.class_info?.CourseCode} - {item.class_info?.CourseName}
+					</CText>
+					<CText fontStyle="SB" fontSize={15} style={{ textTransform: 'uppercase', marginTop: 3 }} numberOfLines={2}>
+						{item.class_info?.Section}
+					</CText>
+				</View>
+
+				<View style={styles.teacherContainer}>
+					<Image source={{ uri: avatarUri }} style={styles.avatar} />
+					<CText fontStyle="SB" numberOfLines={1} fontSize={12} style={{ textTransform: 'uppercase', width: '80%' }}>
+						{teacher.name}
+					</CText>
+				</View>
+			</TouchableOpacity>
+		);
 	};
 
 	return (
@@ -123,148 +181,43 @@ const ClassesScreen = ({ navigation }) => {
 			<CustomHeader />
 			<BackgroundWrapper>
 				<SafeAreaView style={[globalStyles.safeArea]}>
-					<View style={{ flex: 1, paddingHorizontal: 16 }}>
-						<View style={{ position: 'relative', marginBottom: 10}}>
+					<View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 10 }}>
+						<View style={styles.searchWrapper}>
 							<TextInput
-								placeholder="Search ..."
-								placeholderTextColor="#000"
+								placeholder="Search classes..."
+								placeholderTextColor="#666"
 								value={searchQuery}
 								onChangeText={handleSearchTextChange}
-								onSubmitEditing={() => fetch(1)}
-								style={{
-									borderWidth: 1,
-									borderColor: '#ccc',
-									backgroundColor:'#fff',
-									padding: 15,
-									paddingRight: 35,
-									borderRadius: 8,
-									// fontSize: 18,
-									fontWeight: 500
-								}}
+								onSubmitEditing={() => fetchClasses(1)}
+								returnKeyType="search"
+								style={styles.searchInput}
+								clearButtonMode="while-editing"
 							/>
-							{searchQuery !== '' && (
-								<TouchableOpacity
-									style={{
-										position: 'absolute',
-										right: 10,
-										top: 10,
-									}}
-									onPress={() => {
-										handleSearch('');
-										fetch(1);
-									}}
-								>
-									<Icon name={'close'} size={25} color={'#000'} />
+							{searchQuery ? (
+								<TouchableOpacity style={styles.clearBtn} onPress={handleClearSearch} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+									<Icon name="close-circle" size={22} color="#666" />
 								</TouchableOpacity>
-							)}
+							) : null}
 						</View>
 
 						<ShimmerList
-							data={students}
+							data={classes}
 							loading={loading}
 							keyExtractor={(item) => item.ClassStudentID.toString()}
-							renderItem={({ item }) => (
-								<TouchableOpacity
-									activeOpacity={0.5}
-									onPress={() =>
-										handleViewClass(
-											item.ClassStudentID,
-											item.class_info?.ClassID,
-											item.class_info?.CourseName
-										)
-									}
-									style={{
-										padding: 16,
-										backgroundColor: theme.colors.light.card,
-										borderRadius: 8,
-										marginBottom: 10,
-										borderWidth: 1,
-										borderColor: theme.colors.light.primary + '22',
-									}}
-								>
-									<View>
-										<CText
-											fontStyle={'SB'}
-											fontSize={13}
-											style={{ textTransform: 'uppercase' }}
-											numberOfLines={2}
-										>
-											{item.class_info?.CourseCode} - {item.class_info?.CourseName}
-										</CText>
-										<CText
-											fontStyle={'SB'}
-											fontSize={14}
-											style={{ textTransform: 'uppercase' }}
-											numberOfLines={2}
-										>
-											{item.class_info?.Section}
-										</CText>
-									</View>
-									<View
-										style={{
-											flexDirection: 'row',
-											alignItems: 'center',
-											justifyContent: 'space-between',
-											backgroundColor: theme.colors.light.primary + '22',
-											padding: 5,
-											borderRadius: 10,
-											width: 200,
-											marginTop: 20,
-										}}
-									>
-										<View
-											style={{
-												flexDirection: 'row',
-												alignItems: 'center',
-												justifyContent: 'space-between',
-											}}
-										>
-											<Image
-												source={
-													item.class_info?.teacher?.avatar
-														? {
-															uri: `${FILE_BASE_URL}/${item.class_info?.teacher?.avatar}`,
-														}
-														: require('../../../assets/img/ic_launcher.png')
-												}
-												style={{
-													width: 20,
-													height: 20,
-													borderRadius: 30,
-													marginRight: 6,
-													backgroundColor: '#ccc',
-													borderWidth: 1,
-													borderColor: theme.colors.light.primary,
-												}}
-											/>
-											<CText
-												fontStyle={'SB'}
-												fontSize={10}
-												style={{ textTransform: 'uppercase' }}
-											>
-												{item.class_info?.teacher?.name}
-											</CText>
-										</View>
-									</View>
-								</TouchableOpacity>
-							)}
+							renderItem={renderClassItem}
 							refreshing={refreshing}
 							onRefresh={handleRefresh}
 							onEndReached={handleLoadMore}
+							onEndReachedThreshold={0.5}
 							ListFooterComponent={renderFooter}
 							ListEmptyComponent={
-								<Text style={{ textAlign: 'center', marginTop: 20 }}>No classes found.</Text>
+								!loading && (
+									<View style={{ paddingVertical: 30 }}>
+										<Text style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>No classes found.</Text>
+									</View>
+								)
 							}
 						/>
-
-						{/*<View style={styles.floatBtn}>*/}
-						{/*	<TouchableOpacity*/}
-						{/*		activeOpacity={0.8}*/}
-						{/*		style={styles.fab}*/}
-						{/*		onPress={handleAddStudent}>*/}
-						{/*		<Icon name={'add'} size={25} color={'#fff'} />*/}
-						{/*	</TouchableOpacity>*/}
-						{/*</View>*/}
 					</View>
 				</SafeAreaView>
 			</BackgroundWrapper>
@@ -273,24 +226,59 @@ const ClassesScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-	floatBtn: {
-		position: 'absolute',
-		right: 20,
-		bottom: 20,
+	searchWrapper: {
+		position: 'relative',
+		marginBottom: 15,
 	},
-	fab: {
-		backgroundColor: theme.colors.light.primary,
-		width: 60,
-		height: 60,
-		borderRadius: 30,
-		alignItems: 'center',
-		justifyContent: 'center',
-		elevation: 5,
+	searchInput: {
+		backgroundColor: '#fff',
+		borderWidth: 1,
+		borderColor: '#ccc',
+		borderRadius: 10,
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		fontWeight: '600',
+		fontSize: 16,
+		color: '#000',
+	},
+	clearBtn: {
+		position: 'absolute',
+		right: 15,
+		top: '50%',
+		transform: [{ translateY: -11 }],
+	},
+	card: {
+		backgroundColor: theme.colors.light.card,
+		borderRadius: 12,
+		marginBottom: 14,
+		padding: 16,
+		borderWidth: 1,
+		borderColor: theme.colors.light.primary + '22',
 		shadowColor: '#000',
+		shadowOpacity: 0.05,
+		shadowRadius: 5,
 		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.3,
-		shadowRadius: 3,
-	}
+		elevation: 3,
+	},
+	teacherContainer: {
+		marginTop: 18,
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: theme.colors.light.primary + '22',
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+		borderRadius: 30,
+		width: 180,
+	},
+	avatar: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		marginRight: 8,
+		borderWidth: 1,
+		borderColor: theme.colors.light.primary,
+		backgroundColor: '#ccc',
+	},
 });
 
 export default ClassesScreen;

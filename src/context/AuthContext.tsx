@@ -87,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			setUser(userData.user);
 			await setAuthToken(userData.token);
 		} catch (err) {
-			console.error('Login error:', err);
+			// console.error('Login error:', err);
 		}
 	};
 	
@@ -102,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			// await Keychain.resetGenericPassword({ service: 'fgHEMIS-biometric' });
 			// setBiometricEnabled(false);
 		} catch (err) {
-			console.error('Logout error:', err);
+			// console.error('Logout error:', err);
 		}
 	};
 	
