@@ -28,7 +28,7 @@ import { CText } from '../../../components/CText.tsx';
 import { handleApiError } from '../../../utils/errorHandler.ts';
 import { getWall, reactPost } from '../../../api/modules/wallApi.ts';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { FILE_BASE_URL } from '../../../api/api_configuration.ts';
+import { FILE_BASE_URL } from '../../../../env.ts';
 import { useAuth } from '../../../context/AuthContext.tsx';
 import { formatDate } from '../../../utils/dateFormatter';
 import { useFocusEffect } from '@react-navigation/native';

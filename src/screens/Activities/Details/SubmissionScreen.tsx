@@ -12,7 +12,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { globalStyles } from '../../../theme/styles.ts';
 import {
-	fetchStudentSubmissions,
+	fetchStudentSubmissions, turninSubmission,
 	uploadStudentSubmission
 } from '../../../api/modules/submissionApi.ts';
 import {handleApiError} from "../../../utils/errorHandler.ts";
@@ -103,6 +103,50 @@ export default function SubmissionScreen({ navigation, route }) {
 		}
 	};
 
+	const handleAction = async () => {
+		try {
+			const isSubmitted = activity?.SubmissionType === 'Submitted';
+			showLoading(isSubmitted ? 'Withdrawing...' : 'Submitting...');
+
+			const res = await turninSubmission({ ActivityID });
+
+			if (res.success) {
+				showAlert(
+					'success',
+					isSubmitted ? 'Withdrawn' : 'Submitted',
+					isSubmitted ? 'Submission has been withdrawn.' : 'Submitted successfully.'
+				);
+				navigation.goBack();
+			} else {
+				showAlert('error', 'Error', res.message);
+			}
+		} catch (e) {
+			handleApiError(e, 'Submission failed');
+		} finally {
+			hideLoading();
+		}
+	};
+
+	const handleConfirmAction = () => {
+		const isSubmitted = activity?.SubmissionType === 'Submitted';
+
+		Alert.alert(
+			isSubmitted ? 'Withdraw Submission?' : 'Submit?',
+			isSubmitted
+				? 'Are you sure you want to withdraw your submission?'
+				: 'Are you sure you want to submit?',
+			[
+				{ text: 'Cancel', style: 'cancel' },
+				{
+					text: isSubmitted ? 'Withdraw' : 'Submit',
+					style: isSubmitted ? 'destructive' : 'default',
+					onPress: handleAction,
+				},
+			]
+		);
+	};
+
+
 	const loadSubmissions = async () => {
 		try {
 			setLoadingSubmissions(true);
@@ -147,7 +191,9 @@ export default function SubmissionScreen({ navigation, route }) {
 
 	return (
 		<>
-			<BackHeader title="Submission" />
+			<BackHeader
+				title="Submission"
+			/>
 				<SafeAreaView style={globalStyles.safeArea}>
 					{loadingSubmissions ? (
 						<ActivityIndicator size="large" color={theme.colors.light.card} />

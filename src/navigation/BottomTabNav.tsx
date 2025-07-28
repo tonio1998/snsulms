@@ -12,6 +12,7 @@ import { useAccess } from '../hooks/useAccess.ts';
 import { CText } from '../components/CText.tsx';
 import GradesScreen from "./Grades/GradesScreen.tsx";
 import ActivitiesScreen from "../screens/Activities/ActivitiesScreen.tsx";
+import QRCodeScreen from "../screens/user/QRCodeScreen.tsx";
 
 const Tab = createBottomTabNavigator();
 const ClassesStack = createNativeStackNavigator();
@@ -51,6 +52,9 @@ export default function BottomTabNav() {
 								break;
 							case 'Classes':
 								iconName = focused ? 'people' : 'people-outline';
+								break;
+							case 'myQR':
+								iconName = focused ? 'qr-code' : 'qr-code';
 								break;
 							case 'Grades':
 								iconName = focused ? 'bar-chart' : 'bar-chart-outline';
@@ -93,6 +97,7 @@ export default function BottomTabNav() {
 			>
 				<Tab.Screen name="Home" component={HomeScreen} />
 				<Tab.Screen name="Classes" component={ClassesStackScreen} />
+				<Tab.Screen name="myQR" component={QRCodeScreen} />
 				<Tab.Screen name="Activities" component={ActivitiesScreen} />
 				{/*<Tab.Screen name="Grades" component={GradesScreen} />*/}
 			</Tab.Navigator>

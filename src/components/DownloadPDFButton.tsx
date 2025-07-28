@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, ActivityIndicator, View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { downloadAndOpenPDF } from '../utils/fileDownloader';
-import { API_BASE } from '../api/api_configuration.ts';
+import { API_BASE } from '../../env.ts';
 import { theme } from '../theme';
 import Icon from 'react-native-vector-icons/Ionicons';
 

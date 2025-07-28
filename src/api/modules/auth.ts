@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../api_configuration.ts";
+import { API_BASE_URL } from "../../../env.ts";
 import api from '../api.ts';
 
 export const authLogin = async (requestData) => {

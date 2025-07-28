@@ -19,7 +19,7 @@ import { useAlert } from '../../components/CAlert.tsx';
 import { globalStyles } from '../../theme/styles';
 import { theme } from '../../theme';
 import { CText } from '../../components/CText.tsx';
-import { API_BASE_URL } from '../../api/api_configuration.ts';
+import { API_BASE_URL } from '../../../env.ts';
 import { changePhoneNumber, forgotPassword, verifyPhoneNumber, verifyPhoneNumberForgot } from '../../api/VerificationApi.ts';
 import CButton from '../../components/CButton.tsx';
 import { handleApiError } from '../../utils/errorHandler.ts';

@@ -22,7 +22,7 @@ import CButton from '../../../components/CButton';
 import { getWallComments, postWallComment } from '../../../api/modules/wallApi';
 import { useFocusEffect } from '@react-navigation/native';
 import { formatDate } from '../../../utils/dateFormatter';
-import { FILE_BASE_URL } from '../../../api/api_configuration';
+import { FILE_BASE_URL } from '../../../../env.ts';
 
 const WallCommentsScreen = ({ route, navigation }) => {
 	const postId = route.params.postId;

@@ -1,4 +1,4 @@
-import { ENABLE_DEBUG } from "../api/api_configuration.ts";
+import { ENABLE_DEBUG } from "../../env.ts";
 
 const isDebugEnabled = ENABLE_DEBUG;
 
