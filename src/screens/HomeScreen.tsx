@@ -74,7 +74,6 @@ const HomeScreen = ({navigation}) => {
 					AcademicYear: acad,
 				};
 				const res = await getDashData(filter);
-				console.log("ress", res);
 				setData(res);
 			} else {
 
@@ -166,7 +165,7 @@ const HomeScreen = ({navigation}) => {
 							loading={loading}
 							formatNumber={formatNumber}
 							CText={CText}
-							stats={[{ label: '', value: stats.due }]}
+							stats={[{ label: '', value: stats.dueToday }]}
 							backgroundColor="#fff"
 							textColor={theme.colors.light.primary}
 							cardStyle={{

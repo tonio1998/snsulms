@@ -67,7 +67,7 @@ export default function LoginOptionsScreen() {
 
 	useEffect(() => {
 		init();
-		checkSession();
+		// checkSession();
 		// showLoading('Logging in...');
 	}, []);
 
