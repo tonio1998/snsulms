@@ -28,11 +28,11 @@ const Loading: React.FC<LoadingProps> = ({
     const animationRef = useRef<Animated.CompositeAnimation | null>(null);
 
     const startIndeterminateAnimation = () => {
-        translateX.setValue(-100);
+        translateX.setValue(-300);
         animationRef.current = Animated.loop(
             Animated.timing(translateX, {
                 toValue: 500,
-                duration: 700,
+                duration: 500,
                 easing: Easing.linear,
                 useNativeDriver: true,
             })

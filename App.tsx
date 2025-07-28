@@ -3,7 +3,7 @@ import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer, useFocusEffect } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Alert, Linking, LogBox, StatusBar, Text, TouchableOpacity, Vibration } from 'react-native';
+import { Alert, ImageBackground, Linking, LogBox, StatusBar, StyleSheet, Text, TouchableOpacity, Vibration } from 'react-native';
 
 import { theme } from './src/theme';
 import { AuthProvider, useAuth } from './src/context/AuthContext.tsx';
@@ -43,6 +43,8 @@ import WallCommentsScreen from "./src/screens/Classes/Details/WallCommentScreen.
 import PostWallScreen from "./src/screens/Classes/Details/PostWallScreen.tsx";
 import ActivityBottomNav from "./src/navigation/activity/ActivityBottomNav.tsx";
 import AcademicYearScreen from "./src/screens/AcademicYearScreen.tsx";
+import BackgroundWrapper from "./src/utils/BackgroundWrapper";
+import JoinClassScreen from "./src/screens/Classes/JoinClassScreen.tsx";
 const Stack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
 LogBox.ignoreLogs([
@@ -165,6 +167,7 @@ function AppNavigator() {
     }else{
         return (
             <>
+                <StatusBar backgroundColor="#00A859" barStyle="dark-content" translucent={false} />
                 <SafeAreaProvider>
                     <AccessProvider>
                         <NavigationContainer
@@ -173,62 +176,49 @@ function AppNavigator() {
                                 tryFlushPendingNavigation();
                             }}
                         >
-                                <Stack.Navigator screenOptions={{ headerShown: false }}>
-                                    <Stack.Screen name="MainTabs" component={BottomTabNav} />
-                                    <Stack.Screen name="ClassDetails" component={ClassBottomNav} options={{
-                                        headerShown: false,
-                                        headerStyle:{
-                                            backgroundColor: theme.colors.light.primary,
-                                        },
-                                        headerTitleStyle:{
-                                            color: '#fff'
-                                        },
-                                        headerTintColor: '#fff',
-                                    }} />
-                                    <Stack.Screen name="ActivityDetails" component={ActivityBottomNav} options={{
-                                        headerShown: false,
-                                        headerStyle:{
-                                            backgroundColor: theme.colors.light.primary,
-                                        },
-                                        headerTitleStyle:{
-                                            color: '#fff'
-                                        },
-                                        headerTintColor: '#fff',
-                                    }} />
-
-                                    <Stack.Screen
-                                        name="WallComments"
-                                        component={WallCommentsScreen}
-                                        options={{
-                                            headerShown: true,
-                                            headerStyle:{
-                                                backgroundColor: theme.colors.light.primary,
-                                            },
-                                            headerTitleStyle:{
-                                                color: '#fff'
-                                            },
-                                            headerTintColor: '#fff',
-                                            title: 's',
-                                        }}
-                                    />
-                                    <Stack.Screen
-                                        name="PostWall"
-                                        component={PostWallScreen}
-                                        options={{
+                            <Stack.Navigator screenOptions={{ headerShown: false }}>
+                                        <Stack.Screen name="MainTabs" component={BottomTabNav} />
+                                        <Stack.Screen name="JoinClass" component={JoinClassScreen} />
+                                        <Stack.Screen name="ClassDetails" component={ClassBottomNav} options={{
                                             headerShown: false,
-                                            headerStyle:{
-                                                backgroundColor: theme.colors.light.primary,
-                                            },
-                                            headerTitleStyle:{
-                                                color: '#fff'
-                                            },
-                                            headerTintColor: '#fff',
-                                            title: 's',
-                                        }}
-                                    />
-                                    <Stack.Screen name="Profile" component={ProfileScreen} />
-                                    <Stack.Screen name="AcademicYear" component={AcademicYearScreen} />
-                                </Stack.Navigator>
+                                        }} />
+                                        <Stack.Screen name="ActivityDetails" component={ActivityBottomNav} options={{
+                                            headerShown: false,
+                                        }} />
+
+                                        <Stack.Screen
+                                            name="WallComments"
+                                            component={WallCommentsScreen}
+                                            options={{
+                                                headerShown: true,
+                                                headerStyle:{
+                                                    backgroundColor: theme.colors.light.primary,
+                                                },
+                                                headerTitleStyle:{
+                                                    color: '#fff'
+                                                },
+                                                headerTintColor: '#fff',
+                                                title: 's',
+                                            }}
+                                        />
+                                        <Stack.Screen
+                                            name="PostWall"
+                                            component={PostWallScreen}
+                                            options={{
+                                                headerShown: false,
+                                                headerStyle:{
+                                                    backgroundColor: theme.colors.light.primary,
+                                                },
+                                                headerTitleStyle:{
+                                                    color: '#fff'
+                                                },
+                                                headerTintColor: '#fff',
+                                                title: 's',
+                                            }}
+                                        />
+                                        <Stack.Screen name="Profile" component={ProfileScreen} />
+                                        <Stack.Screen name="AcademicYear" component={AcademicYearScreen} />
+                                    </Stack.Navigator>
                         </NavigationContainer>
                     </AccessProvider>
                 </SafeAreaProvider>
@@ -253,5 +243,12 @@ function App(): React.JSX.Element {
         </LoadingProvider>
     );
 }
+
+const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+        // backgroundColor: theme.colors.light.primary,
+    },
+});
 
 export default App;

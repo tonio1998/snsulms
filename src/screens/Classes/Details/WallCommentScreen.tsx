@@ -10,7 +10,7 @@ import {
 	StyleSheet,
 	TextInput,
 	TouchableOpacity,
-	View
+	View, StatusBar
 } from 'react-native';
 import { globalStyles } from '../../../theme/styles';
 import { handleApiError } from '../../../utils/errorHandler';
@@ -117,40 +117,43 @@ const WallCommentsScreen = ({ route, navigation }) => {
 	);
 
 	return (
-		<SafeAreaView style={{ flex: 1, backgroundColor: '#f0f2f5' }}>
-			<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-								  style={{ flex: 1 }}
-								  keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 90}>
-				<FlatList
-					data={comments}
-					keyExtractor={(item, idx) => idx.toString()}
-					renderItem={renderComment}
-					contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
-					ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-					ListEmptyComponent={!loading && (
-						<View style={styles.emptyContainer}>
-							<CText style={styles.emptyText}>No comments yet. Be the first!</CText>
-						</View>
-					)}
-				/>
-
-				<View style={styles.inputContainer}>
-					<TextInput
-						value={body}
-						onChangeText={setBody}
-						style={styles.input}
-						placeholder="Write a comment..."
-						placeholderTextColor="#777"
-						multiline
-						numberOfLines={2}
+		<>
+			<StatusBar backgroundColor="#00A859" barStyle="light-content" translucent={false} />
+			<SafeAreaView style={{ flex: 1, backgroundColor: '#f0f2f5' }}>
+				<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+									  style={{ flex: 1 }}
+									  keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 90}>
+					<FlatList
+						data={comments}
+						keyExtractor={(item, idx) => idx.toString()}
+						renderItem={renderComment}
+						contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
+						ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+						ListEmptyComponent={!loading && (
+							<View style={styles.emptyContainer}>
+								<CText style={styles.emptyText}>No comments yet. Be the first!</CText>
+							</View>
+						)}
 					/>
-					{loading
-						? <ActivityIndicator size="small" color={theme.colors.light.primary} style={styles.sendLoader} />
-						: <CButton icon="send" onPress={postComment} disabled={!body.trim()} type="success" style={styles.sendBtn} textStyle={styles.sendText} />}
-				</View>
-			</KeyboardAvoidingView>
-		</SafeAreaView>
+
+					<View style={styles.inputContainer}>
+						<TextInput
+							value={body}
+							onChangeText={setBody}
+							style={styles.input}
+							placeholder="Write a comment..."
+							placeholderTextColor="#777"
+							multiline
+							numberOfLines={2}
+						/>
+						{loading
+							? <ActivityIndicator size="small" color={theme.colors.light.primary} style={styles.sendLoader} />
+							: <CButton icon="send" onPress={postComment} disabled={!body.trim()} type="success" style={styles.sendBtn} textStyle={styles.sendText} />}
+					</View>
+				</KeyboardAvoidingView>
+			</SafeAreaView>
+		</>
 	);
 };
 
@@ -162,11 +165,11 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		padding: 12,
 		borderRadius: 12,
-		shadowColor: '#000',
+		// shadowColor: '#000',
 		shadowOpacity: 0.03,
 		shadowOffset: { width: 0, height: 1 },
 		shadowRadius: 2,
-		elevation: 1,
+		// elevation: 1,
 	},
 	avatar: {
 		width: 38,

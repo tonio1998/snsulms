@@ -1,4 +1,11 @@
-import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+	useCallback,
+	useContext,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from 'react';
 import {
 	View,
 	Text,
@@ -10,7 +17,9 @@ import {
 	SafeAreaView,
 	Animated,
 	Easing,
+	useWindowDimensions,
 } from 'react-native';
+import RenderHtml from 'react-native-render-html';
 import { NetworkContext } from '../../../context/NetworkContext.tsx';
 import BackgroundWrapper from '../../../utils/BackgroundWrapper';
 import { globalStyles } from '../../../theme/styles.ts';
@@ -25,7 +34,8 @@ import { formatDate } from '../../../utils/dateFormatter';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import BackHeader from '../../../components/BackHeader.tsx';
-import { getOfflineWall, saveWallOffline } from '../../../utils/sqlite/offlineWallService.ts';
+import {getOfflineWall, saveWallOffline} from "../../../utils/sqlite/offlineWallService.ts";
+
 
 const WallScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -38,12 +48,7 @@ const WallScreen = ({ navigation, route }) => {
 	const [refreshing, setRefreshing] = useState(false);
 	const heartScales = useRef({}).current;
 	const { showLoading, hideLoading } = useLoading();
-
-	useLayoutEffect(() => {
-		navigation.setOptions({
-			title: route.params?.customTitle || 'Wall',
-		});
-	}, [navigation, route.params?.customTitle]);
+	const { width } = useWindowDimensions();
 
 	const fetch = async (pageNumber = 1, filters = {}) => {
 		if (loading) return;
@@ -80,10 +85,6 @@ const WallScreen = ({ navigation, route }) => {
 			hideLoading();
 		}
 	};
-
-	useEffect(() => {
-		fetch(1);
-	}, []);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -125,8 +126,8 @@ const WallScreen = ({ navigation, route }) => {
 	const handleReaction = async (postId) => {
 		try {
 			bounceHeart(postId);
-			setWall(prev =>
-				prev.map(item =>
+			setWall((prev) =>
+				prev.map((item) =>
 					item.id === postId
 						? {
 							...item,
@@ -150,73 +151,127 @@ const WallScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<BackHeader title={'Wall'} />
-			<BackgroundWrapper>
-				<SafeAreaView style={[globalStyles.safeArea]}>
-					<View style={{ flex: 1, paddingHorizontal: 10 }}>
-						<ScrollView
-							contentContainerStyle={{ paddingBottom: 100 }}
-							refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-						>
-							{wall.map((item, index) => (
-								<View key={index} style={styles.postCard}>
-									<View style={styles.postHeader}>
-										<Image
-											source={
-												item.created_by?.profile_pic
-													? { uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}` }
-													: {
-														uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-															item.created_by?.name || 'User'
-														)}&background=random`,
-													}
-											}
-											style={styles.avatar}
-										/>
-										<View style={{ marginLeft: 10, flex: 1 }}>
-											<CText fontSize={14.5} fontStyle="SB">{item.created_by?.name}</CText>
-											<CText fontSize={11} color="#777">{formatDate(item.created_at, 'relative')}</CText>
-										</View>
-									</View>
-
-									<CText style={styles.postBody}>{item.body}</CText>
-
-									<View style={styles.postActions}>
-										<TouchableOpacity style={styles.actionBtn} onPress={() => handleReaction(item.id)}>
-											<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
-												<Icon
-													name={item.is_react_by_you ? 'heart' : 'heart-outline'}
-													size={20}
-													color={item.is_react_by_you ? theme.colors.light.primary : '#aaa'}
-												/>
-											</Animated.View>
-											<CText fontSize={14} style={styles.reactionCount}>
-												{item.reactions_count > 0 ? item.reactions_count : ''}
-											</CText>
-										</TouchableOpacity>
-
-										<TouchableOpacity style={styles.actionBtn} onPress={() => handleComment(item.id)}>
-											<Icon name="chatbubble-outline" size={20} color="#aaa" />
-											<CText fontSize={14} style={styles.reactionCount}>
-												{item.comments?.length > 0 ? item.comments.length : ''}
-											</CText>
-										</TouchableOpacity>
+			<BackHeader title="Wall" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
+			<SafeAreaView style={[globalStyles.safeArea]}>
+				<View style={{ flex: 1, paddingHorizontal: 10 }}>
+					<ScrollView
+						contentContainerStyle={{ paddingBottom: 100 }}
+						refreshControl={
+							<RefreshControl
+								refreshing={refreshing}
+								onRefresh={handleRefresh}
+							/>
+						}
+					>
+						{wall.map((item, index) => (
+							<View key={index} style={styles.postCard}>
+								<View style={styles.postHeader}>
+									<Image
+										source={
+											item.created_by?.profile_pic
+												? {
+													uri: `${FILE_BASE_URL}/${item.created_by?.profile_pic}`,
+												}
+												: {
+													uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+														item.created_by?.name || 'User'
+													)}&background=random`,
+												}
+										}
+										style={styles.avatar}
+									/>
+									<View style={{ marginLeft: 10, flex: 1 }}>
+										<CText fontSize={14.5} fontStyle="SB">
+											{item.created_by?.name}
+										</CText>
+										<CText fontSize={11} color="#777">
+											{formatDate(item.created_at, 'relative')}
+										</CText>
 									</View>
 								</View>
-							))}
-						</ScrollView>
 
-						{/* FAB */}
-						<TouchableOpacity
-							style={styles.fab}
-							activeOpacity={0.7}
-							onPress={() => navigation.navigate('PostWall', { ClassID })}
-						>
-							<Icon name="add" size={28} color="#fff" />
-						</TouchableOpacity>
-					</View>
-				</SafeAreaView>
-			</BackgroundWrapper>
+								{item.body ? (
+									<RenderHtml
+										contentWidth={width - 40}
+										source={{ html: item.body }}
+										baseStyle={styles.postBody}
+										tagsStyles={{
+											p: { marginBottom: 6, color: '#333' },
+											strong: { fontWeight: 'bold' },
+											em: { fontStyle: 'italic' },
+										}}
+									/>
+								) : null}
+
+								<View style={styles.postActions}>
+									<TouchableOpacity
+										style={styles.actionBtn}
+										onPress={() => handleReaction(item.id)}
+									>
+										<Animated.View
+											style={{
+												transform: [
+													{ scale: getHeartScale(item.id) },
+												],
+											}}
+										>
+											<Icon
+												name={
+													item.is_react_by_you
+														? 'heart'
+														: 'heart-outline'
+												}
+												size={20}
+												color={
+													item.is_react_by_you
+														? theme.colors.light.primary
+														: '#aaa'
+												}
+											/>
+										</Animated.View>
+										<CText
+											fontSize={14}
+											style={styles.reactionCount}
+										>
+											{item.reactions_count > 0
+												? item.reactions_count
+												: ''}
+										</CText>
+									</TouchableOpacity>
+
+									<TouchableOpacity
+										style={styles.actionBtn}
+										onPress={() => handleComment(item.id)}
+									>
+										<Icon
+											name="chatbubble-outline"
+											size={20}
+											color="#aaa"
+										/>
+										<CText
+											fontSize={14}
+											style={styles.reactionCount}
+										>
+											{item.comments?.length > 0
+												? item.comments.length
+												: ''}
+										</CText>
+									</TouchableOpacity>
+								</View>
+							</View>
+						))}
+					</ScrollView>
+
+					{/* FAB */}
+					<TouchableOpacity
+						style={styles.fab}
+						activeOpacity={0.7}
+						onPress={() => navigation.navigate('PostWall', { ClassID })}
+					>
+						<Icon name="add" size={28} color="#fff" />
+					</TouchableOpacity>
+				</View>
+			</SafeAreaView>
 		</>
 	);
 };

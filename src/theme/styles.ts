@@ -6,6 +6,23 @@ let WhiteColor = '#fff';
 let FontFamily = 'Poppins';
 let PrimaryColorHex = theme.colors.light.primary;
 export const globalStyles = StyleSheet.create({
+    fab: {
+        position: 'absolute',
+        right: 20,
+        bottom: 25,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: theme.colors.light.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        zIndex: 10,
+    },
     textUppercase: {
         textTransform: 'uppercase',
     },

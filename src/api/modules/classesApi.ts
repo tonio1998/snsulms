@@ -6,3 +6,8 @@ export const getMyClasses = async ({ page = 1, search = '', AcademicYear }) => {
     });
     return response.data;
 };
+
+export const joinClassByCode = async (classCode: string) => {
+    const res = await api.post('/lms/class/join', { classCode });
+    return res.data;
+};

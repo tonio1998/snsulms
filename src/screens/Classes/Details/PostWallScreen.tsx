@@ -20,6 +20,7 @@ import {FILE_BASE_URL} from "../../../api/api_configuration.ts";
 import {CText} from "../../../components/CText.tsx";
 import CButton from "../../../components/CButton.tsx";
 import {theme} from "../../../theme";
+import {handleApiError} from "../../../utils/errorHandler.ts";
 
 const PostWallScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -48,7 +49,6 @@ const PostWallScreen = ({ navigation, route }) => {
 	return (
 		<>
 			<BackHeader title="Create Post" />
-			<BackgroundWrapper>
 				<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
 					<ScrollView contentContainerStyle={{ flexGrow: 1 }}>
 						<KeyboardAvoidingView
@@ -113,7 +113,6 @@ const PostWallScreen = ({ navigation, route }) => {
 						</KeyboardAvoidingView>
 					</ScrollView>
 				</SafeAreaView>
-			</BackgroundWrapper>
 		</>
 	);
 };

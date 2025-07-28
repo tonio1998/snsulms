@@ -154,17 +154,14 @@ const PeopleScreen = ({ navigation, route }) => {
 				<CText style={styles.name} fontStyle={'SB'} fontSize={14.5}>
 					{item.student_info?.FirstName} {item.student_info?.LastName}
 				</CText>
-				<TouchableOpacity onPress={() => handleEmailPress(item.student_info?.user?.email)}>
-					<CText style={styles.email}>{item.student_info?.user?.email}</CText>
-				</TouchableOpacity>
+				<CText style={styles.email}>{item.student_info?.user?.email}</CText>
 			</View>
 		</View>
 	);
 
 	return (
 		<>
-			<BackHeader title={'People'} />
-			<BackgroundWrapper>
+			<BackHeader title="People" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
 				<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
 					<View style={{ flex: 1, paddingHorizontal: 16 }}>
 						{/* Search Bar */}
@@ -219,7 +216,6 @@ const PeopleScreen = ({ navigation, route }) => {
 						/>
 					</View>
 				</SafeAreaView>
-			</BackgroundWrapper>
 		</>
 	);
 };

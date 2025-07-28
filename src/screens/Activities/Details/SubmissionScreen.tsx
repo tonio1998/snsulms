@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
 	View,
 	Text,
@@ -21,11 +21,14 @@ import {CText} from "../../../components/CText.tsx";
 import {viewFile} from "../../../utils/viewFile.ts";
 import {formatNumber, getFileSize} from "../../../utils/format.ts";
 import BackHeader from "../../../components/BackHeader.tsx";
-import BackgroundWrapper from "../../../utils/BackgroundWrapper";
 import { pick, types } from '@react-native-documents/picker';
+import {useActivity} from "../../../context/SharedActivityContext.tsx";
+import {formatDate} from "../../../utils/dateFormatter";
 
 export default function SubmissionScreen({ navigation, route }) {
 	const StudentActivityID = route.params.StudentActivityID;
+	const ActivityID = route.params.ActivityID;
+	const { activity, loading } = useActivity();
 
 	const [modalVisible, setModalVisible] = useState(false);
 	const [link, setLink] = useState('');
@@ -52,7 +55,7 @@ export default function SubmissionScreen({ navigation, route }) {
 				type: file.type,
 				name: file.name,
 			});
-			formData.append('StudentActivityID', StudentActivityID.toString());
+			formData.append('ActivityID', ActivityID.toString());
 
 			setUploading(true);
 			const response = await uploadStudentSubmission(formData);
@@ -79,7 +82,7 @@ export default function SubmissionScreen({ navigation, route }) {
 
 		const formData = new FormData();
 		formData.append('link', link);
-		formData.append('StudentActivityID', StudentActivityID.toString());
+		formData.append('ActivityID', ActivityID.toString());
 
 		try {
 			setUploading(true);
@@ -103,7 +106,7 @@ export default function SubmissionScreen({ navigation, route }) {
 	const loadSubmissions = async () => {
 		try {
 			setLoadingSubmissions(true);
-			const res = await fetchStudentSubmissions({ StudentActivityID });
+			const res = await fetchStudentSubmissions({ ActivityID });
 			setSubmissions(res.data);
 		} catch (err) {
 			handleApiError(err, 'Fetch');
@@ -145,7 +148,6 @@ export default function SubmissionScreen({ navigation, route }) {
 	return (
 		<>
 			<BackHeader title="Submission" />
-			<BackgroundWrapper>
 				<SafeAreaView style={globalStyles.safeArea}>
 					{loadingSubmissions ? (
 						<ActivityIndicator size="large" color={theme.colors.light.card} />
@@ -166,9 +168,11 @@ export default function SubmissionScreen({ navigation, route }) {
 						/>
 					)}
 
-					<TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
-						<Icon name="cloud-upload-outline" size={28} color="#fff" />
-					</TouchableOpacity>
+					{activity?.SubmissionType !== 'Submitted' && (
+						<TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
+							<Icon name="cloud-upload-outline" size={28} color="#fff" />
+						</TouchableOpacity>
+					)}
 
 					<Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
 						<View style={styles.modalOverlay}>
@@ -203,7 +207,6 @@ export default function SubmissionScreen({ navigation, route }) {
 						</View>
 					</Modal>
 				</SafeAreaView>
-			</BackgroundWrapper>
 		</>
 	);
 }

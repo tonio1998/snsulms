@@ -97,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			await setAuthToken(null);
 			await AsyncStorage.removeItem('roles');
 			await AsyncStorage.removeItem('permissions');
-			// await AsyncStorage.removeItem('isLoggedIn');
+			await AsyncStorage.removeItem('isLoggedIn');
 			// await Keychain.resetGenericPassword();
 			// await Keychain.resetGenericPassword({ service: 'fgHEMIS-biometric' });
 			// setBiometricEnabled(false);
