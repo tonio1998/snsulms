@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import {View, TouchableOpacity, StyleSheet, SafeAreaView, Alert, StatusBar} from 'react-native';
 import { CText } from '../components/CText.tsx';
 import { globalStyles } from '../theme/styles.ts';
 import BackgroundWrapper from '../utils/BackgroundWrapper';
@@ -52,11 +52,12 @@ export default function AcademicYearScreen({ navigation }) {
 	};
 
 	return (
-		<BackgroundWrapper>
+		<>
+			<StatusBar barStyle="dark-content" />
 			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
 				<View style={styles.container}>
 					<CText fontSize={20} fontStyle="B" style={{ marginBottom: 10 }}>
-						Academic Year
+						Change Academic
 					</CText>
 
 					<CText fontSize={16} fontStyle="SB" style={{ color: '#000', marginTop: 20 }}>
@@ -110,7 +111,7 @@ export default function AcademicYearScreen({ navigation }) {
 					</TouchableOpacity>
 				</View>
 			</SafeAreaView>
-		</BackgroundWrapper>
+		</>
 	);
 }
 

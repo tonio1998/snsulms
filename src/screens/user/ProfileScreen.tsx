@@ -138,7 +138,6 @@ export default function ProfileScreen({ navigation }) {
 	return (
 		<>
 			<BackHeader />
-			<BackgroundWrapper>
 				<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
 					<ScrollView
 						showsVerticalScrollIndicator={false}
@@ -293,7 +292,6 @@ export default function ProfileScreen({ navigation }) {
 						)}
 					</ScrollView>
 				</SafeAreaView>
-			</BackgroundWrapper>
 		</>
 	);
 }

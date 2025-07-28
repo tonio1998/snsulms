@@ -46,8 +46,6 @@ export default function LoginOptionsScreen() {
 					token: password
 				};
 
-				console.log("sessionData: ", sessionData)
-
 				await loginAuth(sessionData);
 			}
 		} catch (err) {

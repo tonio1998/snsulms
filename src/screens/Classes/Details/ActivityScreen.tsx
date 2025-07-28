@@ -36,7 +36,7 @@ const ActivityScreen = ({ navigation, route }) => {
 
 	const activityTypes = [
 		{ label: 'All', value: '' },
-		{ label: 'Resource', value: 1 },
+		// { label: 'Resource', value: 1 },
 		{ label: 'Assignment', value: 2 },
 		{ label: 'Quiz', value: 3 },
 		{ label: 'Exam', value: 4 }
@@ -44,23 +44,30 @@ const ActivityScreen = ({ navigation, route }) => {
 
 	const fetchActivities = async () => {
 		try {
+			if (loading) return;
 			setLoading(true);
 			showLoading('Loading activities...');
 
-			let list = [];
 			const filter = { page: 1, search: '', ClassID };
+			let list = await getOfflineActivities({ ClassID });
+
+			if (list?.length) {
+				setAllActivities(list);
+				setActivities(list);
+				handleActTypeFilter(actType, list);
+			}
 
 			if (network?.isOnline) {
 				const res = await getStudentActivities(filter);
-				list = res?.data || [];
-				await saveActivitiesOffline(list, ClassID);
-			} else {
-				list = await getOfflineActivities({ ClassID });
-			}
+				const onlineList = res?.data || [];
 
-			setAllActivities(list);
-			setActivities(list);
-			handleActTypeFilter(actType, list); // reapply current filter
+				if (!list?.length || JSON.stringify(onlineList) !== JSON.stringify(list)) {
+					await saveActivitiesOffline(onlineList, ClassID);
+					setAllActivities(onlineList);
+					setActivities(onlineList);
+					handleActTypeFilter(actType, onlineList);
+				}
+			}
 
 		} catch (err) {
 			handleApiError(err, 'Failed to fetch activities');
@@ -70,11 +77,17 @@ const ActivityScreen = ({ navigation, route }) => {
 		}
 	};
 
-	useFocusEffect(
-		useCallback(() => {
-			if (ClassID) fetchActivities();
-		}, [ClassID])
-	);
+
+	useEffect(() => {
+		if (ClassID) fetchActivities();
+	}, [ClassID]);
+
+
+	// useFocusEffect(
+	// 	useCallback(() => {
+	// 		if (ClassID) fetchActivities();
+	// 	}, [ClassID])
+	// );
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
@@ -84,20 +97,24 @@ const ActivityScreen = ({ navigation, route }) => {
 
 	const handleActTypeFilter = (type, list = allActivities) => {
 		setActType(type);
-		if (!type) {
-			setActivities(list);
+
+		const filtered = list.filter(item => item.activity.ActivityTypeID !== 1);
+
+		if (type) {
+			setActivities(filtered.filter(item => item.activity.ActivityTypeID == type));
 		} else {
-			setActivities(list.filter(item => item.activity.ActivityTypeID === type));
+			setActivities(filtered);
 		}
 	};
 
-	const handleViewAct = (StudentActivityID, Title) => {
-		navigation.navigate('ActivityDetails', { StudentActivityID, Title });
+
+	const handleViewAct = (StudentActivityID, Title, ActivityID) => {
+		navigation.navigate('ActivityDetails', { StudentActivityID, Title, ActivityID});
 	};
 
 	const renderItem = ({ item }) => (
 		<TouchableOpacity style={styles.card}
-						  onPress={() => handleViewAct(item.StudentActivityID, item.activity.Title)}
+						  onPress={() => handleViewAct(item.StudentActivityID, item.activity.Title, item.activity.ActivityID)}
 		>
 			<View style={{ padding: 16 }}>
 				<CText fontSize={16} fontStyle="SB" style={{ color: '#000' }}>
@@ -124,7 +141,7 @@ const ActivityScreen = ({ navigation, route }) => {
 			showsHorizontalScrollIndicator={false}
 			style={{ paddingHorizontal: 10, marginBottom: 10 }}
 		>
-			<View style={{ flexDirection: 'row', gap: 8 }}>
+			<View style={{ flexDirection: 'row', gap: 8, marginHorizontal: 20 }}>
 				{activityTypes.map((type, idx) => (
 					<TouchableOpacity
 						key={idx}
@@ -145,8 +162,7 @@ const ActivityScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<BackHeader title="Activities" />
-			<BackgroundWrapper>
+			<BackHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
 				<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
 					<FlatList
 						data={activities}
@@ -166,7 +182,6 @@ const ActivityScreen = ({ navigation, route }) => {
 						}
 					/>
 				</SafeAreaView>
-			</BackgroundWrapper>
 		</>
 	);
 };
@@ -183,7 +198,7 @@ const styles = StyleSheet.create({
 		backgroundColor: '#ccc',
 		paddingHorizontal: 14,
 		paddingVertical: 8,
-		borderRadius: 20,
+		borderRadius: 8,
 		minHeight: 35,
 		justifyContent: 'center',
 	},

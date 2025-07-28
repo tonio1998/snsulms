@@ -10,7 +10,7 @@ import {
 	Text,
 	ActivityIndicator,
 	TouchableOpacity,
-	Dimensions
+	Dimensions, StatusBar
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { globalStyles } from '../theme/styles.ts';
@@ -50,9 +50,9 @@ const HomeScreen = ({navigation}) => {
 		try {
 			const app = getApp();
 			const messaging = getMessaging(app);
-
 			const token = await getToken(messaging);
-			if (token) {
+			const isGenerated = await AsyncStorage.getItem('FCM_TOKEN_KEY');
+			if (token && isGenerated) {
 				await saveFcmToken(token);
 				await AsyncStorage.setItem('FCM_TOKEN_KEY', token);
 			}
@@ -67,12 +67,13 @@ const HomeScreen = ({navigation}) => {
 
 			if (network?.isOnline) {
 				const res = await getDashData();
+				console.log("ress", res);
 				setData(res);
 			} else {
 
 			}
 		} catch (error) {
-			// handleApiError(error, 'Fetch Dashboard Data');
+			handleApiError(error, 'Fetch Dashboard Data');
 		} finally {
 			setLoading(false);
 		}
@@ -110,7 +111,11 @@ const HomeScreen = ({navigation}) => {
 			totalSubjects: dash_data?.total_classes || 0,
 			totalActivities: dash_data?.total_activities || 0,
 			dueToday: dash_data?.due_today || 0,
+			incoming: dash_data?.incoming_activities || 0,
+			completed: dash_data?.completed_activities || 0,
+			due: dash_data?.due_activities || 0,
 		};
+
 
 		const recentActivities = dash_data?.recent_activities || [];
 
@@ -119,13 +124,13 @@ const HomeScreen = ({navigation}) => {
 				<ScrollView horizontal showsHorizontalScrollIndicator={false}>
 					<View style={{ flexDirection: 'row', gap: 16, paddingHorizontal: 16 }}>
 						<SummaryCard
-							title="My Classes"
+							title="Incoming"
 							loading={loading}
 							formatNumber={formatNumber}
 							CText={CText}
-							stats={[{ label: '', value: stats.totalSubjects }]}
-							backgroundColor="#e0f7fa"
-							textColor="#00796b"
+							stats={[{ label: '', value: stats.incoming }]}
+							backgroundColor="#d0f0c0" // soft green
+							textColor="#2e7d32" // rich green
 							cardStyle={{
 								width: window.width * 0.75,
 								padding: 20,
@@ -134,13 +139,13 @@ const HomeScreen = ({navigation}) => {
 						/>
 
 						<SummaryCard
-							title="Activities"
+							title="Due"
 							loading={loading}
 							formatNumber={formatNumber}
 							CText={CText}
-							stats={[{ label: '', value: stats.totalActivities }]}
-							backgroundColor="#f1f8e9"
-							textColor="#689f38"
+							stats={[{ label: '', value: stats.due }]}
+							backgroundColor="#e0f2f1" // greenish teal or pale green
+							textColor="#00796b" // strong teal green
 							cardStyle={{
 								width: window.width * 0.75,
 								padding: 20,
@@ -149,13 +154,13 @@ const HomeScreen = ({navigation}) => {
 						/>
 
 						<SummaryCard
-							title="Due Today"
+							title="Completed"
 							loading={loading}
 							formatNumber={formatNumber}
 							CText={CText}
-							stats={[{ label: '', value: stats.dueToday }]}
-							backgroundColor="#fff3e0"
-							textColor="#ef6c00"
+							stats={[{ label: '', value: stats.completed }]}
+							backgroundColor="#388e3c" // primary green
+							textColor="#ffffff" // white text on strong green
 							cardStyle={{
 								width: window.width * 0.75,
 								padding: 20,
@@ -164,6 +169,7 @@ const HomeScreen = ({navigation}) => {
 						/>
 					</View>
 				</ScrollView>
+
 
 				<View style={{ marginTop: 30, paddingHorizontal: 16 }}>
 					<CText fontSize={18} fontStyle={'B'} style={{ marginBottom: 10 }}>
@@ -197,9 +203,11 @@ const HomeScreen = ({navigation}) => {
 								</View>
 								<View style={styles.updateText}>
 									<Text style={styles.updateLabel}>{activity?.title || 'Untitled Activity'}</Text>
-									<Text style={styles.updateDate}>
-										{formatDate(activity?.due_date || '', 'MMM dd, yyyy')}
-									</Text>
+									{activity?.due_date && (
+										<Text style={styles.updateDate}>
+											Due: {formatDate(activity?.due_date || '', 'MMM dd, yyyy')}
+										</Text>
+									)}
 								</View>
 							</View>
 						))
@@ -215,7 +223,6 @@ const HomeScreen = ({navigation}) => {
 	return (
 		<>
 			<CustomHeader />
-			<BackgroundWrapper>
 				<SafeAreaView style={[globalStyles.safeArea]}>
 					<ScrollView
 						showsVerticalScrollIndicator={false}
@@ -230,7 +237,6 @@ const HomeScreen = ({navigation}) => {
 						{hasRole('STUD') && renderStudentDashboard()}
 					</ScrollView>
 				</SafeAreaView>
-			</BackgroundWrapper>
 		</>
 	);
 

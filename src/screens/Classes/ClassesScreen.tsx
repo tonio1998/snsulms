@@ -154,7 +154,6 @@ const ClassesScreen = ({ navigation }) => {
 					navigation.navigate('ClassDetails', {
 						ClassStudentID: item.ClassStudentID,
 						ClassID: item.class_info?.ClassID,
-						Title: item.class_info?.CourseName,
 					})
 				}
 				style={styles.card}
@@ -181,7 +180,6 @@ const ClassesScreen = ({ navigation }) => {
 	return (
 		<>
 			<CustomHeader />
-			<BackgroundWrapper>
 				<SafeAreaView style={globalStyles.safeArea}>
 					<View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 10 }}>
 						<View style={styles.searchWrapper}>
@@ -221,8 +219,14 @@ const ClassesScreen = ({ navigation }) => {
 							}
 						/>
 					</View>
+					<TouchableOpacity
+						style={globalStyles.fab}
+						activeOpacity={0.7}
+						onPress={() => navigation.navigate('JoinClass')}
+					>
+						<Icon name="school" size={28} color="#fff" />
+					</TouchableOpacity>
 				</SafeAreaView>
-			</BackgroundWrapper>
 		</>
 	);
 };
@@ -260,7 +264,7 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.05,
 		shadowRadius: 5,
 		shadowOffset: { width: 0, height: 2 },
-		elevation: 3,
+		// elevation: 3,
 	},
 	teacherContainer: {
 		marginTop: 18,

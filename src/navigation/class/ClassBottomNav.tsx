@@ -11,6 +11,8 @@ import ActivityScreen from "../../screens/Classes/Details/ActivityScreen.tsx";
 import PostWallScreen from "../../screens/Classes/Details/PostWallScreen.tsx";
 import WallCommentsScreen from "../../screens/Classes/Details/WallCommentScreen.tsx";
 import PeopleScreen from "../../screens/Classes/Details/PeopleScreen.tsx";
+import MaterialScreen from "../../screens/Classes/Details/MaterialScreen.tsx";
+import CalendarScreen from "../../screens/Classes/Details/CalendarScreen.tsx";
 const Tab = createBottomTabNavigator();
 const ClassesDetailsStack = createNativeStackNavigator();
 
@@ -46,6 +48,9 @@ export default function ClassBottomNav({route, navigation}) {
 							break;
 						case 'Activities':
 							iconName = focused ? 'reader' : 'reader-outline';
+							break;
+							case 'Materials':
+							iconName = focused ? 'book' : 'book-outline';
 							break;
 						case 'People':
 							iconName = focused ? 'people' : 'people-outline';
@@ -106,9 +111,10 @@ export default function ClassBottomNav({route, navigation}) {
 						options={{ headerShown: false }}
 			/>
 			<Tab.Screen name="Activities" component={ActivityScreen} initialParams={{ ClassID }} options={{ headerShown: false }}/>
+			<Tab.Screen name="Materials" component={MaterialScreen} initialParams={{ ClassID }}/>
 			<Tab.Screen name="People" component={PeopleScreen} initialParams={{ ClassID }}/>
 			<Tab.Screen name="Progress" component={WallScreen} initialParams={{ ClassID }}/>
-			<Tab.Screen name="Calendar" component={WallScreen} initialParams={{ ClassID }}/>
+			<Tab.Screen name="Calendar" component={CalendarScreen} initialParams={{ ClassID }}/>
 		</Tab.Navigator>
 	);
 }
