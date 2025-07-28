@@ -37,6 +37,8 @@ import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
 import { NetworkContext } from '../context/NetworkContext.tsx';
 import { getOfflineDashboard, saveDashboardData } from '../utils/sqlite/offlinedashboard';
+import {useFocusEffect} from "@react-navigation/native";
+import {getAcademicInfo} from "../utils/getAcademicInfo.ts";
 const HomeScreen = ({navigation}) => {
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
@@ -45,6 +47,8 @@ const HomeScreen = ({navigation}) => {
 	const [loading, setLoading] = useState(false);
 	const { can, hasRole } = useAccess();
 	const window = Dimensions.get('window');
+	const [acad, setAcad] = useState(null);
+	const [acadRaw, setAcadRaw] = useState(null);
 
 	const getFCMToken = async () => {
 		try {
@@ -66,7 +70,10 @@ const HomeScreen = ({navigation}) => {
 			setLoading(true);
 
 			if (network?.isOnline) {
-				const res = await getDashData();
+				const filter = {
+					AcademicYear: acad,
+				};
+				const res = await getDashData(filter);
 				console.log("ress", res);
 				setData(res);
 			} else {
@@ -80,9 +87,24 @@ const HomeScreen = ({navigation}) => {
 	};
 
 
-	useEffect(() => {
-		getDashboardData();
-	}, []);
+	useFocusEffect(
+		useCallback(() => {
+			let isActive = true;
+			(async () => {
+				const acadInfo = await getAcademicInfo();
+				const acadStr = `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
+				if (isActive) {
+					setAcad(acadStr);
+					setAcadRaw(acadInfo);
+					await getDashboardData();
+				}
+			})();
+			return () => {
+				isActive = false;
+			};
+		}, [])
+	);
+
 
 	const onRefresh = useCallback(() => {
 		setRefreshing(true);
@@ -105,6 +127,7 @@ const HomeScreen = ({navigation}) => {
 
 		requestNotificationPermission();
 	}, []);
+
 
 	const renderStudentDashboard = () => {
 		const stats = {
@@ -129,8 +152,8 @@ const HomeScreen = ({navigation}) => {
 							formatNumber={formatNumber}
 							CText={CText}
 							stats={[{ label: '', value: stats.incoming }]}
-							backgroundColor="#d0f0c0" // soft green
-							textColor="#2e7d32" // rich green
+							backgroundColor="#fff"
+							textColor={theme.colors.light.primary}
 							cardStyle={{
 								width: window.width * 0.75,
 								padding: 20,
@@ -144,8 +167,8 @@ const HomeScreen = ({navigation}) => {
 							formatNumber={formatNumber}
 							CText={CText}
 							stats={[{ label: '', value: stats.due }]}
-							backgroundColor="#e0f2f1" // greenish teal or pale green
-							textColor="#00796b" // strong teal green
+							backgroundColor="#fff"
+							textColor={theme.colors.light.primary}
 							cardStyle={{
 								width: window.width * 0.75,
 								padding: 20,
@@ -159,8 +182,8 @@ const HomeScreen = ({navigation}) => {
 							formatNumber={formatNumber}
 							CText={CText}
 							stats={[{ label: '', value: stats.completed }]}
-							backgroundColor="#388e3c" // primary green
-							textColor="#ffffff" // white text on strong green
+							backgroundColor="#fff"
+							textColor={theme.colors.light.primary}
 							cardStyle={{
 								width: window.width * 0.75,
 								padding: 20,
