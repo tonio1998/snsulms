@@ -105,7 +105,7 @@ const ActivitiesScreen = ({ navigation }) => {
 			onPress={() => handleViewAct(item.StudentActivityID, item.Title, item.ActivityID)}
 		>
 			<CText fontStyle="B" fontSize={16} style={{ marginBottom: 6 }}>{item.Title}</CText>
-			{item.Description && <CText fontSize={12} color="#666">{item.Description}</CText>}
+			{item.Description && <CText fontSize={14} color="#666">{item.Description}</CText>}
 			<CText fontSize={15} style={{ marginBottom: 4 }}>Deadline: {formatDate(item.Deadline)}</CText>
 			<CText
 				fontSize={16}
