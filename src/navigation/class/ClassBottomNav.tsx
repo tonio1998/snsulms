@@ -113,7 +113,7 @@ export default function ClassBottomNav({route, navigation}) {
 			<Tab.Screen name="Activities" component={ActivityScreen} initialParams={{ ClassID }} options={{ headerShown: false }}/>
 			<Tab.Screen name="Materials" component={MaterialScreen} initialParams={{ ClassID }}/>
 			<Tab.Screen name="People" component={PeopleScreen} initialParams={{ ClassID }}/>
-			<Tab.Screen name="Progress" component={WallScreen} initialParams={{ ClassID }}/>
+			{/*<Tab.Screen name="Progress" component={WallScreen} initialParams={{ ClassID }}/>*/}
 			<Tab.Screen name="Calendar" component={CalendarScreen} initialParams={{ ClassID }}/>
 		</Tab.Navigator>
 	);
