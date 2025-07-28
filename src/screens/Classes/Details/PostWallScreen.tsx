@@ -16,7 +16,7 @@ import {postWall} from "../../../api/modules/wallApi.ts";
 import BackHeader from "../../../components/BackHeader.tsx";
 import BackgroundWrapper from "../../../utils/BackgroundWrapper";
 import {globalStyles} from "../../../theme/styles.ts";
-import {FILE_BASE_URL} from "../../../api/api_configuration.ts";
+import {FILE_BASE_URL} from "../../../../env.ts";
 import {CText} from "../../../components/CText.tsx";
 import CButton from "../../../components/CButton.tsx";
 import {theme} from "../../../theme";

@@ -3,7 +3,7 @@ import { Image, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { globalStyles } from '../theme/styles.ts';
 import { CText } from './CText.tsx';
-import { APP_NAME } from '../api/api_configuration.ts';
+import { APP_NAME } from '../../env.ts';
 import { theme } from '../theme';
 
 const QRGenerator = ({ value, size = 200 }) => {

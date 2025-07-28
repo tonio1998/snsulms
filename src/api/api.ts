@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_BASE_URL } from './api_configuration.ts';
+import { API_BASE_URL } from '../../env.ts';
 import axios from 'axios';
 import { handleApiError } from "../utils/errorHandler.ts";
 

@@ -21,7 +21,7 @@ import { useAlert } from '../../components/CAlert.tsx';
 import { getUserDetails, updateProfilePicture } from '../../api/modules/userApi.ts';
 import { formatAcad } from '../../utils/format.ts';
 import { handleApiError } from '../../utils/errorHandler.ts';
-import { FILE_BASE_URL } from '../../api/api_configuration.ts';
+import { FILE_BASE_URL } from '../../../env.ts';
 import HorizontalLine from '../../components/HorizontalLine.tsx';
 import { useLoading } from '../../context/LoadingContext.tsx';
 import BackgroundWrapper from '../../utils/BackgroundWrapper';

@@ -23,7 +23,7 @@ import * as Keychain from 'react-native-keychain';
 import RNFS from 'react-native-fs';
 import { handleGoogleLogin } from '../../utils/authControl';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import {APP_NAME, TAGLINE} from "../../api/api_configuration.ts";
+import {APP_NAME, TAGLINE} from "../../../env.ts";
 import NetInfo from "@react-native-community/netinfo";
 
 export default function LoginOptionsScreen() {

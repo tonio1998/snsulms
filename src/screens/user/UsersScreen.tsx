@@ -16,7 +16,7 @@ import { handleApiError } from '../../utils/errorHandler.ts';
 import CustomHeader from '../../components/CustomHeader.tsx';
 import { globalStyles } from '../../theme/styles.ts';
 import BackgroundWrapper from '../../utils/BackgroundWrapper';
-import { FILE_BASE_URL } from '../../api/api_configuration.ts';
+import { FILE_BASE_URL } from '../../../env.ts';
 import { CText } from '../../components/CText.tsx';
 import { theme } from '../../theme';
 import Icon from 'react-native-vector-icons/Ionicons';

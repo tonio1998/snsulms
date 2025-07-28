@@ -1,7 +1,7 @@
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
-import { NavigationContainer, useFocusEffect } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert, ImageBackground, Linking, LogBox, StatusBar, StyleSheet, Text, TouchableOpacity, Vibration } from 'react-native';
 
@@ -10,7 +10,6 @@ import { AuthProvider, useAuth } from './src/context/AuthContext.tsx';
 import { LoadingProvider } from './src/context/LoadingContext.tsx';
 import { CAlert } from './src/components/CAlert.tsx';
 import LoginOptionsScreen from "./src/screens/Auth/LoginOptionsScreen.tsx";
-import { firebase } from '@react-native-firebase/auth';
 import messaging, {
     getInitialNotification,
     getMessaging, onMessage,
@@ -28,11 +27,7 @@ import { navigationRef } from './src/utils/navigation.ts';
 import { tryFlushPendingNavigation } from './src/hooks/RootNavigation.ts';
 import { getApp } from '@react-native-firebase/app';
 import { AccessProvider } from './src/context/AccessContext.tsx';
-import NFCRegisterVerification from './src/screens/Students/NFCRegisterVerification.tsx';
-import { CText } from './src/components/CText.tsx';
-import Icon from 'react-native-vector-icons/Ionicons';
 import ProfileScreen from './src/screens/user/ProfileScreen.tsx';
-import Sidebar from './src/components/Sidebar.tsx';
 import SigninForm from './src/screens/Auth/SigninForm.tsx';
 import SignupForm from './src/screens/Auth/SignupForm.tsx';
 import SplashScreen from './src/screens/SplashScreen.tsx';
@@ -43,10 +38,8 @@ import WallCommentsScreen from "./src/screens/Classes/Details/WallCommentScreen.
 import PostWallScreen from "./src/screens/Classes/Details/PostWallScreen.tsx";
 import ActivityBottomNav from "./src/navigation/activity/ActivityBottomNav.tsx";
 import AcademicYearScreen from "./src/screens/AcademicYearScreen.tsx";
-import BackgroundWrapper from "./src/utils/BackgroundWrapper";
 import JoinClassScreen from "./src/screens/Classes/JoinClassScreen.tsx";
 const Stack = createNativeStackNavigator();
-const ProfileStack = createNativeStackNavigator();
 LogBox.ignoreLogs([
     'Text strings must be rendered within a <Text> component',
 ]);

@@ -3,7 +3,7 @@ import {View, ActivityIndicator, StyleSheet, StatusBar, Text, Image, ImageBackgr
 import {FontFamily, theme} from '../theme';
 import { CText } from '../components/CText.tsx';
 import { globalStyles } from '../theme/styles.ts';
-import { APP_NAME, TAGLINE } from '../api/api_configuration.ts';
+import { APP_NAME, TAGLINE } from '../../env.ts';
 
 export default function SplashScreen() {
 	return (

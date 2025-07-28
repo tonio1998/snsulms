@@ -1,5 +1,5 @@
 const PORT = 8000;
-const HOST_DOMAIN = '10.25.1.110';
+const HOST_DOMAIN = '10.243.253.229';
 const PROTOCOL = "http:";
 
 // WITH PORT

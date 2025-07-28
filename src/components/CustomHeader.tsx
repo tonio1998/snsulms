@@ -11,12 +11,13 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext.tsx';
-import { APP_NAME, FILE_BASE_URL } from '../api/api_configuration.ts';
+import { APP_NAME, FILE_BASE_URL } from '../../env.ts';
 import { navigate } from '../utils/navigation.ts';
 import { CText } from './CText.tsx';
 import { getAcademicInfo } from '../utils/getAcademicInfo.ts';
 import { formatAcad } from '../utils/format.ts';
 import LinearGradient from 'react-native-linear-gradient';
+import {globalStyles} from "../theme/styles.ts";
 
 const generateCircles = (count = 4) => {
     const fixedPositions = [
@@ -69,7 +70,7 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
             />
 
             <LinearGradient
-                colors={[theme.colors.light.primary + '88', 'transparent']}
+                colors={[theme.colors.light.primary, 'transparent']}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={styles.statusBarBackground}
@@ -95,7 +96,10 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
                     <CText
                         fontSize={30}
                         fontStyle="SB"
-                        style={styles.appName}
+                        style={[
+                            styles.appName,
+                            globalStyles.shadowText
+                        ]}
                         numberOfLines={1}
                         adjustsFontSizeToFit
                     >
@@ -209,7 +213,7 @@ const styles = StyleSheet.create({
     },
 
     appName: {
-        color: theme.colors.light.primary,
+        color: theme.colors.light.card,
         marginLeft: 10,
     },
 

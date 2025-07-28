@@ -1,7 +1,7 @@
 import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
 import { ToastAndroid, Alert, Platform } from 'react-native';
-import {API_BASE_URL} from "../api/api_configuration.ts";
+import {API_BASE_URL} from "../../env.ts";
 import {handleApiError} from "./errorHandler.ts";
 import api from "../api/api.ts";
 

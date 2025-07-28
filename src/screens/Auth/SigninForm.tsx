@@ -25,7 +25,7 @@ import { globalStyles } from '../../theme/styles';
 import { theme } from '../../theme';
 import { CText } from '../../components/CText.tsx';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { GOOGLE_CLIENT_ID } from '../../api/api_configuration.ts';
+import { GOOGLE_CLIENT_ID } from '../../../env.ts';
 import { handleApiError } from '../../utils/errorHandler.ts';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import * as Keychain from 'react-native-keychain';

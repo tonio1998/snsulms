@@ -172,16 +172,36 @@ const InstructionScreen = ({ navigation, route }) => {
 
 			<CText fontSize={16} style={{ marginBottom: 10}} fontStyle="SB">Instructor</CText>
 			<View style={styles.card}>
-				<View style={styles.profileRow}>
-					<Image
-						source={{ uri: activity?.activity?.teacher?.users?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity?.activity?.teacher?.users?.name || 'User')}` }}
-						style={styles.avatar}
-					/>
-					<View style={styles.profileInfo}>
-						<CText fontSize={17} fontStyle="SB">{activity?.activity?.teacher?.users?.name || ''}</CText>
-						<CText fontSize={12} style={{ color: '#777' }}>{activity?.activity?.teacher?.users?.email}</CText>
-					</View>
-				</View>
+				{!activity?.activity?.teacher?.users?.name ? (
+					<>
+
+						<View style={styles.profileRow}>
+							<ShimmerPlaceHolder style={styles.avatar}/>
+							<View style={styles.profileInfo}>
+								<ShimmerPlaceHolder style={{
+									width: 150,
+									marginBottom: 10
+								}}/>
+								<ShimmerPlaceHolder style={{
+									width: 100
+								}}/>
+							</View>
+						</View>
+					</>
+				) : (
+					<>
+						<View style={styles.profileRow}>
+							<Image
+								source={{ uri: activity?.activity?.teacher?.users?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity?.activity?.teacher?.users?.name || 'User')}` }}
+								style={styles.avatar}
+							/>
+							<View style={styles.profileInfo}>
+								<CText fontSize={17} fontStyle="SB">{activity?.activity?.teacher?.users?.name || ''}</CText>
+								<CText fontSize={12} style={{ color: '#777' }}>{activity?.activity?.teacher?.users?.email}</CText>
+							</View>
+						</View>
+					</>
+				)}
 			</View>
 
 			<CText fontSize={16} style={{ marginBottom: 10}} fontStyle="SB">Attachments</CText>

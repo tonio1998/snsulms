@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SEMAPHORE_API_KEY, SEMAPHORE_API_SENDER_NAME } from '../api/api_configuration.ts';
+import { SEMAPHORE_API_KEY, SEMAPHORE_API_SENDER_NAME } from '../../env.ts';
 
 const SEMAPHORE_API_URL = 'https://api.semaphore.co/api/v4/messages';
 const API_KEY = SEMAPHORE_API_KEY;
