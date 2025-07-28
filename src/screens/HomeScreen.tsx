@@ -65,18 +65,16 @@ const HomeScreen = ({navigation}) => {
 		}
 	};
 
-	const getDashboardData = async () => {
+	const getDashboardData = async (acadStr: string) => {
 		try {
 			setLoading(true);
-
 			if (network?.isOnline) {
 				const filter = {
-					AcademicYear: acad,
+					AcademicYear: acadStr,
 				};
 				const res = await getDashData(filter);
 				setData(res);
 			} else {
-
 			}
 		} catch (error) {
 			handleApiError(error, 'Fetch Dashboard Data');
@@ -86,30 +84,41 @@ const HomeScreen = ({navigation}) => {
 	};
 
 
+
 	useFocusEffect(
 		useCallback(() => {
 			let isActive = true;
-			(async () => {
+			const init = async () => {
 				const acadInfo = await getAcademicInfo();
 				const acadStr = `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
 				if (isActive) {
 					setAcad(acadStr);
 					setAcadRaw(acadInfo);
-					await getDashboardData();
+					await getDashboardData(acadStr);
 				}
-			})();
+			};
+			init();
+
 			return () => {
 				isActive = false;
 			};
 		}, [])
 	);
 
-
-	const onRefresh = useCallback(() => {
+	const onRefresh = useCallback(async () => {
 		setRefreshing(true);
-		getDashboardData();
+		if (!acad) {
+			const acadInfo = await getAcademicInfo();
+			const acadStr = `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
+			setAcad(acadStr);
+			setAcadRaw(acadInfo);
+			await getDashboardData(acadStr);
+		} else {
+			await getDashboardData(acad);
+		}
 		setRefreshing(false);
-	}, []);
+	}, [acad]);
+
 
 	useEffect(() => {
 		const requestNotificationPermission = async () => {
@@ -156,7 +165,7 @@ const HomeScreen = ({navigation}) => {
 							cardStyle={{
 								width: window.width * 0.75,
 								padding: 20,
-								borderRadius: 20,
+								borderRadius: 8,
 							}}
 						/>
 
@@ -171,7 +180,7 @@ const HomeScreen = ({navigation}) => {
 							cardStyle={{
 								width: window.width * 0.75,
 								padding: 20,
-								borderRadius: 20,
+								borderRadius: 8,
 							}}
 						/>
 
@@ -184,9 +193,9 @@ const HomeScreen = ({navigation}) => {
 							backgroundColor="#fff"
 							textColor={theme.colors.light.primary}
 							cardStyle={{
-								width: window.width * 0.75,
+								width: window.width * 0.2,
 								padding: 20,
-								borderRadius: 20,
+								borderRadius: 8,
 							}}
 						/>
 					</View>
