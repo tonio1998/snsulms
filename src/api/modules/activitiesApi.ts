@@ -1,11 +1,11 @@
 import api from "../api.ts";
 
-export const getActivities = async ({ page = 1, search = '', ClassID = '' }) => {
-    const response = await api.get('/lms/myclasses/activities', {
-        params: { page, search, ClassID }
-    });
-    return response.data;
-};
+// export const getActivities = async ({ page = 1, search = '', ClassID = '' }) => {
+//     const response = await api.get('/lms/myclasses/activities', {
+//         params: { page, search, ClassID }
+//     });
+//     return response.data;
+// };
 
 export const getStudentActivities = async ({ page = 1, search = '', ClassID = '' }) => {
     const response = await api.get('/lms/myclasses/activities/students', {
@@ -32,4 +32,21 @@ export const getMyActivities = async ({ search = '', ClassID = '', AcademicYear 
         params: { search, ClassID, AcademicYear }
     });
     return response.data;
+};
+
+export const getActivities = async ({ search = '', ClassID = '', AcademicYear }) => {
+    const response = await api.get('/lms/myclasses/fac/activities', {
+        params: { search, ClassID, AcademicYear }
+    });
+    return response.data;
+};
+
+export const getActivityDetails = async (ActivityID) => {
+    const response = await api.get(`/lms/myclasses/fac/activities/${ActivityID}`);
+    return response.data;
+};
+
+export const addActivity = async (form) => {
+    const res = await api.post('/lms/myclasses/activities/add', form);
+    return res.data;
 };

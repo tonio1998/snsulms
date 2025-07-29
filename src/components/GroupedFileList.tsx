@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { CText } from './CText.tsx';
+import { CText } from './common/CText.tsx';
 import { globalStyles } from '../theme/styles.ts';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { theme } from '../theme';

@@ -22,7 +22,7 @@ export const AccessProvider = ({ children }: { children: React.ReactNode }) => {
     const loadFromStorage = async () => {
         const storedRoles = await AsyncStorage.getItem('roles');
         const storedPermissions = await AsyncStorage.getItem('permissions');
-
+        // console.log('AccessProvider', storedRoles, storedPermissions);
         if (storedRoles) setRoles(JSON.parse(storedRoles));
         if (storedPermissions) setPermissions(JSON.parse(storedPermissions));
     };

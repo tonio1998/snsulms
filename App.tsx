@@ -1,247 +1,178 @@
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
+import { StatusBar, Vibration, LogBox } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Alert, ImageBackground, Linking, LogBox, StatusBar, StyleSheet, Text, TouchableOpacity, Vibration } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import NetInfo from '@react-native-community/netinfo';
+import Toast from 'react-native-toast-message';
 
 import { theme } from './src/theme';
 import { AuthProvider, useAuth } from './src/context/AuthContext.tsx';
 import { LoadingProvider } from './src/context/LoadingContext.tsx';
 import { CAlert } from './src/components/CAlert.tsx';
-import LoginOptionsScreen from "./src/screens/Auth/LoginOptionsScreen.tsx";
-import messaging, {
-    getInitialNotification,
-    getMessaging, onMessage,
-    onNotificationOpenedApp
-} from '@react-native-firebase/messaging';
-import { enableScreens } from 'react-native-screens';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AccessProvider } from './src/context/AccessContext.tsx';
 import NetworkProvider from './src/context/NetworkContext.tsx';
 import StatusIndicator from './src/components/StatusIndicator.tsx';
+
+import LoginOptionsScreen from './src/Shared/Auth/LoginOptionsScreen.tsx';
+import SigninForm from './src/Shared/Auth/SigninForm.tsx';
+import SignupForm from './src/Shared/Auth/SignupForm.tsx';
+import SplashScreen from './src/Shared/SplashScreen.tsx';
+
 import BottomTabNav from './src/navigation/BottomTabNav.tsx';
-import notificationEmitter from './src/utils/notificationEmitter.ts';
-import { handleNotificationNavigation } from './src/utils/handleNotificationNavigation.ts';
-import Toast from 'react-native-toast-message';
+import ClassBottomNav from './src/navigation/Shared/ClassBottomNav.tsx';
+import StudentActivityBottomNav from './src/navigation/Student/StudentActivityBottomNav.tsx';
+import FacultyActivityBottomNav from './src/navigation/Faculty/FacultyActivityBottomNav.tsx';
+
+import JoinClassScreen from './src/screens/Student/Classes/JoinClassScreen.tsx';
+import AddClassScreen from './src/screens/Faculty/Classes/AddClassScreen.tsx';
+import SubmissionDetailsScreen from './src/screens/Faculty/Activities/Submission/SubmissionDetailScreen.tsx';
+import WallCommentsScreen from './src/screens/Faculty/Wall/WallCommentScreen.tsx';
+import PostWallScreen from './src/screens/Faculty/Wall/PostWallScreen.tsx';
+import ProfileScreen from './src/Shared/User/ProfileScreen.tsx';
+import AcademicYearScreen from './src/Shared/AcademicYearScreen.tsx';
+
+import messaging, {
+    getInitialNotification,
+    getMessaging,
+    onMessage,
+    onNotificationOpenedApp,
+} from '@react-native-firebase/messaging';
+
 import { navigationRef } from './src/utils/navigation.ts';
 import { tryFlushPendingNavigation } from './src/hooks/RootNavigation.ts';
-import { getApp } from '@react-native-firebase/app';
-import { AccessProvider } from './src/context/AccessContext.tsx';
-import ProfileScreen from './src/screens/user/ProfileScreen.tsx';
-import SigninForm from './src/screens/Auth/SigninForm.tsx';
-import SignupForm from './src/screens/Auth/SignupForm.tsx';
-import SplashScreen from './src/screens/SplashScreen.tsx';
-import NetInfo from '@react-native-community/netinfo';
 import { triggerAllSyncs } from './src/utils/sqlite/syncManager';
-import ClassBottomNav from "./src/navigation/class/ClassBottomNav.tsx";
-import WallCommentsScreen from "./src/screens/Classes/Details/WallCommentScreen.tsx";
-import PostWallScreen from "./src/screens/Classes/Details/PostWallScreen.tsx";
-import ActivityBottomNav from "./src/navigation/activity/ActivityBottomNav.tsx";
-import AcademicYearScreen from "./src/screens/AcademicYearScreen.tsx";
-import JoinClassScreen from "./src/screens/Classes/JoinClassScreen.tsx";
+import notificationEmitter from './src/utils/notificationEmitter.ts';
+import { handleNotificationNavigation } from './src/utils/handleNotificationNavigation.ts';
+import AddActivityScreen from "./src/screens/Faculty/Activities/AddActivityScreen.tsx";
+
 const Stack = createNativeStackNavigator();
-LogBox.ignoreLogs([
-    'Text strings must be rendered within a <Text> component',
-]);
+LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
 
-function UnauthenticatedStack() {
-    return (
-        <>
-            <StatusBar
-                backgroundColor="translucent"
-                barStyle="dark-content"/>
-            <Stack.Navigator screenOptions={{headerShown: false}}>
-                <Stack.Screen name="LoginOptions" component={LoginOptionsScreen}/>
-                <Stack.Screen name="Login" component={SigninForm}/>
-                <Stack.Screen name="Register" component={SignupForm}/>
-            </Stack.Navigator></>
-    );
-}
+const UnauthenticatedStack = () => (
+    <>
+        <StatusBar backgroundColor="translucent" barStyle="dark-content" />
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="LoginOptions" component={LoginOptionsScreen} />
+            <Stack.Screen name="Login" component={SigninForm} />
+            <Stack.Screen name="Register" component={SignupForm} />
+        </Stack.Navigator>
+    </>
+);
 
-enableScreens();
-
-function AppNavigator() {
-    const { user, loginAuth } = useAuth();
-    const [splashScreen, setSplashScreen] = useState(true);
-    const [isLoading, setIsLoading] = useState(true);
-    const [selected, setSelected] = useState('MainTabs');
+const AppNavigator = () => {
+    const { user } = useAuth();
+    const [splashVisible, setSplashVisible] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = NetInfo.addEventListener(state => {
-            if (state.isConnected) {
-                triggerAllSyncs();
-            }
+        const unsubscribeNetInfo = NetInfo.addEventListener(state => {
+            if (state.isConnected) triggerAllSyncs();
         });
 
-        return () => unsubscribe();
-    }, []);
+        const setupFCM = async () => {
+            const app = getMessaging();
 
-
-    useEffect(() => {
-        const app = getApp();
-        const messaging = getMessaging(app);
-
-        const unsubscribe = onMessage(messaging, async remoteMessage => {
-            Toast.show({
-                type: 'success',
-                text1: remoteMessage.notification?.title || 'New Message',
-                text2: remoteMessage.notification?.body || '',
-                position: 'top',
-                autoHide: true,
-                visibilityTime: 4000,
-                topOffset: 50,
+            onMessage(app, async remoteMessage => {
+                Toast.show({
+                    type: 'success',
+                    text1: remoteMessage.notification?.title || 'New Message',
+                    text2: remoteMessage.notification?.body || '',
+                    position: 'top',
+                    autoHide: true,
+                    visibilityTime: 4000,
+                    topOffset: 50,
+                });
             });
-        });
 
-        return unsubscribe;
-    }, []);
+            onNotificationOpenedApp(app, remoteMessage => {
+                if (remoteMessage?.data) {
+                    Vibration.vibrate([500, 1000, 500]);
+                    notificationEmitter.emit('newMessage', remoteMessage.data);
+                    handleNotificationNavigation(remoteMessage.data);
+                }
+            });
 
-    useEffect(() => {
-        const app = getApp();
-        const messaging = getMessaging(app);
-        let appOpened = false;
-
-        const unsubscribeNotificationOpened = onNotificationOpenedApp(messaging, remoteMessage => {
-            if (remoteMessage?.data) {
-                console.log('[Notification Opened from unsubscribeNotificationOpened]', remoteMessage.data);
-                Vibration.vibrate([500, 1000, 500, 1000]);
-                notificationEmitter.emit('newMessage', remoteMessage.data);
-                handleNotificationNavigation(remoteMessage.data);
-            }
-        });
-
-        getInitialNotification(messaging).then(remoteMessage => {
-            if (remoteMessage?.data && !appOpened) {
-                console.log('[Notification Opened from getInitialNotification]', remoteMessage.data);
+            const initialMessage = await getInitialNotification(app);
+            if (initialMessage?.data) {
                 const interval = setInterval(() => {
                     if (navigationRef.isReady()) {
-                        notificationEmitter.emit('newMessage', remoteMessage.data);
-                        handleNotificationNavigation(remoteMessage.data);
-                        appOpened = true;
+                        notificationEmitter.emit('newMessage', initialMessage.data);
+                        handleNotificationNavigation(initialMessage.data);
                         clearInterval(interval);
                     }
                 }, 200);
             }
-        });
-
-        const unsubscribeForeground = onMessage(messaging, async remoteMessage => {
-            if (remoteMessage?.data) {
-                console.log('[Notification Opened from unsubscribeForeground]', remoteMessage.data);
-
-                notificationEmitter.emit('newMessage', remoteMessage.data);
-            }
-        });
-
-        return () => {
-            unsubscribeNotificationOpened();
-            unsubscribeForeground();
         };
+
+        setupFCM();
+        return () => unsubscribeNetInfo();
     }, []);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setSplashScreen(false);
-        }, 1000);
-
+        const timer = setTimeout(() => setSplashVisible(false), 1000);
         return () => clearTimeout(timer);
     }, []);
 
-    if (splashScreen) {
-        return <SplashScreen />;
-    }
+    if (splashVisible) return <SplashScreen />;
 
-
-    if(!user){
+    if (!user) {
         return (
             <NavigationContainer>
                 <UnauthenticatedStack />
             </NavigationContainer>
-        )
-    }else{
-        return (
-            <>
-                <StatusBar backgroundColor="#00A859" barStyle="dark-content" translucent={false} />
-                <SafeAreaProvider>
-                    <AccessProvider>
-                        <NavigationContainer
-                            ref={navigationRef}
-                            onReady={() => {
-                                tryFlushPendingNavigation();
-                            }}
-                        >
-                            <Stack.Navigator screenOptions={{ headerShown: false }}>
-                                        <Stack.Screen name="MainTabs" component={BottomTabNav} />
-                                        <Stack.Screen name="JoinClass" component={JoinClassScreen} />
-                                        <Stack.Screen name="ClassDetails" component={ClassBottomNav} options={{
-                                            headerShown: false,
-                                        }} />
-                                        <Stack.Screen name="ActivityDetails" component={ActivityBottomNav} options={{
-                                            headerShown: false,
-                                        }} />
-
-                                        <Stack.Screen
-                                            name="WallComments"
-                                            component={WallCommentsScreen}
-                                            options={{
-                                                headerShown: true,
-                                                headerStyle:{
-                                                    backgroundColor: theme.colors.light.primary,
-                                                },
-                                                headerTitleStyle:{
-                                                    color: '#fff'
-                                                },
-                                                headerTintColor: '#fff',
-                                                title: 's',
-                                            }}
-                                        />
-                                        <Stack.Screen
-                                            name="PostWall"
-                                            component={PostWallScreen}
-                                            options={{
-                                                headerShown: false,
-                                                headerStyle:{
-                                                    backgroundColor: theme.colors.light.primary,
-                                                },
-                                                headerTitleStyle:{
-                                                    color: '#fff'
-                                                },
-                                                headerTintColor: '#fff',
-                                                title: 's',
-                                            }}
-                                        />
-                                        <Stack.Screen name="Profile" component={ProfileScreen} />
-                                        <Stack.Screen name="AcademicYear" component={AcademicYearScreen} />
-                                    </Stack.Navigator>
-                        </NavigationContainer>
-                    </AccessProvider>
-                </SafeAreaProvider>
-            </>
         );
     }
-}
 
-function App(): React.JSX.Element {
+    return (
+        <>
+            <StatusBar backgroundColor={theme.colors.light.primary} barStyle="dark-content" />
+            <SafeAreaProvider>
+                <AccessProvider>
+                    <NavigationContainer ref={navigationRef} onReady={tryFlushPendingNavigation}>
+                        <Stack.Navigator screenOptions={{ headerShown: false }}>
+                            <Stack.Screen name="MainTabs" component={BottomTabNav} />
+                            <Stack.Screen name="JoinClass" component={JoinClassScreen} />
+                            <Stack.Screen name="AddClass" component={AddClassScreen} />
+                            <Stack.Screen name="AddActivity" component={AddActivityScreen} />
+                            <Stack.Screen name="SubmissionDetails" component={SubmissionDetailsScreen} />
+                            <Stack.Screen name="ClassDetails" component={ClassBottomNav} />
+                            <Stack.Screen name="ActivityDetails" component={StudentActivityBottomNav} />
+                            <Stack.Screen name="FacActivityDetails" component={FacultyActivityBottomNav} />
+                            <Stack.Screen
+                                name="WallComments"
+                                component={WallCommentsScreen}
+                                options={{
+                                    headerShown: true,
+                                    title: 'Comments',
+                                    headerStyle: { backgroundColor: theme.colors.light.primary },
+                                    headerTitleStyle: { color: '#fff' },
+                                    headerTintColor: '#fff',
+                                }}
+                            />
+                            <Stack.Screen name="PostWall" component={PostWallScreen} />
+                            <Stack.Screen name="Profile" component={ProfileScreen} />
+                            <Stack.Screen name="AcademicYear" component={AcademicYearScreen} />
+                        </Stack.Navigator>
+                    </NavigationContainer>
+                </AccessProvider>
+            </SafeAreaProvider>
+        </>
+    );
+};
+
+export default function App(): React.JSX.Element {
     return (
         <LoadingProvider>
             <CAlert>
-                <LoadingProvider>
-                    <NetworkProvider>
-                        <AuthProvider>
-                            <AppNavigator />
-                        </AuthProvider>
-                        <StatusIndicator />
-                    </NetworkProvider>
-                </LoadingProvider>
+                <NetworkProvider>
+                    <AuthProvider>
+                        <AppNavigator />
+                    </AuthProvider>
+                    <StatusIndicator />
+                </NetworkProvider>
             </CAlert>
         </LoadingProvider>
     );
 }
-
-const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-        // backgroundColor: theme.colors.light.primary,
-    },
-});
-
-export default App;
