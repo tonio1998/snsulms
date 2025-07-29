@@ -1,5 +1,5 @@
 const PORT = 8000;
-const HOST_DOMAIN = '10.243.253.229';
+const HOST_DOMAIN = '10.25.1.110';
 const PROTOCOL = "http:";
 
 // WITH PORT
@@ -20,3 +20,5 @@ export const SEMAPHORE_API_SENDER_NAME="DJEMC"
 export const APP_NAME = "fbLMS";
 export const TAGLINE = "Empowering Education, the SNSU Way."
 export const SCHOOL_ID = 1;
+
+export const CACHE_REFRESH = 2000

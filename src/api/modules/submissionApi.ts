@@ -15,8 +15,15 @@ export const uploadStudentSubmission = async (formData) => {
     }
 };
 
-export const fetchStudentSubmissions = async ({ ActivityID }) => {
+export const fetchStudentSubmissions = async ({ StudentActivityID, StudentID }) => {
     const response = await api.get('/lms/submission/fetch', {
+        params: { StudentActivityID, StudentID }
+    });
+    return response.data;
+};
+
+export const getActivityResponses = async ({ ActivityID }) => {
+    const response = await api.get('/lms/submission/fetch/list', {
         params: { ActivityID }
     });
     return response.data;
@@ -26,6 +33,21 @@ export const fetchStudentSubmissions = async ({ ActivityID }) => {
 export const turninSubmission = async ({ ActivityID }) => {
     const response = await api.get('/lms/submission/turnin', {
         params: { ActivityID }
+    });
+    return response.data;
+};
+
+export const fetchStudentResponses = async ({StudentActivityID}) => {
+    const response = await api.get('/lms/submission/fetch/list/student', {
+        params: { StudentActivityID }
+    });
+    return response.data;
+};
+
+export const saveStudentGrade = async ({ StudentActivityID, Grade }) => {
+    const response = await api.post('/lms/submission/grade', {
+        StudentActivityID,
+        Grade,
     });
     return response.data;
 };

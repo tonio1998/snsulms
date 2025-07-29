@@ -2,20 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Dimensions, StatusBar } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-
-import HomeScreen from '../screens/HomeScreen';
-import ClassesScreen from '../screens/Classes/ClassesScreen.tsx';
-
 import { theme } from '../theme';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAccess } from '../hooks/useAccess.ts';
-import { CText } from '../components/CText.tsx';
+import { CText } from '../components/common/CText.tsx';
 import GradesScreen from "./Grades/GradesScreen.tsx";
-import ActivitiesScreen from "../screens/Activities/ActivitiesScreen.tsx";
-import QRCodeScreen from "../screens/user/QRCodeScreen.tsx";
+import ActivitiesScreen from "../screens/Student/Classes/ActivitiesScreen.tsx";
+import QRCodeScreen from "../Shared/User/QRCodeScreen.tsx";
+import HomeScreen from '../Shared/HomeScreen.tsx';
+import ClassesScreen from '../screens/Student/Classes/ClassesScreen.tsx';
+import {useAuth} from "../context/AuthContext.tsx";
+import ClassesListScreen from "../screens/Faculty/Classes/ClassesListScreen.tsx";
 
 const Tab = createBottomTabNavigator();
 const ClassesStack = createNativeStackNavigator();
+const FacClassesStack = createNativeStackNavigator();
 const currentColors = theme.colors.light;
 
 function useOrientation() {
@@ -36,6 +37,7 @@ function useOrientation() {
 export default function BottomTabNav() {
 	const isLandscape = useOrientation();
 	const { hasRole } = useAccess();
+	const { user } = useAuth();
 
 	return (
 		<>
@@ -95,15 +97,37 @@ export default function BottomTabNav() {
 					},
 				})}
 			>
+
 				<Tab.Screen name="Home" component={HomeScreen} />
-				<Tab.Screen name="Classes" component={ClassesStackScreen} />
-				<Tab.Screen name="myQR" component={QRCodeScreen} />
-				<Tab.Screen name="Activities" component={ActivitiesScreen} />
+				{hasRole('STUD') && (
+					<>
+						<Tab.Screen name="Classes" component={ClassesStackScreen} />
+						<Tab.Screen name="myQR" component={QRCodeScreen} />
+						<Tab.Screen name="Activities" component={ActivitiesScreen} />
+					</>
+				)}
+
+				{hasRole('ACAD') && (
+					<>
+						<Tab.Screen name="Classes" component={FacClassesStackScreen} />
+					</>
+				)}
 				{/*<Tab.Screen name="Grades" component={GradesScreen} />*/}
 			</Tab.Navigator>
 		</>
 	);
 }
+
+function FacClassesStackScreen() {
+	return (
+		<>
+			<FacClassesStack.Navigator screenOptions={{ headerShown: false }}>
+				<FacClassesStack.Screen name="Classes" component={ClassesListScreen} />
+			</FacClassesStack.Navigator>
+		</>
+	);
+}
+
 
 function ClassesStackScreen() {
 	return (

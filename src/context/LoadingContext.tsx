@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import Loading from '../components/Loading.tsx';
+import Loading from '../components/loaders/Loading.tsx';
 import {Alert, ToastAndroid} from "react-native";
 
 interface LoadingContextType {
