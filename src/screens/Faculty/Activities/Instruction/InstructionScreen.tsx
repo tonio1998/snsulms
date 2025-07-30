@@ -25,29 +25,26 @@ import BackHeader from '../../../../components/layout/BackHeader.tsx';
 import { CText } from '../../../../components/common/CText.tsx';
 import { formatDate } from '../../../../utils/dateFormatter';
 import { handleApiError } from '../../../../utils/errorHandler.ts';
-import { fetchClassAttachments, getStudenActivityDetails } from '../../../../api/modules/activitiesApi.ts';
+import { fetchClassAttachments } from '../../../../api/modules/activitiesApi.ts';
 import { getFileSize, formatNumber } from '../../../../utils/format.ts';
-import { getOfflineActivityById, saveActivitiesOffline } from '../../../../utils/sqlite/offlineActivityService.ts';
 import { viewFile } from '../../../../utils/viewFile.ts';
-import {turninSubmission} from "../../../../api/modules/submissionApi.ts";
 import { useAlert } from '../../../../components/CAlert.tsx';
-import {useFacActivity} from "../../../../context/FacSharedActivityContext.tsx";
+import { useFacActivity } from '../../../../context/FacSharedActivityContext.tsx';
 
 const InstructionScreen = ({ navigation, route }) => {
 	const { activity } = useFacActivity();
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
+	const { showAlert } = useAlert();
+	const [ActivityID, setActivityID] = useState();
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 	const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 	const [submissions, setSubmissions] = useState([]);
-	const {showAlert} = useAlert();
-	const [ActivityID, setActivityID] = useState();
 
 	const loadSubmissions = async () => {
-		setLoading(true)
-		// showLoading('Loading submissions...');
+		setLoading(true);
 		try {
 			setLoadingSubmissions(true);
 			const res = await fetchClassAttachments(ActivityID);
@@ -57,7 +54,6 @@ const InstructionScreen = ({ navigation, route }) => {
 		} finally {
 			setLoadingSubmissions(false);
 			setLoading(false);
-			// hideLoading();
 		}
 	};
 
@@ -73,13 +69,12 @@ const InstructionScreen = ({ navigation, route }) => {
 		}
 	}, [ActivityID]);
 
-
-
 	const handleRefresh = async () => {
 		setRefreshing(true);
-		loadSubmissions();
+		await loadSubmissions();
 		setRefreshing(false);
 	};
+
 	const renderItem = ({ item }) => {
 		const isWebLink = item.Link.startsWith('http');
 		return (
@@ -108,14 +103,16 @@ const InstructionScreen = ({ navigation, route }) => {
 				<CText fontSize={16} fontStyle="SB" style={styles.title}>{activity?.Title}</CText>
 				<CText fontSize={12} style={styles.label}>Instruction:</CText>
 				<CText style={styles.text}>{activity?.Description}</CText>
-				{activity?.DueDate && <>
-					<CText fontSize={12} style={styles.label}>Due Date:</CText>
-					<CText style={styles.text}>{formatDate(activity?.DueDate)}</CText>
-				</>}
+				{activity?.DueDate && (
+					<>
+						<CText fontSize={12} style={styles.label}>Due Date:</CText>
+						<CText style={styles.text}>{formatDate(activity?.DueDate)}</CText>
+					</>
+				)}
 
-				<View style={[globalStyles.cardRow, {flexDirection: 'row', justifyContent: 'flex-start'}]}>
+				<View style={[globalStyles.cardRow, { flexDirection: 'row', justifyContent: 'flex-start' }]}>
 					{activity?.Points > 0 && (
-						<View style={[styles.pointsRow, {marginRight: 45}]}>
+						<View style={[styles.pointsRow, { marginRight: 45 }]}>
 							<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>{formatNumber(activity?.Points)}</CText>
 							<CText fontSize={12} style={styles.pointsLabel}>Points</CText>
 						</View>
@@ -128,7 +125,7 @@ const InstructionScreen = ({ navigation, route }) => {
 					)}
 				</View>
 
-				<View style={[globalStyles.cardRow, {flexDirection: 'row', justifyContent: 'flex-start'}]}>
+				<View style={[globalStyles.cardRow, { flexDirection: 'row', justifyContent: 'flex-start' }]}>
 					{activity?.DateSubmitted && (
 						<View style={styles.pointsRow}>
 							<CText fontSize={18} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>{formatDate(activity?.DateSubmitted)}</CText>
@@ -138,62 +135,37 @@ const InstructionScreen = ({ navigation, route }) => {
 				</View>
 			</View>
 
-			<CText fontSize={16} style={{ marginBottom: 10}} fontStyle="SB">Instructor</CText>
+			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Instructor</CText>
 			<View style={styles.card}>
 				{!activity?.teacher?.users?.name ? (
-					<>
-
-						<View style={styles.profileRow}>
-							<ShimmerPlaceHolder style={styles.avatar}/>
-							<View style={styles.profileInfo}>
-								<ShimmerPlaceHolder style={{
-									width: 150,
-									marginBottom: 10
-								}}/>
-								<ShimmerPlaceHolder style={{
-									width: 100
-								}}/>
-							</View>
+					<View style={styles.profileRow}>
+						<ShimmerPlaceHolder style={styles.avatar} />
+						<View style={styles.profileInfo}>
+							<ShimmerPlaceHolder style={{ width: 150, marginBottom: 10 }} />
+							<ShimmerPlaceHolder style={{ width: 100 }} />
 						</View>
-					</>
+					</View>
 				) : (
-					<>
-						<View style={styles.profileRow}>
-							<Image
-								source={{ uri: activity?.teacher?.users?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity?.teacher?.users?.name || 'User')}` }}
-								style={styles.avatar}
-							/>
-							<View style={styles.profileInfo}>
-								<CText fontSize={17} fontStyle="SB">{activity?.teacher?.users?.name || ''}</CText>
-								<CText fontSize={12} style={{ color: '#777' }}>{activity?.teacher?.users?.email}</CText>
-							</View>
+					<View style={styles.profileRow}>
+						<Image
+							source={{ uri: activity?.teacher?.users?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity?.teacher?.users?.name || 'User')}` }}
+							style={styles.avatar}
+						/>
+						<View style={styles.profileInfo}>
+							<CText fontSize={17} fontStyle="SB">{activity?.teacher?.users?.name}</CText>
+							<CText fontSize={12} style={{ color: '#777' }}>{activity?.teacher?.users?.email}</CText>
 						</View>
-					</>
+					</View>
 				)}
 			</View>
 
-			<CText fontSize={16} style={{ marginBottom: 10}} fontStyle="SB">Attachments</CText>
+			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Attachments</CText>
 		</>
-	);
-
-	const renderShimmer = () => (
-		[1, 2].map((_, index) => (
-			<View style={{ padding: 16}} key={index}>
-				<ShimmerPlaceHolder
-					loading={true}
-					LinearGradient={LinearGradient}
-					style={{ width: '100%', height: 100, borderRadius: 12, }}
-					autoRun
-				/>
-			</View>
-		))
 	);
 
 	return (
 		<>
-			<BackHeader
-				title="Instruction"/>
-
+			<BackHeader title="Instruction" />
 			<SafeAreaView style={globalStyles.safeArea}>
 				<FlatList
 					data={submissions}

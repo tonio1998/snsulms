@@ -1,4 +1,3 @@
-// Updated InstructionScreen using FlatList only to avoid ScrollView nesting issues
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
 	View,
@@ -26,60 +25,55 @@ import BackHeader from '../../../../components/layout/BackHeader.tsx';
 import { CText } from '../../../../components/common/CText.tsx';
 import { formatDate } from '../../../../utils/dateFormatter';
 import { handleApiError } from '../../../../utils/errorHandler.ts';
-import { fetchClassAttachments, getStudenActivityDetails } from '../../../../api/modules/activitiesApi.ts';
+import { fetchClassAttachments } from '../../../../api/modules/activitiesApi.ts';
 import { getFileSize, formatNumber } from '../../../../utils/format.ts';
-import { getOfflineActivityById, saveActivitiesOffline } from '../../../../utils/sqlite/offlineActivityService.ts';
 import { viewFile } from '../../../../utils/viewFile.ts';
-import {turninSubmission} from "../../../../api/modules/submissionApi.ts";
+import { turninSubmission } from "../../../../api/modules/submissionApi.ts";
 import { useAlert } from '../../../../components/CAlert.tsx';
-import {useActivity} from "../../../../context/SharedActivityContext.tsx";
+import { useActivity } from "../../../../context/SharedActivityContext.tsx";
 
-const InstructionScreen = ({ navigation, route }) => {
+const InstructionScreen = ({ navigation }) => {
 	const { activity } = useActivity();
 	const [ActivityID, setActivityID] = useState(0);
 	const [StudentActivityID, setStudentActivityID] = useState(0);
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
-	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
-	const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+	const [loading, setLoading] = useState(false);
 	const [submissions, setSubmissions] = useState([]);
-	const {showAlert} = useAlert();
-
+	const { showAlert } = useAlert();
 
 	const loadSubmissions = async () => {
+		if (!ActivityID || !network?.isOnline) return;
+
+		setLoading(true);
 		try {
-			setLoadingSubmissions(true);
 			const res = await fetchClassAttachments(ActivityID);
-			setSubmissions(res.data);
+			setSubmissions(res?.data || []);
 		} catch (err) {
-			handleApiError(err, 'Fetch');
+			handleApiError(err, 'Fetching attachments failed');
 		} finally {
-			setLoadingSubmissions(false);
+			setLoading(false);
 		}
 	};
 
 	useEffect(() => {
-		loadSubmissions();
-	}, []);
-
-	useEffect(() => {
-		if (activity?.ActivityID > 0) {
+		if (activity?.ActivityID) {
 			setActivityID(activity.ActivityID);
 			setStudentActivityID(activity.StudentActivityID);
 		}
 	}, [activity]);
 
 	useEffect(() => {
-		if (ActivityID > 0) {
+		if (ActivityID) {
 			loadSubmissions();
 		}
 	}, [ActivityID]);
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
-		loadSubmissions();
+		await loadSubmissions();
 		setRefreshing(false);
 	};
 
@@ -87,7 +81,6 @@ const InstructionScreen = ({ navigation, route }) => {
 		try {
 			const isSubmitted = activity?.SubmissionType === 'Submitted';
 			showLoading(isSubmitted ? 'Withdrawing...' : 'Submitting...');
-
 			const res = await turninSubmission({ ActivityID });
 
 			if (res.success) {
@@ -117,15 +110,10 @@ const InstructionScreen = ({ navigation, route }) => {
 				: 'Are you sure you want to submit?',
 			[
 				{ text: 'Cancel', style: 'cancel' },
-				{
-					text: isSubmitted ? 'Withdraw' : 'Submit',
-					style: isSubmitted ? 'destructive' : 'default',
-					onPress: handleAction,
-				},
+				{ text: isSubmitted ? 'Withdraw' : 'Submit', onPress: handleAction },
 			]
 		);
 	};
-
 
 	const renderItem = ({ item }) => {
 		const isWebLink = item.Link.startsWith('http');
@@ -155,86 +143,73 @@ const InstructionScreen = ({ navigation, route }) => {
 				<CText fontSize={16} fontStyle="SB" style={styles.title}>{activity?.activity?.Title}</CText>
 				<CText fontSize={12} style={styles.label}>Instruction:</CText>
 				<CText style={styles.text}>{activity?.activity?.Description}</CText>
-				{activity?.activity?.DueDate && <>
-					<CText fontSize={12} style={styles.label}>Due Date:</CText>
-					<CText style={styles.text}>{formatDate(activity?.activity?.DueDate)}</CText>
-				</>}
-
-				<View style={[globalStyles.cardRow, {flexDirection: 'row', justifyContent: 'flex-start'}]}>
+				{activity?.activity?.DueDate && (
+					<>
+						<CText fontSize={12} style={styles.label}>Due Date:</CText>
+						<CText style={styles.text}>{formatDate(activity?.activity?.DueDate)}</CText>
+					</>
+				)}
+				<View style={[globalStyles.cardRow, { flexDirection: 'row', justifyContent: 'flex-start' }]}>
 					{activity?.activity?.Points > 0 && (
-						<View style={[styles.pointsRow, {marginRight: 45}]}>
-							<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>{formatNumber(activity?.activity?.Points)}</CText>
+						<View style={[styles.pointsRow, { marginRight: 45 }]}>
+							<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary }}>{formatNumber(activity?.activity?.Points)}</CText>
 							<CText fontSize={12} style={styles.pointsLabel}>Points</CText>
 						</View>
 					)}
 					{activity?.Grade > 0 && (
 						<View style={styles.pointsRow}>
-							<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>{formatNumber(activity?.Grade)}</CText>
+							<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary }}>{formatNumber(activity?.Grade)}</CText>
 							<CText fontSize={12} style={styles.pointsLabel}>Points Earned</CText>
 						</View>
 					)}
 				</View>
-
-				<View style={[globalStyles.cardRow, {flexDirection: 'row', justifyContent: 'flex-start'}]}>
-					{activity?.DateSubmitted && (
-						<View style={styles.pointsRow}>
-							<CText fontSize={18} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>{formatDate(activity?.DateSubmitted)}</CText>
-							<CText fontSize={12} style={styles.pointsLabel}>Date Submitted</CText>
-						</View>
-					)}
-				</View>
-			</View>
-
-			<CText fontSize={16} style={{ marginBottom: 10}} fontStyle="SB">Instructor</CText>
-			<View style={styles.card}>
-				{!activity?.activity?.teacher?.users?.name ? (
-					<>
-
-						<View style={styles.profileRow}>
-							<ShimmerPlaceHolder style={styles.avatar}/>
-							<View style={styles.profileInfo}>
-								<ShimmerPlaceHolder style={{
-									width: 150,
-									marginBottom: 10
-								}}/>
-								<ShimmerPlaceHolder style={{
-									width: 100
-								}}/>
-							</View>
-						</View>
-					</>
-				) : (
-					<>
-						<View style={styles.profileRow}>
-							<Image
-								source={{ uri: activity?.activity?.teacher?.users?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity?.activity?.teacher?.users?.name || 'User')}` }}
-								style={styles.avatar}
-							/>
-							<View style={styles.profileInfo}>
-								<CText fontSize={17} fontStyle="SB">{activity?.activity?.teacher?.users?.name || ''}</CText>
-								<CText fontSize={12} style={{ color: '#777' }}>{activity?.activity?.teacher?.users?.email}</CText>
-							</View>
-						</View>
-					</>
+				{activity?.DateSubmitted && (
+					<View style={styles.pointsRow}>
+						<CText fontSize={18} fontStyle="SB" style={{ color: theme.colors.light.primary }}>{formatDate(activity?.DateSubmitted)}</CText>
+						<CText fontSize={12} style={styles.pointsLabel}>Date Submitted</CText>
+					</View>
 				)}
 			</View>
 
-			<CText fontSize={16} style={{ marginBottom: 10}} fontStyle="SB">Attachments</CText>
+			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Instructor</CText>
+			<View style={styles.card}>
+				{!activity?.activity?.teacher?.users?.name ? (
+					<View style={styles.profileRow}>
+						<ShimmerPlaceHolder style={styles.avatar} />
+						<View style={styles.profileInfo}>
+							<ShimmerPlaceHolder style={{ width: 150, marginBottom: 10 }} />
+							<ShimmerPlaceHolder style={{ width: 100 }} />
+						</View>
+					</View>
+				) : (
+					<View style={styles.profileRow}>
+						<Image
+							source={{ uri: activity?.activity?.teacher?.users?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity?.activity?.teacher?.users?.name || 'User')}` }}
+							style={styles.avatar}
+						/>
+						<View style={styles.profileInfo}>
+							<CText fontSize={17} fontStyle="SB">{activity?.activity?.teacher?.users?.name}</CText>
+							<CText fontSize={12} style={{ color: '#777' }}>{activity?.activity?.teacher?.users?.email}</CText>
+						</View>
+					</View>
+				)}
+			</View>
+
+			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Attachments</CText>
 		</>
 	);
 
-	const renderShimmer = () => (
+	const renderShimmer = () =>
 		[1, 2].map((_, index) => (
-			<View style={{ padding: 16}} key={index}>
+			<View style={{ padding: 16 }} key={index}>
 				<ShimmerPlaceHolder
 					loading={true}
 					LinearGradient={LinearGradient}
-					style={{ width: '100%', height: 100, borderRadius: 12, }}
+					style={{ width: '100%', height: 100, borderRadius: 12 }}
 					autoRun
 				/>
 			</View>
-		))
-	);
+		));
 
 	return (
 		<>
@@ -247,7 +222,9 @@ const InstructionScreen = ({ navigation, route }) => {
 								styles.submitBtn,
 								{
 									backgroundColor:
-										activity?.SubmissionType === 'Submitted' ? theme.colors.light.danger : theme.colors.light.primary,
+										activity?.SubmissionType === 'Submitted'
+											? theme.colors.light.danger
+											: theme.colors.light.primary,
 								},
 							]}
 							onPress={handleConfirmAction}

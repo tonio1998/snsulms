@@ -121,7 +121,7 @@ export default function LoginOptionsScreen() {
 			if (error?.response?.status === 404) {
 				console.warn('User not found.');
 			}
-
+			handleApiError(error, 'Google Login');
 			setLoading(false);
 		} finally {
 			hideLoading();

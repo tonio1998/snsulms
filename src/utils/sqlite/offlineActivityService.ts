@@ -5,19 +5,24 @@ import { getDb } from "./offlineService";
  * @param {SQLiteDatabase} db - The database instance.
  */
 export const initActivityTable = async (db) => {
+    // await db.executeSql(`DROP TABLE IF EXISTS class_activities`);
     await db.executeSql(`
         CREATE TABLE IF NOT EXISTS class_activities (
-                                                        StudentActivityID TEXT PRIMARY KEY,
-                                                        ClassID TEXT,
-                                                        ActivityTypeID INTEGER,
-                                                        DueDate TEXT,
+                                                        ActivityID INTEGER PRIMARY KEY,
+                                                        ClassID INTEGER,
+                                                        ExamID INTEGER,
+                                                        QuizID INTEGER,
                                                         Title TEXT,
                                                         Description TEXT,
-                                                        created_at TEXT,
+                                                        TeacherID INTEGER,
+                                                        Points INTEGER,
+                                                        StrictLate INTEGER,
+                                                        Graded INTEGER,
                                                         other_data TEXT,
-                                                        synced INTEGER DEFAULT 0
-        );
+                                                        synced INTEGER
+        )
     `);
+
 };
 
 /**
@@ -29,32 +34,56 @@ export const saveActivitiesOffline = async (activities = [], classId) => {
     const db = await getDb();
     await initActivityTable(db);
 
-    const insertQueries = activities.map(item => {
-        const activity = item.activity ?? {};
+    // 🧹 Deduplicate by ActivityID
+    const dedupedActivities = Object.values(
+        activities.reduce((acc, curr) => {
+            acc[curr.ActivityID] = curr;
+            return acc;
+        }, {})
+    );
 
+    const queries = dedupedActivities.map(item => {
         return db.executeSql(
-            `INSERT OR REPLACE INTO class_activities
-            (StudentActivityID, ClassID, ActivityTypeID, DueDate, Title, Description, created_at, other_data, synced)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+            `INSERT INTO class_activities
+				(ActivityID, ClassID, ExamID, QuizID, Title, Description, TeacherID, Points, StrictLate, Graded, other_data, synced)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+			ON CONFLICT(ActivityID)
+			DO UPDATE SET
+				ClassID = excluded.ClassID,
+				ExamID = excluded.ExamID,
+				QuizID = excluded.QuizID,
+				Title = excluded.Title,
+				Description = excluded.Description,
+				TeacherID = excluded.TeacherID,
+				Points = excluded.Points,
+				StrictLate = excluded.StrictLate,
+				Graded = excluded.Graded,
+				other_data = excluded.other_data,
+				synced = 0`,
             [
-                item.StudentActivityID,
+                item.ActivityID,
                 classId,
-                activity.ActivityTypeID ?? null,
-                activity.DueDate ?? null,
-                activity.Title ?? '',
-                activity.Description ?? '',
-                activity.created_at ?? null,
+                item.ExamID ?? null,
+                item.QuizID ?? null,
+                item.Title ?? '',
+                item.Description ?? '',
+                item.TeacherID ?? null,
+                item.Points ?? 0,
+                item.StrictLate ?? null,
+                item.Graded ?? null,
                 JSON.stringify(item),
             ]
         );
     });
 
     try {
-        await Promise.all(insertQueries);
+        await Promise.all(queries);
     } catch (err) {
-        console.error("Failed to save some activities:", err);
+        console.error("🚨 Error saving activities offline:", err);
     }
 };
+
+
 
 export const getOfflineActivityById = async (StudentActivityID) => {
     const db = await getDb();
@@ -86,7 +115,7 @@ export const getOfflineActivityById = async (StudentActivityID) => {
         }
         return null;
     } catch (err) {
-        console.error("Failed to fetch activity by ID:", err);
+        // console.error("Failed to fetch activity by ID:", err);
         return null;
     }
 };

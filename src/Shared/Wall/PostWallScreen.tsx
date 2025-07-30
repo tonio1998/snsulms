@@ -10,17 +10,17 @@ import {
 	Image,
 	StyleSheet,
 } from "react-native";
-import NetworkContext from "../../../context/NetworkContext.tsx";
-import {useAuth} from "../../../context/AuthContext.tsx";
-import {postWall} from "../../../api/modules/wallApi.ts";
-import BackHeader from "../../../components/layout/BackHeader.tsx";
-import BackgroundWrapper from "../../../utils/BackgroundWrapper";
-import {globalStyles} from "../../../theme/styles.ts";
-import {FILE_BASE_URL} from "../../../../env.ts";
-import {CText} from "../../../components/common/CText.tsx";
-import CButton from "../../../components/buttons/CButton.tsx";
-import {theme} from "../../../theme";
-import {handleApiError} from "../../../utils/errorHandler.ts";
+import NetworkContext from "../../context/NetworkContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
+import {postWall} from "../../api/modules/wallApi.ts";
+import BackHeader from "../../components/layout/BackHeader.tsx";
+import BackgroundWrapper from "../../utils/BackgroundWrapper";
+import {globalStyles} from "../../theme/styles.ts";
+import {FILE_BASE_URL} from "../../../env.ts";
+import {CText} from "../../components/common/CText.tsx";
+import CButton from "../../components/buttons/CButton.tsx";
+import {theme} from "../../theme";
+import {handleApiError} from "../../utils/errorHandler.ts";
 
 const PostWallScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -37,7 +37,8 @@ const PostWallScreen = ({ navigation, route }) => {
 		try {
 			setLoading(true);
 			const payload = { body, remark, ClassID };
-			await postWall(payload);
+			const res = await postWall(payload);
+			console.log('res', res);
 			navigation.goBack();
 		} catch (e) {
 			handleApiError(e, "Failed to submit post");

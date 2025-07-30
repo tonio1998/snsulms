@@ -12,7 +12,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 
-const generateCircles = (count = 2) => {
+const generateCircles = (count = 4) => {
 	const fixedPositions = [
 		{ top: 30, left: 20 },
 		{ top: 60, left: 100 },
@@ -60,7 +60,7 @@ const BackHeader = ({
 		<>
 			<StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
 			<LinearGradient
-				colors={[theme.colors.light.primary + '88', 'transparent']}
+				colors={[theme.colors.light.primary, 'transparent']}
 				start={{ x: 0.5, y: 0 }}
 				end={{ x: 0.5, y: 1 }}
 				style={styles.gradientBackground}
