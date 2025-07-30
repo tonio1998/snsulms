@@ -1,4 +1,4 @@
-import React, {useCallback, useContext, useEffect, useState} from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
 	View,
 	Text,
@@ -7,7 +7,8 @@ import {
 	RefreshControl,
 	SafeAreaView,
 	Image,
-	StyleSheet, ActivityIndicator,
+	StyleSheet,
+	ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../../../../context/AuthContext.tsx';
 import { NetworkContext } from '../../../../context/NetworkContext.tsx';
@@ -17,11 +18,10 @@ import BackHeader from '../../../../components/layout/BackHeader.tsx';
 import { CText } from '../../../../components/common/CText.tsx';
 import { handleApiError } from '../../../../utils/errorHandler.ts';
 import { getActivityResponses } from '../../../../api/modules/submissionApi.ts';
-import { useActivity } from "../../../../context/SharedActivityContext.tsx";
-import Icon from "react-native-vector-icons/Ionicons";
-import {useFacActivity} from "../../../../context/FacSharedActivityContext.tsx";
-import {useFocusEffect} from "@react-navigation/native";
-import {ShimmerList} from "../../../../components/loaders/ShimmerList.tsx";
+import { useFacActivity } from '../../../../context/FacSharedActivityContext.tsx';
+import { useFocusEffect } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { ShimmerList } from '../../../../components/loaders/ShimmerList.tsx';
 
 const SubmissionListScreen = ({ navigation }) => {
 	const { activity } = useFacActivity();
@@ -35,7 +35,6 @@ const SubmissionListScreen = ({ navigation }) => {
 
 	const loadSubmissions = async (id) => {
 		if (!id || id <= 0) return;
-
 		setLoading(true);
 		try {
 			const data = await getActivityResponses({ ActivityID: id });
@@ -67,7 +66,6 @@ const SubmissionListScreen = ({ navigation }) => {
 		}, [ActivityID])
 	);
 
-
 	const handleViewSubmission = (StudentActivityID) => {
 		navigation.navigate('SubmissionDetails', { StudentActivityID });
 	};
@@ -77,7 +75,6 @@ const SubmissionListScreen = ({ navigation }) => {
 		const userInfo = student.user || {};
 		const grade = item.Grade;
 		const isSubmitted = item.SubmissionType === 'Submitted';
-		const isReviewed = item.reviewed;
 
 		return (
 			<TouchableOpacity
@@ -108,35 +105,27 @@ const SubmissionListScreen = ({ navigation }) => {
 				</View>
 
 				<View style={styles.detailsRow}>
-					<View>
-						{isSubmitted && (
-							<View style={styles.statusBox}>
-								<CText fontSize={13}>Submitted</CText>
-								<Icon
-									name={isSubmitted ? "checkmark-circle" : "close-circle"}
-									size={22}
-									color={isSubmitted ? theme.colors.light.primary : theme.colors.light.danger}
-								/>
+					{isSubmitted && (
+						<View style={styles.statusBox}>
+							<CText fontSize={13}>Submitted</CText>
+							<Icon
+								name="checkmark-circle"
+								size={22}
+								color={theme.colors.light.primary}
+							/>
+						</View>
+					)}
+					{typeof grade === 'number' && (
+						<View style={styles.statusBox}>
+							<CText fontSize={13}>Points</CText>
+							<View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+								<Icon name="star" size={20} color={theme.colors.light.warning} />
+								<CText fontSize={18} fontStyle="SB">
+									{grade}/{item.activity?.Points}
+								</CText>
 							</View>
-						)}
-					</View>
-					<View>
-						{typeof grade === 'number' && (
-							<View style={styles.statusBox}>
-								<CText fontSize={13}>Points</CText>
-								<View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-									<Icon
-										name="star"
-										size={20}
-										color={theme.colors.light.warning}
-									/>
-									<CText fontSize={18} fontStyle="SB">
-										{grade}/{item.activity?.Points}
-									</CText>
-								</View>
-							</View>
-						)}
-					</View>
+						</View>
+					)}
 				</View>
 			</TouchableOpacity>
 		);
@@ -214,6 +203,5 @@ const styles = StyleSheet.create({
 		fontSize: 13,
 	},
 });
-
 
 export default SubmissionListScreen;

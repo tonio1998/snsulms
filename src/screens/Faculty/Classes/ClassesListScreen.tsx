@@ -20,32 +20,16 @@ import { globalStyles } from '../../../theme/styles.ts';
 import { CText } from '../../../components/common/CText.tsx';
 import { theme } from '../../../theme';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { NetworkContext } from '../../../context/NetworkContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
-import {getClassesVersion, getFacClasses, getFacClassesVersion} from '../../../api/modules/classesApi.ts';
 import { ShimmerList } from '../../../components/loaders/ShimmerList.tsx';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import { getAcademicInfo } from '../../../utils/getAcademicInfo.ts';
-import { getOfflineClasses, saveClassesOffline } from '../../../utils/sqlite/offlineClassesService.ts';
 import { useAuth } from '../../../context/AuthContext.tsx';
-import {CACHE_REFRESH} from "../../../../env.ts";
+import { getFacClasses } from '../../../api/modules/classesApi.ts';
 
 const { height } = Dimensions.get('window');
 
-const dedupeClasses = (list) => {
-	const seen = new Set();
-	return list.filter((item) => {
-		const key = `${item.ClassID}-${item.Section}-${item.CourseCode}`;
-		if (seen.has(key)) return false;
-		seen.add(key);
-		return true;
-	});
-};
-
-let lastVersionCheck = 0;
-let lastVersionResult = null;
 const ClassesListScreen = ({ navigation }) => {
-	const network = useContext(NetworkContext);
 	const { showLoading, hideLoading } = useLoading();
 	const { user } = useAuth();
 	const [searchQuery, setSearchQuery] = useState('');
@@ -80,81 +64,43 @@ const ClassesListScreen = ({ navigation }) => {
 		AcademicYear: acad,
 	};
 
-	const offlineFilter = {
-		Semester: acadRaw?.semester,
-		AYFrom: acadRaw?.from,
-		AYTo: acadRaw?.to,
-		UserID: user?.id,
-		...(searchQuery ? { search: searchQuery } : {}),
-	};
-
-	const getCachedFacClassesVersion = async (filter) => {
-		const now = Date.now();
-		if (lastVersionCheck && now - lastVersionCheck < CACHE_REFRESH) {
-			return lastVersionResult;
-		}
+	const loadClassesOnline = useCallback(async () => {
 		try {
-			const version = await getClassesVersion(filter);
-			lastVersionCheck = now;
-			lastVersionResult = version;
-			return version;
+			setLoading(true);
+			showLoading('Fetching classes...');
+			const res = await getFacClasses(filter);
+			setClasses(res?.data ?? []);
 		} catch (err) {
-			console.warn('⚠️ Version check failed:', err.message);
-			return null;
+			handleApiError(err, 'Load Classes');
+		} finally {
+			setLoading(false);
+			hideLoading();
 		}
-	};
-
-	const loadCachedThenCheckVersion = useCallback(async () => {
-		const local = await getOfflineClasses(offlineFilter);
-		setClasses(dedupeClasses(local?.data ?? []));
-		if (network?.isOnline) {
-			const version = await getCachedFacClassesVersion(filter);
-			if (!version) return;
-			const isOutdated = version?.last_updated !== local?.updatedAt;
-			if (isOutdated) {
-				try {
-					const res = await getFacClasses(filter);
-					const fresh = res?.data ?? [];
-					await saveClassesOffline(user?.id, fresh, {
-						from: acadRaw?.from,
-						to: acadRaw?.to,
-						semester: acadRaw?.semester,
-						updatedAt: version?.last_updated || new Date().toISOString(),
-					});
-					setClasses(dedupeClasses(fresh));
-				} catch (err) {
-					if (err?.response?.status === 429) {
-						console.warn("🚫 Too Many Requests. Skipping remote fetch.");
-						return;
-					}
-					console.error("🔥 Failed to fetch classes:", err);
-				}
-			}
-		}
-	}, [acad, acadRaw, filter, searchQuery, offlineFilter, network?.isOnline, user?.id]);
+	}, [filter]);
 
 	useEffect(() => {
-		loadCachedThenCheckVersion();
-	}, []);
+		if (acad) loadClassesOnline();
+	}, [acad]);
 
 	useFocusEffect(
 		useCallback(() => {
-			if (acad && acadRaw) loadCachedThenCheckVersion();
-		}, [])
+			if (acad) loadClassesOnline();
+		}, [acad])
 	);
+
 	const handleSearchTextChange = (text) => {
 		setSearchQuery(text);
 		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 		debounceTimeout.current = setTimeout(() => {
-			loadCachedThenCheckVersion();
+			loadClassesOnline();
 		}, 500);
 	};
 
-
 	const handleClearSearch = () => {
 		setSearchQuery('');
-		loadCachedThenCheckVersion();
+		loadClassesOnline();
 	};
+
 	const openModal = () => {
 		setShowModal(true);
 		Animated.timing(slideAnim, {
@@ -254,7 +200,7 @@ const ClassesListScreen = ({ navigation }) => {
 						loading={loading}
 						keyExtractor={(item) => item.ClassStudentID?.toString() ?? `${item.ClassID}-${Math.random()}`}
 						renderItem={renderClassItem}
-						onRefresh={loadCachedThenCheckVersion}
+						onRefresh={loadClassesOnline}
 						onEndReachedThreshold={0.5}
 						ListFooterComponent={renderFooter}
 						ListEmptyComponent={
@@ -291,6 +237,7 @@ const ClassesListScreen = ({ navigation }) => {
 		</>
 	);
 };
+
 
 const styles = StyleSheet.create({
 	searchWrapper: {

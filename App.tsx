@@ -1,7 +1,7 @@
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
-import { StatusBar, Vibration, LogBox } from 'react-native';
+import {StatusBar, Vibration, LogBox, AppState} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -29,8 +29,8 @@ import FacultyActivityBottomNav from './src/navigation/Faculty/FacultyActivityBo
 import JoinClassScreen from './src/screens/Student/Classes/JoinClassScreen.tsx';
 import AddClassScreen from './src/screens/Faculty/Classes/AddClassScreen.tsx';
 import SubmissionDetailsScreen from './src/screens/Faculty/Activities/Submission/SubmissionDetailScreen.tsx';
-import WallCommentsScreen from './src/screens/Faculty/Wall/WallCommentScreen.tsx';
-import PostWallScreen from './src/screens/Faculty/Wall/PostWallScreen.tsx';
+import WallCommentsScreen from './src/Shared/Wall/WallCommentScreen.tsx';
+import PostWallScreen from './src/Shared/Wall/PostWallScreen.tsx';
 import ProfileScreen from './src/Shared/User/ProfileScreen.tsx';
 import AcademicYearScreen from './src/Shared/AcademicYearScreen.tsx';
 
@@ -47,6 +47,8 @@ import { triggerAllSyncs } from './src/utils/sqlite/syncManager';
 import notificationEmitter from './src/utils/notificationEmitter.ts';
 import { handleNotificationNavigation } from './src/utils/handleNotificationNavigation.ts';
 import AddActivityScreen from "./src/screens/Faculty/Activities/AddActivityScreen.tsx";
+import {syncAllTables} from "./src/services/syncService";
+import {tableConfigs} from "./src/config/syncTables";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -67,14 +69,46 @@ const AppNavigator = () => {
     const [splashVisible, setSplashVisible] = useState(true);
 
     useEffect(() => {
+        let syncInterval;
+        const startSync = () => {
+            syncAllTables(tableConfigs);
+            syncInterval = setInterval(() => {
+                syncAllTables(tableConfigs);
+                console.log('AppNavigatorssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss');
+            }, 5 * 1 * 1000);
+        };
+
+        const stopSync = () => clearInterval(syncInterval);
+
+        const handleAppStateChange = (nextState) => {
+            if (nextState === 'active') startSync();
+            else stopSync();
+        };
+
+        startSync();
+
+        const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+        return () => {
+            stopSync();
+            subscription.remove();
+        };
+    }, []);
+
+    useEffect(() => {
         const unsubscribeNetInfo = NetInfo.addEventListener(state => {
-            if (state.isConnected) triggerAllSyncs();
+            if (state.isConnected) {
+                triggerAllSyncs();
+            }
         });
 
         const setupFCM = async () => {
             const app = getMessaging();
 
             onMessage(app, async remoteMessage => {
+                console.log('Foreground notification:', remoteMessage);
+                Vibration.vibrate([200]);
+
                 Toast.show({
                     type: 'success',
                     text1: remoteMessage.notification?.title || 'New Message',
@@ -84,10 +118,16 @@ const AppNavigator = () => {
                     visibilityTime: 4000,
                     topOffset: 50,
                 });
+
+                if (remoteMessage?.data) {
+                    notificationEmitter.emit('newMessage', remoteMessage.data);
+                    handleNotificationNavigation(remoteMessage.data);
+                }
             });
 
             onNotificationOpenedApp(app, remoteMessage => {
                 if (remoteMessage?.data) {
+                    console.log('onNotificationOpenedApp:', remoteMessage.data);
                     Vibration.vibrate([500, 1000, 500]);
                     notificationEmitter.emit('newMessage', remoteMessage.data);
                     handleNotificationNavigation(remoteMessage.data);
@@ -98,6 +138,7 @@ const AppNavigator = () => {
             if (initialMessage?.data) {
                 const interval = setInterval(() => {
                     if (navigationRef.isReady()) {
+                        console.log('Initial notification:', initialMessage.data);
                         notificationEmitter.emit('newMessage', initialMessage.data);
                         handleNotificationNavigation(initialMessage.data);
                         clearInterval(interval);
@@ -107,7 +148,11 @@ const AppNavigator = () => {
         };
 
         setupFCM();
-        return () => unsubscribeNetInfo();
+
+        // Cleanup
+        return () => {
+            unsubscribeNetInfo();
+        };
     }, []);
 
     useEffect(() => {

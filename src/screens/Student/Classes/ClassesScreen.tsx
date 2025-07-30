@@ -1,14 +1,14 @@
-import React, {useCallback, useContext, useEffect, useRef, useState} from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
 	View,
 	TextInput,
 	FlatList,
-	ActivityIndicator,
 	TouchableOpacity,
 	SafeAreaView,
 	Image,
 	StyleSheet,
-	Text, Animated, Dimensions,
+	Text,
+	Dimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -19,39 +19,22 @@ import { ShimmerList } from '../../../components/loaders/ShimmerList.tsx';
 
 import { globalStyles } from '../../../theme/styles.ts';
 import { theme } from '../../../theme';
-import {CACHE_REFRESH, FILE_BASE_URL} from '../../../../env.ts';
 
 import { handleApiError } from '../../../utils/errorHandler.ts';
 import { getAcademicInfo } from '../../../utils/getAcademicInfo.ts';
-import { getOfflineClasses, saveClassesOffline } from '../../../utils/sqlite/offlineClassesService.ts';
-
-import {getMyClasses, getFacClassesVersion, getFacClasses, getClassesVersion} from '../../../api/modules/classesApi.ts';
+import { getMyClasses } from '../../../api/modules/classesApi.ts';
 import { useLoading } from '../../../context/LoadingContext.tsx';
-import { NetworkContext } from '../../../context/NetworkContext.tsx';
 import { useAuth } from '../../../context/AuthContext.tsx';
-const { height } = Dimensions.get('window');
-const dedupeClasses = (list) => {
-	const seen = new Set();
-	return list.filter((item) => {
-		const key = `${item.ClassID}-${item.Section}-${item.CourseCode}`;
-		if (seen.has(key)) return false;
-		seen.add(key);
-		return true;
-	});
-};
 
-let lastVersionCheck = 0;
-let lastVersionResult = null;
+const { height } = Dimensions.get('window');
+
 const ClassesScreen = ({ navigation }) => {
-	const network = useContext(NetworkContext);
-	const { showLoading, hideLoading } = useLoading();
 	const { user } = useAuth();
+	const { showLoading, hideLoading } = useLoading();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [acad, setAcad] = useState(null);
 	const [acadRaw, setAcadRaw] = useState(null);
 	const debounceTimeout = useRef(null);
-	const [showModal, setShowModal] = useState(false);
-	const slideAnim = useRef(new Animated.Value(height)).current;
 	const [classes, setClasses] = useState([]);
 	const [loading, setLoading] = useState(false);
 
@@ -72,86 +55,48 @@ const ClassesScreen = ({ navigation }) => {
 		}, [])
 	);
 
-	const filter = {
-		page: 1,
-		...(searchQuery ? { search: searchQuery } : {}),
-		AcademicYear: acad,
-	};
+	const fetchClasses = useCallback(async () => {
+		if (!acad || !user?.id) return;
+		setLoading(true);
 
-	const offlineFilter = {
-		Semester: acadRaw?.semester,
-		AYFrom: acadRaw?.from,
-		AYTo: acadRaw?.to,
-		UserID: user?.id,
-		...(searchQuery ? { search: searchQuery } : {}),
-	};
-
-	const getCachedFacClassesVersion = async (filter) => {
-		const now = Date.now();
-		if (lastVersionCheck && now - lastVersionCheck < CACHE_REFRESH) {
-			return lastVersionResult;
-		}
 		try {
-			const version = await getClassesVersion(filter);
-			lastVersionCheck = now;
-			lastVersionResult = version;
-			return version;
-		} catch (err) {
-			console.warn('⚠️ Version check failed:', err.message);
-			return null;
-		}
-	};
+			const filter = {
+				page: 1,
+				...(searchQuery ? { search: searchQuery } : {}),
+				AcademicYear: acad,
+			};
 
-	const loadCachedThenCheckVersion = useCallback(async () => {
-		const local = await getOfflineClasses(offlineFilter);
-		setClasses(dedupeClasses(local?.data ?? []));
-		if (network?.isOnline) {
-			const version = await getCachedFacClassesVersion(filter);
-			if (!version) return;
-			const isOutdated = version?.last_updated !== local?.updatedAt;
-			if (isOutdated) {
-				try {
-					const res = await getMyClasses(filter);
-					const fresh = res?.data ?? [];
-					await saveClassesOffline(user?.id, fresh, {
-						from: acadRaw?.from,
-						to: acadRaw?.to,
-						semester: acadRaw?.semester,
-						updatedAt: version?.last_updated || new Date().toISOString(),
-					});
-					setClasses(dedupeClasses(fresh));
-				} catch (err) {
-					if (err?.response?.status === 429) {
-						console.warn("🚫 Too Many Requests. Skipping remote fetch.");
-						return;
-					}
-					console.error("🔥 Failed to fetch classes:", err);
-				}
-			}
+			const res = await getMyClasses(filter);
+			setClasses(res?.data || []);
+		} catch (err) {
+			console.error("🔥 Failed to fetch classes:", err);
+			handleApiError(err);
+		} finally {
+			setLoading(false);
 		}
-	}, [acad, acadRaw, filter, searchQuery, offlineFilter, network?.isOnline, user?.id]);
+	}, [acad, user?.id, searchQuery]);
 
 	useEffect(() => {
-		loadCachedThenCheckVersion();
-	}, []);
+		fetchClasses();
+	}, [acad, user?.id]);
 
 	useFocusEffect(
 		useCallback(() => {
-			if (acad && acadRaw) loadCachedThenCheckVersion();
-		}, [])
+			if (acad && acadRaw) fetchClasses();
+		}, [acad, acadRaw])
 	);
+
 	const handleSearchTextChange = (text) => {
 		setSearchQuery(text);
 		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 		debounceTimeout.current = setTimeout(() => {
-			loadCachedThenCheckVersion();
+			fetchClasses();
 		}, 500);
 	};
 
-
 	const handleClearSearch = () => {
 		setSearchQuery('');
-		loadCachedThenCheckVersion();
+		fetchClasses();
 	};
 
 	const renderClassItem = ({ item }) => {
@@ -203,7 +148,6 @@ const ClassesScreen = ({ navigation }) => {
 							onChangeText={handleSearchTextChange}
 							returnKeyType="search"
 							clearButtonMode="while-editing"
-							onSubmitEditing={() => fetchClasses(1)}
 						/>
 						{searchQuery ? (
 							<TouchableOpacity onPress={handleClearSearch} style={styles.clearBtn} hitSlop={10}>
@@ -217,7 +161,7 @@ const ClassesScreen = ({ navigation }) => {
 						loading={loading}
 						keyExtractor={(item) => item.ClassStudentID?.toString() ?? `${item.ClassID}-${Math.random()}`}
 						renderItem={renderClassItem}
-						onRefresh={loadCachedThenCheckVersion}
+						onRefresh={fetchClasses}
 						onEndReachedThreshold={0.5}
 						ListEmptyComponent={
 							!loading && (

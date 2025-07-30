@@ -28,28 +28,31 @@ export const AccessProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     useEffect(() => {
-        const fetchAccess = async () => {
-            try {
-                const res = await userAccessUpdate(user?.id);
-                const data = res;
-                setRoles([...data.roles || []]);
-                setPermissions([...data.permissions || []]);
+        if(user){
+            const fetchAccess = async () => {
+                try {
+                    const res = await userAccessUpdate(user?.id);
+                    const data = res;
+                    setRoles([...data.roles || []]);
+                    setPermissions([...data.permissions || []]);
 
-                await AsyncStorage.setItem('roles', JSON.stringify(data.roles));
-                await AsyncStorage.setItem('permissions', JSON.stringify(data.permissions));
-            } catch (err) {
-                console.warn('Access sync failed:', err);
-                handleApiError(err, "df")
-            }
-        };
+                    await AsyncStorage.setItem('roles', JSON.stringify(data.roles));
+                    await AsyncStorage.setItem('permissions', JSON.stringify(data.permissions));
+                } catch (err) {
+                    // console.warn('Access sync failed:', err);
+                    // handleApiError(err, "df")
+                }
+            };
 
-        fetchAccess();
-        const interval = setInterval(() => {
             fetchAccess();
-            loadFromStorage();
-        }, 5 * 1000);
+            const interval = setInterval(() => {
+                fetchAccess();
+                loadFromStorage();
+            }, 5 * 1000);
 
-        return () => clearInterval(interval);
+            return () => clearInterval(interval);
+        }
+
     }, []);
 
 

@@ -1,9 +1,11 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
 	Alert,
-	Image, Keyboard,
+	Image,
+	Keyboard,
 	KeyboardAvoidingView,
-	Linking, Platform,
+	Linking,
+	Platform,
 	RefreshControl,
 	SafeAreaView,
 	ScrollView,
@@ -15,7 +17,6 @@ import {
 	View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-
 import BackHeader from '../../../../components/layout/BackHeader.tsx';
 import { CText } from '../../../../components/common/CText.tsx';
 import { globalStyles } from '../../../../theme/styles.ts';
@@ -26,7 +27,11 @@ import { useAuth } from '../../../../context/AuthContext.tsx';
 import { handleApiError } from '../../../../utils/errorHandler.ts';
 import { viewFile } from '../../../../utils/viewFile.ts';
 import { getFileSize } from '../../../../utils/format.ts';
-import {fetchStudentResponses, fetchStudentSubmissions, saveStudentGrade} from "../../../../api/modules/submissionApi.ts";
+import {
+	fetchStudentResponses,
+	fetchStudentSubmissions,
+	saveStudentGrade
+} from '../../../../api/modules/submissionApi.ts';
 
 const SubmissionDetailsScreen = ({ navigation, route }) => {
 	const StudentActivityID = route.params.StudentActivityID;
@@ -35,85 +40,70 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 	const { showLoading, hideLoading } = useLoading();
 
 	const [loading, setLoading] = useState(false);
-	const [submission, setSubmissions] = useState([]);
-	const [refreshing, setRefreshing] = useState(false);
+	const [submission, setSubmission] = useState(null);
 	const [attachment, setAttachment] = useState([]);
 	const [gradeInput, setGradeInput] = useState('');
 	const [submitting, setSubmitting] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 
-	const loadSubmissions = async (StudentID) => {
-		try {
-			const res = await fetchStudentSubmissions({ StudentActivityID, StudentID });
-			setAttachment(res.data || []);
-		} catch (err) {
-			handleApiError(err, 'Fetchs');
-		}
-	};
-
-	const fetch = async () => {
+	const fetchData = async () => {
 		try {
 			setLoading(true);
-			showLoading('Loading submissions...');
+			showLoading('Loading...');
 			const res = await fetchStudentResponses({ StudentActivityID });
-			setSubmissions(res);
+			setSubmission(res);
 			if (res?.StudentID) {
-				await loadSubmissions(res.StudentID);
+				const att = await fetchStudentSubmissions({ StudentActivityID, StudentID: res.StudentID });
+				setAttachment(att.data || []);
 			}
 			setGradeInput(res?.Grade ? res.Grade.toString() : '');
 		} catch (err) {
-			handleApiError(err, 'Fetch');
+			handleApiError(err, 'Fetch Error');
 		} finally {
 			hideLoading();
 			setLoading(false);
 		}
 	};
 
-	const handleSubmitGrade = async () => {
-		if (!gradeInput.trim()) {
-			return Alert.alert('Error', 'Please enter a grade.');
-		}
+	const onRefresh = async () => {
+		setRefreshing(true);
+		await fetchData();
+		setRefreshing(false);
+	};
 
+	const handleSubmitGrade = async () => {
+		if (!gradeInput.trim()) return Alert.alert('Error', 'Please enter a grade.');
 		const gradeValue = Number(gradeInput.trim());
 		if (gradeValue > submission?.activity?.Points) {
 			return Alert.alert('Error', 'Grade cannot be greater than the maximum points.');
 		}
 
-		showLoading('Submitting...');
 		try {
+			showLoading('Submitting...');
 			setSubmitting(true);
 			await saveStudentGrade({
 				StudentActivityID,
-				Grade: gradeInput,
+				Grade: gradeInput
 			});
-			// await fetch();
-			Alert.alert('Success', 'Grade submitted.');
+			Alert.alert('Success', 'Grade submitted successfully.');
 			navigation.goBack();
 		} catch (err) {
 			handleApiError(err, 'Submit');
 		} finally {
 			setSubmitting(false);
-			setLoading(false);
 			hideLoading();
 		}
 	};
 
-
 	useEffect(() => {
-		fetch();
+		fetchData();
 	}, []);
 
-	const onRefresh = async () => {
-		setRefreshing(true);
-		await fetch();
-		setRefreshing(false);
-	};
-
 	const renderItem = ({ item }) => {
-		const isWebLink = item.Link.startsWith('http://') || item.Link.startsWith('https://');
+		const isWebLink = item.Link.startsWith('http');
 		return (
 			<TouchableOpacity
 				style={styles.submissionCard}
-				key={item.id}
 				onPress={() => {
 					if (isWebLink) {
 						Linking.openURL(item.Link).catch(() =>
@@ -143,7 +133,6 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 			<KeyboardAvoidingView
 				style={{ flex: 1 }}
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
 			>
 				<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 					<View style={{ flex: 1 }}>
@@ -154,27 +143,29 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 								refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 							>
 								<View style={styles.contentWrapper}>
-									{/* Profile Card */}
+									{/* Profile */}
 									<View style={styles.profileCard}>
 										<Image
 											source={
-												submission.student_info?.user?.profile_pic
+												submission?.student_info?.user?.profile_pic
 													? { uri: submission.student_info.user.profile_pic }
-													: submission.student_info?.user?.avatar
+													: submission?.student_info?.user?.avatar
 														? { uri: submission.student_info.user.avatar }
 														: {
 															uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-																submission.student_info?.user?.name || 'User'
-															)}&background=random`,
+																submission?.student_info?.user?.name || 'User'
+															)}&background=random`
 														}
 											}
 											style={styles.avatar}
 										/>
 										<View style={styles.profileInfo}>
 											<CText style={styles.nameText}>
-												{submission.student_info?.FirstName} {submission.student_info?.LastName}
+												{submission?.student_info?.FirstName} {submission?.student_info?.LastName}
 											</CText>
-											<CText style={styles.subText}>{submission.student_info?.user?.email}</CText>
+											<CText style={styles.subText}>
+												{submission?.student_info?.user?.email}
+											</CText>
 										</View>
 									</View>
 
@@ -191,6 +182,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 								</View>
 							</ScrollView>
 
+							{/* Grade Input */}
 							<View style={styles.fixedGradeInput}>
 								<View style={globalStyles.cardRow}>
 									<CText fontStyle="SB" fontSize={16} style={{ marginBottom: 8 }}>
@@ -210,7 +202,6 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 										placeholder="e.g. 100"
 										placeholderTextColor="#999"
 									/>
-
 									<TouchableOpacity
 										style={styles.iconButton}
 										onPress={handleSubmitGrade}
@@ -224,7 +215,6 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 									</TouchableOpacity>
 								</View>
 							</View>
-
 						</SafeAreaView>
 					</View>
 				</TouchableWithoutFeedback>
@@ -238,7 +228,6 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 	},
-
 	flexGradeInput: {
 		flex: 1,
 		borderWidth: 1,
@@ -251,7 +240,6 @@ const styles = StyleSheet.create({
 		color: '#111827',
 		marginRight: 10,
 	},
-
 	iconButton: {
 		backgroundColor: theme.colors.light.primary,
 		padding: 10,
@@ -259,7 +247,6 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 	},
-
 	fixedGradeInput: {
 		position: 'absolute',
 		left: 0,
@@ -270,13 +257,11 @@ const styles = StyleSheet.create({
 		borderTopWidth: 1,
 		borderColor: '#e5e7eb',
 	},
-
 	contentWrapper: {
 		flex: 1,
 		paddingHorizontal: 16,
 		paddingTop: 10,
 	},
-
 	profileCard: {
 		flexDirection: 'row',
 		alignItems: 'center',
@@ -284,37 +269,32 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 		padding: 12,
 		marginBottom: 14,
+		elevation: 2,
 		shadowColor: '#000',
 		shadowOpacity: 0.04,
 		shadowOffset: { width: 0, height: 1 },
 		shadowRadius: 2,
-		elevation: 2,
 	},
-
 	profileInfo: {
 		marginLeft: 10,
 		flex: 1,
 	},
-
 	avatar: {
 		width: 54,
 		height: 54,
 		borderRadius: 27,
 		backgroundColor: '#d1d5db',
 	},
-
 	nameText: {
 		fontWeight: '600',
 		fontSize: 15,
 		color: '#111827',
 	},
-
 	subText: {
 		fontSize: 13,
 		color: '#6b7280',
 		marginTop: 2,
 	},
-
 	submissionCard: {
 		flexDirection: 'row',
 		alignItems: 'center',
@@ -328,30 +308,6 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.03,
 		shadowRadius: 1,
 	},
-
-	gradeBox: {
-		backgroundColor: '#f3f4f6',
-		padding: 12,
-		borderRadius: 8,
-		marginBottom: 16,
-	},
-
-	gradeInput: {
-		borderWidth: 1,
-		borderColor: '#d1d5db',
-		borderRadius: 8,
-		padding: 10,
-		fontSize: 16,
-		color: '#000',
-	},
-
-	submitBtn: {
-		backgroundColor: theme.colors.light.primary,
-		borderRadius: 8,
-		paddingVertical: 12,
-		alignItems: 'center',
-	},
-
 	emptyText: {
 		textAlign: 'center',
 		paddingVertical: 24,
@@ -359,6 +315,5 @@ const styles = StyleSheet.create({
 		fontSize: 13,
 	},
 });
-
 
 export default SubmissionDetailsScreen;

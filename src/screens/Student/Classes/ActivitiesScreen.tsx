@@ -14,7 +14,6 @@ import CustomHeader from '../../../components/layout/CustomHeader.tsx';
 import { globalStyles } from '../../../theme/styles.ts';
 import { theme } from '../../../theme';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { NetworkContext } from '../../../context/NetworkContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import { getAcademicInfo } from '../../../utils/getAcademicInfo.ts';
@@ -23,7 +22,6 @@ import { CText } from '../../../components/common/CText.tsx';
 import { formatDate } from '../../../utils/dateFormatter';
 
 const ActivitiesScreen = ({ navigation }) => {
-	const network = useContext(NetworkContext);
 	const { showLoading, hideLoading } = useLoading();
 
 	const [data, setData] = useState([]);
@@ -62,13 +60,9 @@ const ActivitiesScreen = ({ navigation }) => {
 				search: query,
 				AcademicYear: currentAcad,
 			};
-			let response = [];
-			if (network?.isOnline) {
-				const res = await getMyActivities(params);
-				response = res ?? [];
-				console.log('response', params);
-				setData(response);
-			}
+
+			const res = await getMyActivities(params);
+			setData(res ?? []);
 		} catch (err) {
 			handleApiError(err, 'Failed to load activities');
 		} finally {
@@ -143,7 +137,6 @@ const ActivitiesScreen = ({ navigation }) => {
 				a.SubmissionType === 'Submitted'
 			),
 		};
-
 
 		const filtered = categorized[selectedTab] || [];
 

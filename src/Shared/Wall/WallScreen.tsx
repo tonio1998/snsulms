@@ -17,23 +17,47 @@ import {
 	useWindowDimensions,
 	FlatList,
 	ActivityIndicator,
+	ToastAndroid,
 } from 'react-native';
 import RenderHtml from 'react-native-render-html';
-import { NetworkContext } from '../../../context/NetworkContext.tsx';
-import { globalStyles } from '../../../theme/styles.ts';
-import { theme } from '../../../theme';
-import { CText } from '../../../components/common/CText.tsx';
-import { handleApiError } from '../../../utils/errorHandler.ts';
-import { getWall, reactPost } from '../../../api/modules/wallApi.ts';
+import { NetworkContext } from '../../context/NetworkContext.tsx';
+import { globalStyles } from '../../theme/styles.ts';
+import { theme } from '../../theme';
+import { CText } from '../../components/common/CText.tsx';
+import { handleApiError } from '../../utils/errorHandler.ts';
+import { getWall, reactPost } from '../../api/modules/wallApi.ts';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useAuth } from '../../../context/AuthContext.tsx';
-import { formatDate } from '../../../utils/dateFormatter';
-import { useLoading } from '../../../context/LoadingContext.tsx';
-import BackHeader from '../../../components/layout/BackHeader.tsx';
+import { useAuth } from '../../context/AuthContext.tsx';
+import { formatDate } from '../../utils/dateFormatter';
+import { useLoading } from '../../context/LoadingContext.tsx';
+import BackHeader from '../../components/layout/BackHeader.tsx';
 import {
 	getOfflineWall,
 	saveWallOffline,
-} from '../../../utils/sqlite/offlineWallService.ts';
+} from '../../utils/sqlite/offlineWallService.ts';
+import { getWallVersion } from '../../api/modules/Versioning/versionna.ts';
+import { CACHE_REFRESH } from '../../../env.ts';
+import notificationEmitter from '../../utils/notificationEmitter.ts';
+import {sortByDateDesc} from "../../utils/cache/dataHelpers";
+
+let lastWallVersionCheck = 0;
+let lastWallVersionResult = null;
+
+const getCachedWallVersion = async (filter) => {
+	const now = Date.now();
+	if (lastWallVersionCheck && now - lastWallVersionCheck < CACHE_REFRESH) {
+		return lastWallVersionResult;
+	}
+	try {
+		const version = await getWallVersion(filter);
+		lastWallVersionCheck = now;
+		lastWallVersionResult = version;
+		return version;
+	} catch (err) {
+		console.warn('⚠️ Wall version check failed:', err.message);
+		return null;
+	}
+};
 
 const WallScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -48,32 +72,60 @@ const WallScreen = ({ navigation, route }) => {
 	const heartScales = useRef({}).current;
 	const { width } = useWindowDimensions();
 
+	const sortPosts = (list) => {
+		return [...list].sort((a, b) => {
+			const aIsMine = a.created_by?.id === user.id;
+			const bIsMine = b.created_by?.id === user.id;
+			if (aIsMine && !bIsMine) return -1;
+			if (!aIsMine && bIsMine) return 1;
+			return 0;
+		});
+	};
+
 	const fetch = async (pageNumber = 1, isRefresh = false) => {
 		if (loading) return;
+
 		try {
 			if (isRefresh) setRefreshing(true);
 			setLoading(true);
 
 			const filter = { page: pageNumber, ClassID };
-			console.log('filter: ', filter)
-			let List = [];
-			let totalPages = 1;
+			const localList = await getOfflineWall({ ClassID });
+			const localUpdatedAt = localList?.[0]?.updatedAt;
 
-			if (network?.isOnline) {
-				const res = await getWall(filter);
-				List = res.data ?? [];
-				console.log('List: ', res)
-				totalPages = res.last_page ?? 1;
-				await saveWallOffline(List, ClassID);
-			} else {
-				const offlineList = await getOfflineWall({ ClassID });
-				List = offlineList ?? [];
-				totalPages = 1;
+			if (pageNumber === 1) {
+				const sortedLocal = sortByDateDesc(localList ?? []);
+				setWall(sortedLocal);
 			}
 
-			setWall((prev) => (pageNumber === 1 ? List : [...prev, ...List]));
-			setPage(pageNumber);
-			setHasMore(pageNumber < totalPages);
+			if (!network?.isOnline) return;
+
+			if (pageNumber === 1) {
+				const version = await getCachedWallVersion({ ClassID });
+				const isOutdated = version?.last_updated !== localUpdatedAt;
+
+				if (isOutdated) {
+					const res = await getWall({ ...filter });
+					const onlineList = sortByDateDesc(res.data ?? []);
+
+					await saveWallOffline(onlineList, ClassID, {
+						updatedAt: version?.last_updated || new Date().toISOString(),
+					});
+
+					setWall(onlineList);
+					setHasMore((res?.last_page ?? 1) > 1);
+					setPage(1);
+				}
+			}
+
+			if (pageNumber > 1) {
+				const res = await getWall({ ...filter });
+				const newList = res.data ?? [];
+				setWall(prev => [...prev, ...newList]);
+				setHasMore((res?.last_page ?? 1) > pageNumber);
+				setPage(pageNumber);
+			}
+
 		} catch (error) {
 			handleApiError(error, 'Failed to load wall posts');
 		} finally {
@@ -84,6 +136,13 @@ const WallScreen = ({ navigation, route }) => {
 
 	useEffect(() => {
 		fetch(1);
+		const handler = () => {
+			fetch(1);
+		};
+		notificationEmitter.on('newMessage', handler);
+		return () => {
+			notificationEmitter.off('newMessage', handler);
+		};
 	}, []);
 
 	const handleRefresh = () => fetch(1, true);
@@ -138,7 +197,7 @@ const WallScreen = ({ navigation, route }) => {
 	};
 
 	const renderItem = ({ item }) => (
-		<View style={styles.postCard}>
+		<View style={styles.postCard} key={item.id}>
 			<View style={styles.postHeader}>
 				<Image
 					source={
@@ -176,23 +235,12 @@ const WallScreen = ({ navigation, route }) => {
 			) : null}
 
 			<View style={styles.postActions}>
-				<TouchableOpacity
-					style={styles.actionBtn}
-					onPress={() => handleReaction(item.id)}
-				>
-					<Animated.View
-						style={{
-							transform: [{ scale: getHeartScale(item.id) }],
-						}}
-					>
+				<TouchableOpacity style={styles.actionBtn} onPress={() => handleReaction(item.id)}>
+					<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
 						<Icon
 							name={item.is_react_by_you ? 'heart' : 'heart-outline'}
 							size={20}
-							color={
-								item.is_react_by_you
-									? theme.colors.light.primary
-									: '#aaa'
-							}
+							color={item.is_react_by_you ? theme.colors.light.primary : '#aaa'}
 						/>
 					</Animated.View>
 					<CText fontSize={14} style={styles.reactionCount}>
@@ -200,10 +248,7 @@ const WallScreen = ({ navigation, route }) => {
 					</CText>
 				</TouchableOpacity>
 
-				<TouchableOpacity
-					style={styles.actionBtn}
-					onPress={() => handleComment(item.id)}
-				>
+				<TouchableOpacity style={styles.actionBtn} onPress={() => handleComment(item.id)}>
 					<Icon name="chatbubble-outline" size={20} color="#aaa" />
 					<CText fontSize={14} style={styles.reactionCount}>
 						{item.comments?.length > 0 ? item.comments.length : ''}
@@ -216,23 +261,16 @@ const WallScreen = ({ navigation, route }) => {
 	return (
 		<>
 			<BackHeader title="Wall" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-			<SafeAreaView style={[globalStyles.safeArea]}>
+			<SafeAreaView style={globalStyles.safeArea}>
 				<View style={{ flex: 1, paddingHorizontal: 10 }}>
 					<FlatList
 						data={wall}
 						keyExtractor={(item, index) => item.id?.toString() || index.toString()}
 						renderItem={renderItem}
 						contentContainerStyle={{ paddingBottom: 100 }}
-						refreshControl={
-							<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-						}
+						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
 						onEndReached={() => {
-							console.log('hasMore: ', hasMore)
-							if (hasMore && !loading) {
-								console.log('hasMore: ', hasMore)
-								fetch(page + 1);
-
-							}
+							if (hasMore && !loading) fetch(page + 1);
 						}}
 						onEndReachedThreshold={0.3}
 						ListFooterComponent={

@@ -56,6 +56,8 @@ export default function SubmissionScreen({ navigation, route }) {
 				StudentID: user?.conn_id
 			});
 
+			console.log(res.data);
+
 			setSubmissions(res.data);
 		} catch (err) {
 			handleApiError(err, 'Fetch');
