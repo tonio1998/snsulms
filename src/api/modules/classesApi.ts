@@ -22,3 +22,11 @@ export const joinClassByCode = async (classCode: string) => {
     const res = await api.post('/lms/class/join', { classCode });
     return res.data;
 };
+
+export const getClassInfo = async (ClassID) => {
+    // console.log("ClassIDClassIDClassIDClassID: ", ClassID)
+  const res = await api.get('/lms/class', {
+      params: {ClassID}
+  });
+  return res.data;
+};

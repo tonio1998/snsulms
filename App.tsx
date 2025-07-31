@@ -49,6 +49,7 @@ import { handleNotificationNavigation } from './src/utils/handleNotificationNavi
 import AddActivityScreen from "./src/screens/Faculty/Activities/AddActivityScreen.tsx";
 import {syncAllTables} from "./src/services/syncService";
 import {tableConfigs} from "./src/config/syncTables";
+import CreateMeetingScreen from "./src/Shared/GMeet/CreateMeetingScreen.tsx";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -74,8 +75,8 @@ const AppNavigator = () => {
             syncAllTables(tableConfigs);
             syncInterval = setInterval(() => {
                 syncAllTables(tableConfigs);
-                console.log('AppNavigatorssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss');
-            }, 5 * 1 * 1000);
+                // console.log('AppNavigatorssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss');
+            }, 5 * 5 * 1000);
         };
 
         const stopSync = () => clearInterval(syncInterval);
@@ -183,6 +184,7 @@ const AppNavigator = () => {
                             <Stack.Screen name="AddActivity" component={AddActivityScreen} />
                             <Stack.Screen name="SubmissionDetails" component={SubmissionDetailsScreen} />
                             <Stack.Screen name="ClassDetails" component={ClassBottomNav} />
+                            <Stack.Screen name="ClassMeeting" component={CreateMeetingScreen} />
                             <Stack.Screen name="ActivityDetails" component={StudentActivityBottomNav} />
                             <Stack.Screen name="FacActivityDetails" component={FacultyActivityBottomNav} />
                             <Stack.Screen

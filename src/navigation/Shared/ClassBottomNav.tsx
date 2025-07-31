@@ -36,7 +36,7 @@ function useOrientation() {
 
 export default function ClassBottomNav({route, navigation}) {
 	const ClassID = route.params.ClassID;
-	console.log('ClassBottomNav', route.params)
+	// console.log('ClassBottomNav', route.params)
 
 	const isLandscape = useOrientation();
 	const { hasRole } = useAccess();
