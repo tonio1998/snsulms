@@ -55,13 +55,16 @@ const HomeScreen = ({navigation}) => {
 			const app = getApp();
 			const messaging = getMessaging(app);
 			const token = await getToken(messaging);
+
 			const isGenerated = await AsyncStorage.getItem('FCM_TOKEN_KEY');
-			if (token && isGenerated) {
+			// console.log('isGenerated ', isGenerated);
+			if (token && !isGenerated) {
+				console.log('FCM Token already generated');
 				await saveFcmToken(token);
 				await AsyncStorage.setItem('FCM_TOKEN_KEY', token);
 			}
 		} catch (error) {
-			// handleApiError(error, 'Get FCM Token');
+			handleApiError(error, 'Get FCM Token');
 		}
 	};
 

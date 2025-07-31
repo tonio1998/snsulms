@@ -1,4 +1,4 @@
-import React, {useCallback, useContext, useEffect, useRef, useState} from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
 	View,
 	FlatList,
@@ -7,9 +7,12 @@ import {
 	TouchableOpacity,
 	RefreshControl,
 	SafeAreaView,
-	Image,
 	StyleSheet,
-	ScrollView, Modal, Animated, Easing, Dimensions,
+	ScrollView,
+	Modal,
+	Animated,
+	Easing,
+	Dimensions,
 } from 'react-native';
 import { globalStyles } from '../../../theme/styles.ts';
 import { theme } from '../../../theme';
@@ -17,23 +20,23 @@ import { handleApiError } from '../../../utils/errorHandler.ts';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
 import { CText } from '../../../components/common/CText.tsx';
-import {getActivities, getStudentActivities} from "../../../api/modules/activitiesApi.ts";
-import { formatDate } from "../../../utils/dateFormatter";
-import BackHeader from "../../../components/layout/BackHeader.tsx";
-import BackgroundWrapper from "../../../utils/BackgroundWrapper";
-import { NetworkContext } from "../../../context/NetworkContext.tsx";
-import { getOfflineActivities, saveActivitiesOffline } from "../../../utils/sqlite/offlineActivityService.ts";
-import Icon from "react-native-vector-icons/Ionicons";
+import { getActivities } from '../../../api/modules/activitiesApi.ts';
+import { formatDate } from '../../../utils/dateFormatter';
+import BackHeader from '../../../components/layout/BackHeader.tsx';
+import { NetworkContext } from '../../../context/NetworkContext.tsx';
+import Icon from 'react-native-vector-icons/Ionicons';
+
 const { height } = Dimensions.get('window');
+
 const ActivityScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
 	const network = useContext(NetworkContext);
+	const { showLoading, hideLoading } = useLoading();
+
 	const [activities, setActivities] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
-	const { showLoading, hideLoading } = useLoading();
 	const [actType, setActType] = useState('');
-	const [allActivities, setAllActivities] = useState([]);
 	const [showModal, setShowModal] = useState(false);
 	const slideAnim = useRef(new Animated.Value(height)).current;
 
@@ -69,7 +72,7 @@ const ActivityScreen = ({ navigation, route }) => {
 		{ label: 'All', value: '' },
 		{ label: 'Assignment', value: 2 },
 		{ label: 'Quiz', value: 3 },
-		{ label: 'Exam', value: 4 }
+		{ label: 'Exam', value: 4 },
 	];
 
 	const fetchActivities = async () => {
@@ -78,26 +81,11 @@ const ActivityScreen = ({ navigation, route }) => {
 			setLoading(true);
 			showLoading('Loading activities...');
 
-			const filter = { page: 1, search: '', ClassID };
+			if (!network?.isOnline) return;
 
-			if (network?.isOnline) {
-				const res = await getActivities(filter);
-				const onlineList = res?.data || [];
-
-				await saveActivitiesOffline(onlineList, ClassID);
-				setAllActivities(onlineList);
-				setActivities(onlineList);
-				handleActTypeFilter(actType, onlineList);
-			}else{
-				let list = await getOfflineActivities({ ClassID });
-
-				if (list?.length) {
-					setAllActivities(list);
-					setActivities(list);
-					handleActTypeFilter(actType, list);
-				}
-			}
-
+			const res = await getActivities({ ClassID });
+			const list = res?.data || [];
+			handleActTypeFilter(actType, list);
 		} catch (err) {
 			handleApiError(err, 'Failed to fetch activities');
 		} finally {
@@ -105,7 +93,6 @@ const ActivityScreen = ({ navigation, route }) => {
 			hideLoading();
 		}
 	};
-
 
 	useEffect(() => {
 		if (ClassID) fetchActivities();
@@ -117,65 +104,40 @@ const ActivityScreen = ({ navigation, route }) => {
 		setRefreshing(false);
 	};
 
-	const handleActTypeFilter = (type, list = allActivities) => {
+	const handleActTypeFilter = (type, list = activities) => {
 		setActType(type);
-
 		const filtered = list.filter(item => item?.ActivityTypeID !== 1);
-
-		if (type) {
-			setActivities(filtered.filter(item => item?.ActivityTypeID == type));
-		} else {
-			setActivities(filtered);
-		}
+		const filteredByType = type ? filtered.filter(item => item?.ActivityTypeID == type) : filtered;
+		setActivities(filteredByType);
 	};
 
-
 	const handleViewAct = (Title, ActivityID) => {
-		navigation.navigate('FacActivityDetails', {  Title, ActivityID});
+		navigation.navigate('FacActivityDetails', { Title, ActivityID });
 	};
 
 	const renderItem = ({ item }) => (
-		<TouchableOpacity style={styles.card}
-						  onPress={() => handleViewAct(item.Title, item.ActivityID)}
-		>
+		<TouchableOpacity key={item.ActivityID} style={styles.card} onPress={() => handleViewAct(item.Title, item.ActivityID)}>
 			<View style={{ padding: 16 }}>
-				<CText fontSize={16} fontStyle="SB" style={{ color: '#000' }}>
-					{item?.Title}
-				</CText>
-				<CText fontSize={14} style={{ color: '#444', marginTop: 4 }}>
-					{item?.Description}
-				</CText>
+				<CText fontSize={16} fontStyle="SB" style={{ color: '#000' }}>{item?.Title}</CText>
+				<CText fontSize={14} style={{ color: '#444', marginTop: 4 }}>{item?.Description}</CText>
 				<View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-					<CText fontSize={12} style={{ color: '#777' }}>
-						Due: {formatDate(item?.DueDate)}
-					</CText>
-					<CText fontSize={12} style={{ color: '#777' }}>
-						Created: {formatDate(item?.created_at, 'relative')}
-					</CText>
+					<CText fontSize={12} style={{ color: '#777' }}>Due: {formatDate(item?.DueDate)}</CText>
+					<CText fontSize={12} style={{ color: '#777' }}>Created: {formatDate(item?.created_at, 'relative')}</CText>
 				</View>
 			</View>
 		</TouchableOpacity>
 	);
 
 	const renderFilterHeader = () => (
-		<ScrollView
-			horizontal
-			showsHorizontalScrollIndicator={false}
-			style={{ paddingHorizontal: 10, marginBottom: 10 }}
-		>
+		<ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 10, marginBottom: 10 }}>
 			<View style={{ flexDirection: 'row', gap: 8, marginHorizontal: 20 }}>
 				{activityTypes.map((type, idx) => (
 					<TouchableOpacity
 						key={idx}
 						onPress={() => handleActTypeFilter(type.value)}
-						style={[
-							styles.filterBtn,
-							actType === type.value && styles.activeFilterBtn
-						]}
+						style={[styles.filterBtn, actType === type.value && styles.activeFilterBtn]}
 					>
-						<CText style={{ color: actType === type.value ? '#fff' : '#000' }} fontStyle="SB">
-							{type.label}
-						</CText>
+						<CText style={{ color: actType === type.value ? '#fff' : '#000' }} fontStyle="SB">{type.label}</CText>
 					</TouchableOpacity>
 				))}
 			</View>
@@ -185,60 +147,54 @@ const ActivityScreen = ({ navigation, route }) => {
 	return (
 		<>
 			<BackHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-				<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
-					<FlatList
-						data={activities}
-						keyExtractor={(item) => item.ActivityID.toString()}
-						renderItem={renderItem}
-						ListHeaderComponent={renderFilterHeader}
-						contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
-						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-						ListEmptyComponent={
-							!loading && (
-								<View style={{ padding: 20, alignItems: 'center' }}>
-									<CText fontSize={14} style={{ color: '#888' }}>
-										No activities found
-									</CText>
-								</View>
-							)
-						}
-					/>
-					<TouchableOpacity style={globalStyles.fab} activeOpacity={0.7} onPress={openModal}>
-						<Icon name="add" size={28} color="#fff" />
-					</TouchableOpacity>
-
-					{showModal && (
-						<Modal transparent visible={showModal} animationType="none">
-							<TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeModal} />
-							<Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
-								<TouchableOpacity style={styles.option} onPress={() => handleOption('2')}>
-									<CText fontStyle="SB" fontSize={16}>Assignment</CText>
-								</TouchableOpacity>
-								<TouchableOpacity style={styles.option} onPress={() => handleOption('3')}>
-									<CText fontStyle="SB" fontSize={16}>Quiz</CText>
-								</TouchableOpacity>
-								<TouchableOpacity style={styles.option} onPress={() => handleOption('4')}>
-									<CText fontStyle="SB" fontSize={16}>Exam</CText>
-								</TouchableOpacity>
-								<TouchableOpacity style={styles.cancel} onPress={closeModal}>
-									<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>
-								</TouchableOpacity>
-							</Animated.View>
-						</Modal>
-					)}
-				</SafeAreaView>
+			<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
+				<FlatList
+					data={activities}
+					keyExtractor={(item) => item.ActivityID.toString()}
+					renderItem={renderItem}
+					ListHeaderComponent={renderFilterHeader}
+					contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
+					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+					ListEmptyComponent={
+						!loading && (
+							<View style={{ padding: 20, alignItems: 'center' }}>
+								<CText fontSize={14} style={{ color: '#888' }}>No activities found</CText>
+							</View>
+						)
+					}
+				/>
+				<TouchableOpacity style={globalStyles.fab} activeOpacity={0.7} onPress={openModal}>
+					<Icon name="add" size={28} color="#fff" />
+				</TouchableOpacity>
+				{showModal && (
+					<Modal transparent visible={showModal} animationType="none">
+						<TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeModal} />
+						<Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
+							<TouchableOpacity style={styles.option} onPress={() => handleOption('2')}>
+								<CText fontStyle="SB" fontSize={16}>Assignment</CText>
+							</TouchableOpacity>
+							<TouchableOpacity style={styles.option} onPress={() => handleOption('3')}>
+								<CText fontStyle="SB" fontSize={16}>Quiz</CText>
+							</TouchableOpacity>
+							<TouchableOpacity style={styles.option} onPress={() => handleOption('4')}>
+								<CText fontStyle="SB" fontSize={16}>Exam</CText>
+							</TouchableOpacity>
+							<TouchableOpacity style={styles.cancel} onPress={closeModal}>
+								<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>
+							</TouchableOpacity>
+						</Animated.View>
+					</Modal>
+				)}
+			</SafeAreaView>
 		</>
 	);
 };
 
 const styles = StyleSheet.create({
-	// Dimmed backdrop
 	overlay: {
 		flex: 1,
 		backgroundColor: 'rgba(0,0,0,0.4)',
 	},
-
-	// Bottom sheet modal
 	modalContainer: {
 		position: 'absolute',
 		bottom: 0,
@@ -255,19 +211,15 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: -3 },
 		shadowRadius: 6,
 	},
-
 	option: {
 		paddingVertical: 14,
 		borderBottomWidth: 1,
 		borderColor: '#f0f0f0',
 	},
-
 	cancel: {
 		marginTop: 18,
 		alignItems: 'center',
 	},
-
-	// Activity Card
 	card: {
 		backgroundColor: '#ffffff',
 		borderRadius: 12,
@@ -279,8 +231,6 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 2 },
 		shadowRadius: 3,
 	},
-
-	// Filter Buttons
 	filterBtn: {
 		borderRadius: 20,
 		paddingVertical: 8,
@@ -289,31 +239,10 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: '#e5e7eb',
 	},
-
 	activeFilterBtn: {
 		backgroundColor: theme.colors.light.primary,
 		borderColor: theme.colors.light.primary,
 	},
-
-	// Optional: Card content spacing
-	cardTitle: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: '#111827',
-	},
-
-	cardDesc: {
-		fontSize: 14,
-		color: '#374151',
-		marginTop: 4,
-	},
-
-	cardMeta: {
-		fontSize: 12,
-		color: '#6b7280',
-		marginTop: 6,
-	},
 });
-
 
 export default ActivityScreen;

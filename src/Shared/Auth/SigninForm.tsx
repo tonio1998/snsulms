@@ -38,6 +38,7 @@ import checkBiometricSupport from '../../services/checkBiometricSupport.ts';
 GoogleSignin.configure({
 	webClientId: GOOGLE_CLIENT_ID,
 	offlineAccess: true,
+	scopes: ['https://www.googleapis.com/auth/calendar'],
 });
 
 const SigninForm = ({ navigation }: any) => {
@@ -150,10 +151,12 @@ const SigninForm = ({ navigation }: any) => {
 			await GoogleSignin.hasPlayServices();
 			await GoogleSignin.signOut();
 			const userInfo = await GoogleSignin.signIn();
-
+			const tokens = await GoogleSignin.getTokens();
+			const accessToken = tokens.accessToken;
 			showLoading('Logging in...');
 			const user = userInfo?.data?.user;
 			const idToken = userInfo?.data?.idToken;
+			await AsyncStorage.setItem('googleAccessToken', accessToken);
 
 			const response = await loginWithGoogle({
 				token: idToken,

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
 	ActivityIndicator,
 	Image,
@@ -10,19 +10,21 @@ import {
 	StyleSheet,
 	TextInput,
 	TouchableOpacity,
-	View, StatusBar
+	View,
+	StatusBar,
+	Vibration
 } from 'react-native';
-import { globalStyles } from '../../../theme/styles.ts';
-import { handleApiError } from '../../../utils/errorHandler.ts';
-import { useAuth } from '../../../context/AuthContext.tsx';
-import { NetworkContext } from '../../../context/NetworkContext.tsx';
-import { CText } from '../../../components/common/CText.tsx';
-import { theme } from '../../../theme';
-import CButton from '../../../components/buttons/CButton.tsx';
-import { getWallComments, postWallComment } from '../../../api/modules/wallApi.ts';
-import { useFocusEffect } from '@react-navigation/native';
-import { formatDate } from '../../../utils/dateFormatter';
-import { FILE_BASE_URL } from '../../../../env.ts';
+import { globalStyles } from '../../theme/styles.ts';
+import { handleApiError } from '../../utils/errorHandler.ts';
+import { useAuth } from '../../context/AuthContext.tsx';
+import { NetworkContext } from '../../context/NetworkContext.tsx';
+import { CText } from '../../components/common/CText.tsx';
+import { theme } from '../../theme';
+import CButton from '../../components/buttons/CButton.tsx';
+import { getWallComments, postWallComment } from '../../api/modules/wallApi.ts';
+import { formatDate } from '../../utils/dateFormatter';
+import { FILE_BASE_URL } from '../../../env.ts';
+import notificationEmitter from "../../utils/notificationEmitter.ts";
 
 const WallCommentsScreen = ({ route, navigation }) => {
 	const postId = route.params.postId;
@@ -33,10 +35,6 @@ const WallCommentsScreen = ({ route, navigation }) => {
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 	const [body, setBody] = useState('');
-
-	useEffect(() => {
-		navigation.setOptions({ title: 'Comments' });
-	}, [navigation]);
 
 	useEffect(() => {
 		navigation.setOptions({ title: 'Comments' });
@@ -60,15 +58,20 @@ const WallCommentsScreen = ({ route, navigation }) => {
 	};
 
 	useEffect(() => {
-		const loadComments = async () => {
-			await fetchComments();
-		};
 		loadComments();
+		const handler = (data: any) => {
+			Vibration.vibrate([500, 1000, 500, 1000]);
+			loadComments();
+		};
+		notificationEmitter.on('newMessage', handler);
+		return () => {
+			notificationEmitter.off('newMessage', handler);
+		};
 	}, []);
 
-	useFocusEffect(useCallback(() => {
-		fetchComments();
-	}, []));
+	const loadComments = async () => {
+		await fetchComments();
+	};
 
 	const onRefresh = async () => {
 		setRefreshing(true);
@@ -78,24 +81,38 @@ const WallCommentsScreen = ({ route, navigation }) => {
 
 	const postComment = async () => {
 		if (!body.trim()) return;
+
+		const tempId = `temp-${Date.now()}`;
+		const optimisticComment = {
+			id: tempId,
+			content: body,
+			created_by: {
+				name: user?.name || 'You',
+				profile_pic: user?.profile_pic || null,
+				avatar: user?.avatar || null,
+			},
+			created_at: new Date().toISOString(),
+			sending: true,
+		};
+
+		setComments(prev => [optimisticComment, ...prev]);
+		setBody('');
+
 		try {
-			setLoading(true);
 			await postWallComment({
 				content: body,
 				commentable_type: 'App\\Models\\LMS\\ClassFeed',
 				commentable_id: postId
 			});
-			setBody('');
 			await fetchComments();
 		} catch (err) {
 			handleApiError(err, 'Failed to post comment');
-		} finally {
-			setLoading(false);
+			setComments(prev => prev.filter(c => c.id !== tempId));
 		}
 	};
 
 	const renderComment = ({ item }) => (
-		<View style={styles.commentBubble}>
+		<View style={[styles.commentBubble, item.sending && { opacity: 0.5 }]}>
 			<Image
 				source={
 					item.created_by?.profile_pic
@@ -109,7 +126,9 @@ const WallCommentsScreen = ({ route, navigation }) => {
 			<View style={styles.textContent}>
 				<View style={styles.headerRow}>
 					<CText fontStyle="SB" fontSize={14}>{item.created_by?.name}</CText>
-					<CText fontSize={12} style={styles.timeText}>{formatDate(item.created_at, 'relative')}</CText>
+					<CText fontSize={12} style={styles.timeText}>
+						{item.sending ? 'Sending...' : formatDate(item.created_at, 'relative')}
+					</CText>
 				</View>
 				<CText fontSize={14} style={styles.commentText}>{item.content}</CText>
 			</View>
@@ -120,12 +139,14 @@ const WallCommentsScreen = ({ route, navigation }) => {
 		<>
 			<StatusBar backgroundColor="#00A859" barStyle="light-content" translucent={false} />
 			<SafeAreaView style={{ flex: 1, backgroundColor: '#f0f2f5' }}>
-				<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-									  style={{ flex: 1 }}
-									  keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 90}>
+				<KeyboardAvoidingView
+					behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+					style={{ flex: 1 }}
+					keyboardVerticalOffset={90}
+				>
 					<FlatList
 						data={comments}
-						keyExtractor={(item, idx) => idx.toString()}
+						keyExtractor={(item, idx) => item.id?.toString() || idx.toString()}
 						renderItem={renderComment}
 						contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
 						ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
@@ -147,9 +168,14 @@ const WallCommentsScreen = ({ route, navigation }) => {
 							multiline
 							numberOfLines={2}
 						/>
-						{loading
-							? <ActivityIndicator size="small" color={theme.colors.light.primary} style={styles.sendLoader} />
-							: <CButton icon="send" onPress={postComment} disabled={!body.trim()} type="success" style={styles.sendBtn} textStyle={styles.sendText} />}
+						<CButton
+							icon="send"
+							onPress={postComment}
+							disabled={!body.trim()}
+							type="success"
+							style={styles.sendBtn}
+							textStyle={styles.sendText}
+						/>
 					</View>
 				</KeyboardAvoidingView>
 			</SafeAreaView>
@@ -165,11 +191,9 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		padding: 12,
 		borderRadius: 12,
-		// shadowColor: '#000',
 		shadowOpacity: 0.03,
 		shadowOffset: { width: 0, height: 1 },
 		shadowRadius: 2,
-		// elevation: 1,
 	},
 	avatar: {
 		width: 38,

@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../../../env.ts";
 import api from '../api.ts';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const authLogin = async (requestData) => {
     try {
@@ -33,3 +34,11 @@ export const loginWithGoogle = async ({
 };
 
 
+
+export const fetchGenericData = async (endpoint: string) => {
+    const AYFrom = AsyncStorage.getItem('AYFrom');
+    const AYTo = AsyncStorage.getItem('AYTo');
+    const Semester = AsyncStorage.getItem('Semester');
+    const res = await api.get(`/background/${endpoint}?AYFrom=${AYFrom}&AYTo=${AYTo}&Semester=${Semester}`);
+    return res.data;
+};

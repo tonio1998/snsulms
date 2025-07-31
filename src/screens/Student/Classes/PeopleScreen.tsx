@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
 import {
 	View,
 	TextInput,
@@ -7,8 +7,6 @@ import {
 	SafeAreaView,
 	Image,
 	StyleSheet,
-	Linking,
-	ActivityIndicator,
 	RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,8 +19,6 @@ import { getMyClassmates } from '../../../api/modules/classmatesApi.ts';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import Icon from 'react-native-vector-icons/Ionicons';
 import BackHeader from '../../../components/layout/BackHeader.tsx';
-import BackgroundWrapper from '../../../utils/BackgroundWrapper';
-import { getOfflineClassmates, saveClassmatesOffline } from '../../../utils/sqlite/offlineClassmatesService.ts';
 
 const PeopleScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -30,7 +26,6 @@ const PeopleScreen = ({ navigation, route }) => {
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 	const { showLoading, hideLoading } = useLoading();
-	const network = useContext(NetworkContext);
 	const [searchQuery, setSearchQuery] = useState('');
 	const debounceTimeout = useRef(null);
 	const [page, setPage] = useState(1);
@@ -52,36 +47,23 @@ const PeopleScreen = ({ navigation, route }) => {
 				ClassID,
 			};
 
-			let List = [];
+			const response = await getMyClassmates(filter);
+			let List = response?.data ?? [];
 
-			if (network?.isOnline) {
-				const response = await getMyClassmates(filter);
-				List = response?.data ?? [];
+			List.sort((a, b) => {
+				const nameA = a.student_info?.FirstName?.toLowerCase() || '';
+				const nameB = b.student_info?.FirstName?.toLowerCase() || '';
+				return nameA.localeCompare(nameB);
+			});
 
-				// Sort by LastName (assuming structure: item.student_info?.LastName)
-				List.sort((a, b) => {
-					const nameA = a.student_info?.FirstName?.toLowerCase() || '';
-					const nameB = b.student_info?.FirstName?.toLowerCase() || '';
-					return nameA.localeCompare(nameB);
-				});
-
-				await saveClassmatesOffline(List, ClassID);
-
-				if (pageNumber === 1) {
-					setClassmates(List);
-				} else {
-					setClassmates((prev) => [...prev, ...List]);
-				}
-
-				setHasMore(List.length > 0);
-				setPage(pageNumber);
-			} else {
-				List = await getOfflineClassmates(ClassID, filter.search || '');
+			if (pageNumber === 1) {
 				setClassmates(List);
-				setHasMore(false);
-				setPage(1);
+			} else {
+				setClassmates((prev) => [...prev, ...List]);
 			}
 
+			setHasMore(List.length > 0);
+			setPage(pageNumber);
 		} catch (error) {
 			handleApiError(error, 'Error fetching classmates');
 		} finally {
@@ -93,21 +75,15 @@ const PeopleScreen = ({ navigation, route }) => {
 	useFocusEffect(
 		useCallback(() => {
 			fetchClassmates();
-
 			return () => {
-				if (debounceTimeout.current) clearTimeout(debounceTimeout.current); // Cleanup debounce on unmount
+				if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 			};
 		}, [])
 	);
 
-	const handleEmailPress = (email) => {
-		Linking.openURL(`mailto:${email}`);
-	};
-
 	const handleSearchTextChange = (text) => {
 		setSearchQuery(text);
 		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-
 		debounceTimeout.current = setTimeout(() => {
 			fetchClassmates(1, { search: text });
 		}, 500);
@@ -127,12 +103,6 @@ const PeopleScreen = ({ navigation, route }) => {
 		}
 	};
 
-	// const renderFooter = () => {
-	// 	return loading ? (
-	// 		<ActivityIndicator size="large" color={theme.colors.light.primary} />
-	// 	) : null;
-	// };
-
 	const renderItem = ({ item }) => (
 		<View style={styles.card}>
 			<Image
@@ -149,7 +119,6 @@ const PeopleScreen = ({ navigation, route }) => {
 				}
 				style={styles.avatar}
 			/>
-
 			<View style={{ flex: 1 }}>
 				<CText style={styles.name} fontStyle={'SB'} fontSize={14.5}>
 					{item.student_info?.FirstName} {item.student_info?.LastName}
@@ -162,60 +131,42 @@ const PeopleScreen = ({ navigation, route }) => {
 	return (
 		<>
 			<BackHeader title="People" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-				<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
-					<View style={{ flex: 1, paddingHorizontal: 16 }}>
-						{/* Search Bar */}
-						<View style={{ marginBottom: 10, position: 'relative', zIndex: 99 }}>
-							<TextInput
-								placeholder="Search ..."
-								placeholderTextColor="#000"
-								value={searchQuery}
-								onChangeText={handleSearchTextChange}
-								style={{
-									borderWidth: 1,
-									borderColor: '#ccc',
-									backgroundColor: '#fff',
-									padding: 15,
-									paddingRight: 35,
-									borderRadius: 8,
-									fontWeight: '500',
-									height: 50,
-								}}
-							/>
-							{searchQuery !== '' && (
-								<TouchableOpacity
-									style={{
-										position: 'absolute',
-										right: 10,
-										top: 10,
-									}}
-									onPress={() => {
-										setSearchQuery('');
-										if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-										fetchClassmates(1, { search: '' });
-									}}
-								>
-									<Icon name={'close'} size={25} color={'#000'} />
-								</TouchableOpacity>
-							)}
-						</View>
-
-						<FlatList
-							data={classmates}
-							keyExtractor={(item, index) => index.toString()}
-							renderItem={renderItem}
-							refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-							ListEmptyComponent={!loading && <CText style={styles.emptyText}>No data found 😶</CText>}
-							// ListFooterComponent={renderFooter}
-							contentContainerStyle={{
-								paddingBottom: 0,
-								flexGrow: classmates.length === 0 ? 1 : 0,
-							}}
-							onEndReached={handleLoadMore}
-							onEndReachedThreshold={0.5}
+			<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
+				<View style={{ flex: 1, paddingHorizontal: 16 }}>
+					<View style={styles.searchWrapper}>
+						<TextInput
+							placeholder="Search ..."
+							placeholderTextColor="#000"
+							value={searchQuery}
+							onChangeText={handleSearchTextChange}
+							style={styles.searchInput}
 						/>
+						{searchQuery !== '' && (
+							<TouchableOpacity style={styles.clearBtn} onPress={() => {
+								setSearchQuery('');
+								if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+								fetchClassmates(1, { search: '' });
+							}}>
+								<Icon name={'close'} size={25} color={'#000'} />
+							</TouchableOpacity>
+						)}
 					</View>
-				</SafeAreaView>
+
+					<FlatList
+						data={classmates}
+						keyExtractor={(item, index) => index.toString()}
+						renderItem={renderItem}
+						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+						ListEmptyComponent={!loading && <CText style={styles.emptyText}>No data found 😶</CText>}
+						contentContainerStyle={{
+							paddingBottom: 0,
+							flexGrow: classmates.length === 0 ? 1 : 0,
+						}}
+						onEndReached={handleLoadMore}
+						onEndReachedThreshold={0.5}
+					/>
+				</View>
+			</SafeAreaView>
 		</>
 	);
 };
@@ -252,6 +203,26 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		marginTop: 40,
 		color: '#999',
+	},
+	searchWrapper: {
+		marginBottom: 10,
+		position: 'relative',
+		zIndex: 99,
+	},
+	searchInput: {
+		borderWidth: 1,
+		borderColor: '#ccc',
+		backgroundColor: '#fff',
+		padding: 15,
+		paddingRight: 35,
+		borderRadius: 8,
+		fontWeight: '500',
+		height: 50,
+	},
+	clearBtn: {
+		position: 'absolute',
+		right: 10,
+		top: 10,
 	},
 });
 

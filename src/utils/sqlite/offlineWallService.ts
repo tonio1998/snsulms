@@ -1,11 +1,8 @@
-import { getDb } from "./offlineService";
+import {getDb} from "./offlineService";
 
-/**
- * Initialize class_wall_posts table
- */
 export const initWallTable = async () => {
     const db = await getDb();
-
+    // await db.executeSql(`DROP TABLE IF EXISTS class_wall_posts`);
     await db.executeSql(`
         CREATE TABLE IF NOT EXISTS class_wall_posts (
                                                         id TEXT PRIMARY KEY,
@@ -13,6 +10,7 @@ export const initWallTable = async () => {
                                                         body TEXT,
                                                         created_by TEXT,
                                                         created_at TEXT,
+                                                        UpdatedAt TEXT,
                                                         other_data TEXT,
                                                         synced INTEGER DEFAULT 0
         );
@@ -29,14 +27,15 @@ export const saveWallOffline = async (posts = [], classId) => {
     const insertQueries = posts.map(post => {
         return db.executeSql(
             `INSERT OR REPLACE INTO class_wall_posts
-                (id, ClassID, body, created_by, created_at, other_data, synced)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            (id, ClassID, body, created_by, created_at, UpdatedAt, other_data, synced)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 post.id,
                 classId,
                 post.body,
                 JSON.stringify(post.created_by),
                 post.created_at,
+                post.UpdatedAt || post.created_at,
                 JSON.stringify(post),
                 0
             ]
@@ -57,9 +56,11 @@ export const getOfflineWall = async (filters = {}) => {
     const params = [filters.ClassID];
 
     if (filters.search) {
-        query += ` AND body LIKE ?`;
+        query += ` AND body LIKE ? COLLATE BINARY`;
         params.push(`%${filters.search}%`);
     }
+
+    query += ` ORDER BY COALESCE(UpdatedAt, created_at) DESC`;
 
     const results = await db.executeSql(query, params);
     const rows = results[0].rows;
@@ -75,13 +76,15 @@ export const getOfflineWall = async (filters = {}) => {
                 id: row.id,
                 body: row.body,
                 created_by: JSON.parse(row.created_by),
-                created_at: row.created_at
+                created_at: row.created_at,
+                UpdatedAt: row.UpdatedAt
             });
         }
     }
 
     return wallPosts;
 };
+
 
 /**
  * Save wall post comments offline for a specific postId
@@ -98,11 +101,12 @@ export const saveWallCommentsOffline = async (postId, comments) => {
                                                          avatar TEXT,
                                                          profile_pic TEXT,
                                                          content TEXT,
-                                                         created_at TEXT
+                                                         created_at TEXT,
+                                                         UpdatedAt TEXT
              )`
         );
 
-        // 🔥 Clear old comments
+        // Clear old comments for the post
         await tx.executeSql(`DELETE FROM WallComments WHERE postId = ?`, [postId]);
 
         // Insert new comments
@@ -110,8 +114,8 @@ export const saveWallCommentsOffline = async (postId, comments) => {
             const user = c.created_by || {};
             const results = await tx.executeSql(
                 `INSERT INTO WallComments
-                     (postId, commentId, name, avatar, profile_pic, content, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                 (postId, commentId, name, avatar, profile_pic, content, created_at, UpdatedAt)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     postId,
                     c.id,
@@ -119,15 +123,15 @@ export const saveWallCommentsOffline = async (postId, comments) => {
                     user.avatar || '',
                     user.profile_pic || '',
                     c.content,
-                    c.created_at
+                    c.created_at,
+                    c.UpdatedAt || c.created_at
                 ]
             );
 
-            console.log('comments isa saved: ', results)
+            console.log('comment saved:', results);
         }
     });
 };
-
 
 /**
  * Get comments from local DB for a postId

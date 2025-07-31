@@ -15,12 +15,14 @@ interface LoadingProps {
     loading: boolean;
     timeout?: number;
     onTimeout?: (errorMessage: string) => void;
+    text: string
 }
 
 const Loading: React.FC<LoadingProps> = ({
                                              loading,
                                              timeout = 6000,
                                              onTimeout,
+                                             text = "Loading"
                                          }) => {
     const opacity = useRef(new Animated.Value(0)).current;
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -76,7 +78,7 @@ const Loading: React.FC<LoadingProps> = ({
                     size="large"
                     color={theme.colors.light.primary}
                 />
-                <Text style={styles.loadingText}>Loading...</Text>
+                <Text style={styles.loadingText}>{text}</Text>
             </View>
         </Animated.View>
     );

@@ -2,26 +2,17 @@ import { navigate } from '../hooks/RootNavigation.ts';
 
 export function handleNotificationNavigation(data: any) {
     const screen = data?.screen;
-    const id = data?.id || data?.chatId;
-    
-    console.log('handleNotificationNavigation', screen, id)
+    const id = data?.id || data?.postId || data?.ClassID;
     
     switch (screen) {
-        case 'MessageScreen':
-        case 'ChatDetails':
-            navigate('ChatDetailsTab', {
-                screen: 'Chat',
-                params: { chatId: id, user: JSON.parse(data?.user) },
-            });
+        case 'WallComments':
+            navigate('WallComments', { postId: id, commentable_id: id });
             break;
         
-        case 'ShowJob':
-            navigate('MainTabs', {
-                screen: 'Jobs',
-                params: {
-                    screen: 'ShowJob',
-                    params: { id },
-                },
+        case 'Wall':
+            navigate('ClassDetails', {
+                screen: 'Wall',
+                ClassID: id,
             });
             break;
         
@@ -44,8 +35,6 @@ export function handleNotificationNavigation(data: any) {
                 },
             });
             break;
-        default:
-            navigate('Home');
     }
 }
 

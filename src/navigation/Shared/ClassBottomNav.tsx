@@ -6,7 +6,7 @@ import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import {useAccess} from "../../hooks/useAccess.ts";
 import {theme} from "../../theme";
 import { CText } from '../../components/common/CText.tsx';
-import WallScreen from "../../screens/Faculty/Wall/WallScreen.tsx";
+import WallScreen from "../../Shared/Wall/WallScreen.tsx";
 import ActivityScreen from "../../screens/Student/Classes/ActivityScreen.tsx";
 import PeopleScreen from "../../screens/Student/Classes/PeopleScreen.tsx";
 import MaterialScreen from "../../screens/Student/Classes/MaterialScreen.tsx";
@@ -36,6 +36,7 @@ function useOrientation() {
 
 export default function ClassBottomNav({route, navigation}) {
 	const ClassID = route.params.ClassID;
+	// console.log('ClassBottomNav', route.params)
 
 	const isLandscape = useOrientation();
 	const { hasRole } = useAccess();
@@ -136,7 +137,6 @@ export default function ClassBottomNav({route, navigation}) {
 
 function WallStackScreen({ route }) {
 	const { ClassID } = route.params;
-	console.log("ClassID", ClassID)
 
 	return (
 		<ClassesDetailsStack.Navigator screenOptions={{ headerShown: false }}>

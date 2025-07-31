@@ -23,9 +23,10 @@ export const joinClassByCode = async (classCode: string) => {
     return res.data;
 };
 
-export const getClassesVersion = async (params) => {
-    const res = await api.get('/lms/cache/version/class', { params });
-    return {
-        last_updated: res.data?.last_updated ?? new Date().toISOString(),
-    };
+export const getClassInfo = async (ClassID) => {
+    // console.log("ClassIDClassIDClassIDClassID: ", ClassID)
+  const res = await api.get('/lms/class', {
+      params: {ClassID}
+  });
+  return res.data;
 };

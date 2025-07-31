@@ -8,7 +8,7 @@ import {
 	ActivityIndicator,
 	SafeAreaView,
 	ImageBackground,
-	ToastAndroid,
+	ToastAndroid, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -25,9 +25,13 @@ import { handleApiError } from '../../utils/errorHandler.ts';
 import * as Keychain from 'react-native-keychain';
 import RNFS from 'react-native-fs';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { APP_NAME, TAGLINE } from '../../../env.ts';
+import {APP_NAME, GOOGLE_CLIENT_ID, TAGLINE} from '../../../env.ts';
 import NetInfo from '@react-native-community/netinfo';
-
+GoogleSignin.configure({
+	webClientId: GOOGLE_CLIENT_ID,
+	offlineAccess: true,
+	scopes: ['https://www.googleapis.com/auth/calendar'],
+});
 export default function LoginOptionsScreen() {
 	const navigation = useNavigation();
 	const { loginAuth } = useAuth();
@@ -94,14 +98,17 @@ export default function LoginOptionsScreen() {
 	};
 
 	const handleGoogleLogin = async () => {
-		await GoogleSignin.hasPlayServices();
-		await GoogleSignin.signOut();
 		try {
+			await GoogleSignin.hasPlayServices();
+			await GoogleSignin.signOut();
 			const userInfo = await GoogleSignin.signIn();
-			// showLoading('Logging in...', -1);
-			setLoading(true);
+			const tokens = await GoogleSignin.getTokens();
+			const accessToken = tokens.accessToken;
+			showLoading('Logging in...');
 			const user = userInfo?.data?.user;
+			// console.log('tokens: ', tokens)
 			const idToken = userInfo?.data?.idToken;
+			await AsyncStorage.setItem('googleAccessToken'+user?.email, accessToken);
 
 			const response = await loginWithGoogle({
 				token: idToken,
@@ -115,17 +122,10 @@ export default function LoginOptionsScreen() {
 				error?.response?.data?.message ||
 				error?.message ||
 				'Something went wrong during Google login.';
-
-			ToastAndroid.show(message, ToastAndroid.SHORT);
-
-			if (error?.response?.status === 404) {
-				console.warn('User not found.');
-			}
-
-			setLoading(false);
+			Alert.alert('Login Failed', message);
+			handleApiError(error, 'Google Login');
 		} finally {
 			hideLoading();
-			setLoading(false);
 		}
 	};
 

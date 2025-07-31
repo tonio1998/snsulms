@@ -1,5 +1,5 @@
 const PORT = 8000;
-const HOST_DOMAIN = '10.25.1.110';
+const HOST_DOMAIN = '10.12.232.229';
 const PROTOCOL = "http:";
 
 // WITH PORT
@@ -17,8 +17,8 @@ export const GOOGLE_CLIENT_ID = "51010046813-qes3dggin3pa5nhmdali9t8agvos4cmb.ap
 export const SCHOOL_NAME = "SURIGAO DEL NORTE STATE UNIVERSITY";
 export const SEMAPHORE_API_KEY="2db497e7dca562167ae58275bc4bf2c0"
 export const SEMAPHORE_API_SENDER_NAME="DJEMC"
-export const APP_NAME = "fbLMS";
+export const APP_NAME = "eLMS";
 export const TAGLINE = "Empowering Education, the SNSU Way."
 export const SCHOOL_ID = 1;
 
-export const CACHE_REFRESH = 2000
+export const CACHE_REFRESH = 1000

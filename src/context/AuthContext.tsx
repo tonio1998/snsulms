@@ -24,7 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 	const [roles, setRoles] = useState([]);
 	const [permissions, setPermissions] = useState([]);
 	const [isAuthLoading, setIsAuthLoading] = useState(true);
-	
+	const [googleAccessToken, setGoogleAccessToken] = useState(null);
+
 	const [isBiometricSupported, setIsBiometricSupported] = useState(false);
 	const [biometricEnabled, setBiometricEnabled] = useState(false);
 	const biometricEnabledRef = useRef(false);
@@ -98,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			await AsyncStorage.removeItem('roles');
 			await AsyncStorage.removeItem('permissions');
 			await AsyncStorage.removeItem('isLoggedIn');
+			await AsyncStorage.removeItem('googleAccessToken');
 			// await Keychain.resetGenericPassword();
 			// await Keychain.resetGenericPassword({ service: 'fgHEMIS-biometric' });
 			// setBiometricEnabled(false);
