@@ -152,7 +152,7 @@ const WallScreen = ({ navigation, route }) => {
 		if (type === 'post') {
 			navigation.navigate('PostWall', { ClassID });
 		} else if (type === 'meet') {
-			navigation.navigate('ClassMeeting', { ClassID }); // 👈 new screen for input
+			navigation.navigate('ClassMeeting', { ClassID });
 		}
 	};
 
@@ -306,21 +306,21 @@ const WallScreen = ({ navigation, route }) => {
 						}
 					/>
 
-					<TouchableOpacity style={styles.fab} activeOpacity={0.7} onPress={openModal}>
+					<TouchableOpacity style={globalStyles.fab} activeOpacity={0.7} onPress={openModal}>
 						<Icon name="add" size={28} color="#fff" />
 					</TouchableOpacity>
 
 					{showModal && (
 						<Modal transparent visible={showModal} animationType="none">
-							<TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeModal} />
-							<Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
-								<TouchableOpacity style={styles.option} onPress={() => handleWallOption('post')}>
-									<CText fontStyle="SB" fontSize={16}>📢 Post to Wall</CText>
+							<TouchableOpacity style={globalStyles.overlay} activeOpacity={1} onPress={closeModal} />
+							<Animated.View style={[globalStyles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
+								<TouchableOpacity style={globalStyles.option} onPress={() => handleWallOption('post')}>
+									<CText fontStyle="SB" fontSize={16}>Post to Wall</CText>
 								</TouchableOpacity>
-								<TouchableOpacity style={styles.option} onPress={() => handleWallOption('meet')}>
-									<CText fontStyle="SB" fontSize={16}>📅 Create Meeting</CText>
+								<TouchableOpacity style={globalStyles.option} onPress={() => handleWallOption('meet')}>
+									<CText fontStyle="SB" fontSize={16}>Create Meeting</CText>
 								</TouchableOpacity>
-								<TouchableOpacity style={styles.cancel} onPress={closeModal}>
+								<TouchableOpacity style={globalStyles.cancel} onPress={closeModal}>
 									<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>
 								</TouchableOpacity>
 							</Animated.View>
@@ -420,31 +420,6 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.2,
 		shadowRadius: 3,
 		zIndex: 999,
-	},
-	overlay: {
-		flex: 1,
-		backgroundColor: 'rgba(0,0,0,0.3)',
-	},
-	modalContainer: {
-		position: 'absolute',
-		bottom: 0,
-		left: 0,
-		right: 0,
-		backgroundColor: '#fff',
-		borderTopLeftRadius: 20,
-		borderTopRightRadius: 20,
-		paddingBottom: 30,
-		paddingTop: 12,
-		paddingHorizontal: 24,
-	},
-	option: {
-		paddingVertical: 16,
-		borderBottomWidth: 1,
-		borderColor: '#eee',
-	},
-	cancel: {
-		marginTop: 20,
-		alignItems: 'center',
 	},
 });
 

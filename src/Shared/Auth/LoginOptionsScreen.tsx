@@ -8,91 +8,61 @@ import {
 	ActivityIndicator,
 	SafeAreaView,
 	ImageBackground,
-	ToastAndroid, Alert,
+	Alert,
+	Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FontFamily, theme } from '../../theme';
+import { theme } from '../../theme';
 import { loginWithBiometric } from '../../hooks/useBiometrics.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
-import { globalStyles } from '../../theme/styles.ts';
 import { useLoading } from '../../context/LoadingContext.tsx';
 import { authLogin, loginWithGoogle } from '../../api/modules/auth.ts';
 import checkBiometricSupport from '../../services/checkBiometricSupport.ts';
 import { CText } from '../../components/common/CText.tsx';
 import { handleApiError } from '../../utils/errorHandler.ts';
 import * as Keychain from 'react-native-keychain';
-import RNFS from 'react-native-fs';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import {APP_NAME, GOOGLE_CLIENT_ID, TAGLINE} from '../../../env.ts';
-import NetInfo from '@react-native-community/netinfo';
+import { APP_NAME, GOOGLE_CLIENT_ID, TAGLINE } from '../../../env.ts';
+
+const { width } = Dimensions.get('window');
+
 GoogleSignin.configure({
 	webClientId: GOOGLE_CLIENT_ID,
 	offlineAccess: true,
 	scopes: ['https://www.googleapis.com/auth/calendar'],
 });
+
 export default function LoginOptionsScreen() {
 	const navigation = useNavigation();
 	const { loginAuth } = useAuth();
-	const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 	const { showLoading, hideLoading } = useLoading();
 	const [loading, setLoading] = useState(false);
-
-	const checkSession = async () => {
-		try {
-			const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
-			const cachedSession = await Keychain.getGenericPassword();
-			if (isLoggedIn && cachedSession) {
-				const username = JSON.parse(cachedSession.username)
-				const password = await AsyncStorage.getItem("mobile");
-				const sessionData = {
-					user: username,
-					roles: username.roles,
-					permissions: username.permissions,
-					token: password
-				};
-
-				await loginAuth(sessionData);
-			}
-		} catch (err) {
-		}
-	};
-
-	const init = async () => {
-		const email = await AsyncStorage.getItem('biometricUserEmail');
-		const result = await checkBiometricSupport();
-		const flagKey = `biometricEnabled:${email}`;
-		const flag = await AsyncStorage.getItem(flagKey);
-		const isSupported = result.supported;
-		const isEnabled = flag === 'true';
-
-		setIsBiometricEnabled(isSupported && isEnabled);
-	};
-
-
+	const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 
 	useEffect(() => {
-		init();
-		// checkSession();
-		// showLoading('Logging in...');
+		(async () => {
+			const email = await AsyncStorage.getItem('biometricUserEmail');
+			const flagKey = `biometricEnabled:${email}`;
+			const flag = await AsyncStorage.getItem(flagKey);
+			const result = await checkBiometricSupport();
+			setIsBiometricEnabled(result.supported && flag === 'true');
+		})();
 	}, []);
 
 	const handleBiometricLogin = async () => {
 		try {
 			const session = await loginWithBiometric();
-
-			if(session){
+			if (session) {
 				setLoading(true);
-				// showLoading('Logging in...', -1);
 				await loginAuth(session);
 				await AsyncStorage.setItem('isLoggedIn', 'true');
-				await AsyncStorage.setItem("mobile", session.token);
+				await AsyncStorage.setItem('mobile', session.token);
 			}
 		} catch (err) {
-			handleApiError(err, 'BIo');
+			handleApiError(err, 'Biometric');
 		} finally {
-			// hideLoading();
 			setLoading(false);
 		}
 	};
@@ -104,11 +74,11 @@ export default function LoginOptionsScreen() {
 			const userInfo = await GoogleSignin.signIn();
 			const tokens = await GoogleSignin.getTokens();
 			const accessToken = tokens.accessToken;
-			showLoading('Logging in...');
 			const user = userInfo?.data?.user;
-			// console.log('tokens: ', tokens)
 			const idToken = userInfo?.data?.idToken;
-			await AsyncStorage.setItem('googleAccessToken'+user?.email, accessToken);
+
+			showLoading('Logging in...');
+			await AsyncStorage.setItem(`googleAccessToken${user?.email}`, accessToken);
 
 			const response = await loginWithGoogle({
 				token: idToken,
@@ -136,16 +106,11 @@ export default function LoginOptionsScreen() {
 				style={styles.container}
 				resizeMode="cover"
 			>
-				<View style={styles.contentWrapper}>
-					{/* Logo & App Name */}
+				<View style={styles.wrapper}>
 					<View style={styles.header}>
 						<Image source={require('../../../assets/img/ic_launcher.png')} style={styles.logo} />
-						<CText fontStyle="B" fontSize={34} style={styles.appName}>
-							{APP_NAME}
-						</CText>
-						<CText fontStyle="M" fontSize={14} style={styles.tagline}>
-							{TAGLINE}
-						</CText>
+						<CText fontStyle="B" fontSize={40} style={styles.appName}>{APP_NAME}</CText>
+						<CText fontStyle="R" fontSize={14} style={styles.tagline}>{TAGLINE}</CText>
 					</View>
 
 					<View style={styles.authSection}>
@@ -156,41 +121,36 @@ export default function LoginOptionsScreen() {
 							</View>
 						) : (
 							<>
-								<CText style={styles.loginLabel}>Continue with</CText>
-								<View style={styles.authButtons}>
-									<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
-										<Icon name="logo-google" size={26} color="#DB4437" />
-										<CText style={styles.authText}>Google</CText>
-									</TouchableOpacity>
+								<CText style={styles.loginLabel}>Sign in to continue</CText>
+								<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
+									<Icon name="logo-google" size={22} color="#DB4437" />
+									<CText style={styles.authText}>Continue with Google</CText>
+								</TouchableOpacity>
 
-									<TouchableOpacity style={styles.authButton} onPress={() => navigation.navigate('Login')}>
-										<Icon name="key-outline" size={26} color={theme.colors.light.primary} />
-										<CText style={styles.authText}>Password</CText>
-									</TouchableOpacity>
-								</View>
+								<TouchableOpacity style={styles.authButtonOutline} onPress={() => navigation.navigate('Login')}>
+									<Icon name="key-outline" size={22} color="#fff" />
+									<CText style={styles.authTextWhite}>Login with Password</CText>
+								</TouchableOpacity>
 
 								{isBiometricEnabled && (
 									<TouchableOpacity onPress={handleBiometricLogin} style={styles.fingerprint}>
 										<Icon name="finger-print-outline" size={40} color="#fff" />
+										<CText style={styles.bioText}>Use Biometrics</CText>
 									</TouchableOpacity>
 								)}
 							</>
 						)}
 					</View>
 
+					{/* Footer */}
 					<View style={styles.footer}>
-						<CText fontSize={12} style={styles.footerText}>
-							Developed by SNSU - ICT fgWorkz
-						</CText>
-						<CText fontSize={12} style={styles.footerText}>
-							Version {version} • © 2025 All rights reserved
-						</CText>
+						<CText fontSize={11} style={styles.footerText}>Developed by SNSU - ICT fgWorkz</CText>
+						<CText fontSize={11} style={styles.footerText}>Version {version} • © 2025 All rights reserved</CText>
 					</View>
 				</View>
 			</ImageBackground>
 		</SafeAreaView>
 	);
-
 }
 
 const styles = StyleSheet.create({
@@ -198,12 +158,11 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: theme.colors.light.primary,
 	},
-	contentWrapper: {
+	wrapper: {
 		flex: 1,
 		justifyContent: 'space-between',
-		paddingHorizontal: 30,
-		paddingTop: 60,
-		paddingBottom: 30,
+		paddingHorizontal: 28,
+		paddingVertical: 70,
 	},
 	header: {
 		alignItems: 'center',
@@ -211,56 +170,73 @@ const styles = StyleSheet.create({
 	logo: {
 		width: 100,
 		height: 100,
-		marginBottom: 10,
+		marginBottom: 12,
 	},
 	appName: {
 		color: '#fff',
 		textAlign: 'center',
+		marginBottom: 4,
 	},
 	tagline: {
-		color: '#eee',
+		color: '#ddd',
 		textAlign: 'center',
-		marginTop: -5,
 	},
 	authSection: {
 		alignItems: 'center',
-		marginTop: 100,
+		gap: 16,
 	},
 	loginLabel: {
 		color: '#fff',
 		fontSize: 16,
-		marginBottom: 20,
-		fontWeight: '600',
-	},
-	authButtons: {
-		flexDirection: 'row',
-		justifyContent: 'space-evenly',
-		width: '100%',
+		marginBottom: 10,
+		fontWeight: '500',
 	},
 	authButton: {
-		backgroundColor: '#ffffff',
-		paddingVertical: 15,
-		paddingHorizontal: 25,
-		borderRadius: 12,
-		marginHorizontal: 10,
+		flexDirection: 'row',
 		alignItems: 'center',
-		width: 120,
+		justifyContent: 'center',
+		backgroundColor: '#fff',
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		borderRadius: 12,
+		width: width * 0.8,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
-		// elevation: 5,
+		shadowOpacity: 0.15,
+		shadowRadius: 6,
+		elevation: 2,
+	},
+	authButtonOutline: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderColor: '#fff',
+		borderWidth: 1,
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		borderRadius: 12,
+		width: width * 0.8,
 	},
 	authText: {
-		marginTop: 8,
-		fontWeight: 'bold',
+		marginLeft: 10,
+		fontWeight: '600',
 		color: '#333',
+		fontSize: 15,
+	},
+	authTextWhite: {
+		marginLeft: 10,
+		fontWeight: '600',
+		color: '#fff',
+		fontSize: 15,
 	},
 	fingerprint: {
-		marginTop: 30,
-		padding: 12,
-		backgroundColor: '#ffffff20',
-		borderRadius: 50,
+		alignItems: 'center',
+		marginTop: 20,
+	},
+	bioText: {
+		marginTop: 8,
+		color: '#fff',
+		fontSize: 14,
 	},
 	loadingContainer: {
 		alignItems: 'center',
@@ -268,9 +244,11 @@ const styles = StyleSheet.create({
 	loadingText: {
 		color: '#fff',
 		marginTop: 10,
+		fontSize: 15,
 	},
 	footer: {
 		alignItems: 'center',
+		marginTop: 30,
 	},
 	footerText: {
 		color: '#ccc',

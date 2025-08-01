@@ -50,6 +50,7 @@ import AddActivityScreen from "./src/screens/Faculty/Activities/AddActivityScree
 import {syncAllTables} from "./src/services/syncService";
 import {tableConfigs} from "./src/config/syncTables";
 import CreateMeetingScreen from "./src/Shared/GMeet/CreateMeetingScreen.tsx";
+import {Loading2Provider} from "./src/context/Loading2Context.tsx";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -212,14 +213,16 @@ const AppNavigator = () => {
 export default function App(): React.JSX.Element {
     return (
         <LoadingProvider>
-            <CAlert>
-                <NetworkProvider>
-                    <AuthProvider>
-                        <AppNavigator />
-                    </AuthProvider>
-                    <StatusIndicator />
-                </NetworkProvider>
-            </CAlert>
+            <Loading2Provider>
+                <CAlert>
+                    <NetworkProvider>
+                        <AuthProvider>
+                            <AppNavigator />
+                        </AuthProvider>
+                        <StatusIndicator />
+                    </NetworkProvider>
+                </CAlert>
+            </Loading2Provider>
         </LoadingProvider>
     );
 }

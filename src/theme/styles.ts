@@ -6,6 +6,32 @@ let WhiteColor = '#fff';
 let FontFamily = 'Poppins';
 let PrimaryColorHex = theme.colors.light.primary;
 export const globalStyles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+    modalContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingBottom: 30,
+        paddingTop: 12,
+        paddingHorizontal: 24,
+    },
+    option: {
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderColor: '#eee',
+        alignItems: 'center',
+    },
+    cancel: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
     fab: {
         position: 'absolute',
         right: 20,
