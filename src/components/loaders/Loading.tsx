@@ -74,8 +74,8 @@ const styles = StyleSheet.create({
     container: {
         position: 'absolute',
         top: '50%',
-        left: '10%',
-        right: '10%',
+        left: '8%',
+        right: '8%',
         padding: 18,
         transform: [{ translateY: -25 }],
         // height: 50,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
         zIndex: 999,
-        borderRadius: 8,
+        borderRadius: 4,
     },
     text: {
         marginLeft: 8,

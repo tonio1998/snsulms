@@ -32,7 +32,7 @@ const QRCodeScreen = () => {
 	const { showAlert } = useAlert();
 	const qrRef = useRef(null);
 
-	const qr_code = user?.id ?? '';
+	const qr_code = user?.conn_id ?? '';
 	const name = user?.name ?? '';
 	const data = (qr_code && name) ? `${qr_code}@${name}` : 'NO-DATA';
 

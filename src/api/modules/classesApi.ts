@@ -24,9 +24,33 @@ export const joinClassByCode = async (classCode: string) => {
 };
 
 export const getClassInfo = async (ClassID) => {
-    // console.log("ClassIDClassIDClassIDClassID: ", ClassID)
   const res = await api.get('/lms/class', {
       params: {ClassID}
   });
   return res.data;
+};
+
+
+export const updateClassSetting = async (ClassID, key, newValue) => {
+    const res = await api.put('/lms/myclasses/settings', {
+        ClassID,
+        key,
+        value: newValue,
+    });
+    return res.data;
+};
+
+
+export const addClassAttendance = async (payload: {
+    student_id: string;
+    class_id: number;
+    user_id: number;
+    scanned_at: string;
+}) => {
+    try {
+        const response = await api.post(`/lms/myclasses/class-attendance`, payload);
+        return response.data;
+    } catch (error) {
+        throw error; // handled elsewhere via handleApiError
+    }
 };

@@ -14,24 +14,27 @@ import {
 	Easing,
 	Dimensions,
 } from 'react-native';
-import { globalStyles } from '../../../theme/styles.ts';
-import { theme } from '../../../theme';
-import { handleApiError } from '../../../utils/errorHandler.ts';
-import { useLoading } from '../../../context/LoadingContext.tsx';
+import { globalStyles } from '../../../../theme/styles.ts';
+import { theme } from '../../../../theme';
+import { handleApiError } from '../../../../utils/errorHandler.ts';
+import { useLoading } from '../../../../context/LoadingContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
-import { CText } from '../../../components/common/CText.tsx';
-import { getActivities } from '../../../api/modules/activitiesApi.ts';
-import { formatDate } from '../../../utils/dateFormatter';
-import BackHeader from '../../../components/layout/BackHeader.tsx';
-import { NetworkContext } from '../../../context/NetworkContext.tsx';
+import { CText } from '../../../../components/common/CText.tsx';
+import { getActivities } from '../../../../api/modules/activitiesApi.ts';
+import { formatDate } from '../../../../utils/dateFormatter';
+import BackHeader from '../../../../components/layout/BackHeader.tsx';
+import { NetworkContext } from '../../../../context/NetworkContext.tsx';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {useClass} from "../../../../context/SharedClassContext.tsx";
+import {useLoading2} from "../../../../context/Loading2Context.tsx";
 
 const { height } = Dimensions.get('window');
 
 const ActivityScreen = ({ navigation, route }) => {
-	const ClassID = route.params.ClassID;
+	const { classes, refresh } = useClass();
+	const ClassID = classes.ClassID;
 	const network = useContext(NetworkContext);
-	const { showLoading, hideLoading } = useLoading();
+	const { showLoading2, hideLoading2 } = useLoading2();
 
 	const [activities, setActivities] = useState([]);
 	const [loading, setLoading] = useState(false);
@@ -39,6 +42,12 @@ const ActivityScreen = ({ navigation, route }) => {
 	const [actType, setActType] = useState('');
 	const [showModal, setShowModal] = useState(false);
 	const slideAnim = useRef(new Animated.Value(height)).current;
+
+	useFocusEffect(
+		useCallback(() => {
+			refresh();
+		}, [refresh])
+	);
 
 	const openModal = () => {
 		setShowModal(true);
@@ -78,19 +87,20 @@ const ActivityScreen = ({ navigation, route }) => {
 	const fetchActivities = async () => {
 		try {
 			if (loading) return;
-			setLoading(true);
-			showLoading('Loading activities...');
+			// setLoading(true);
+			showLoading2('Loading activities...');
 
 			if (!network?.isOnline) return;
 
-			const res = await getActivities({ ClassID });
-			const list = res?.data || [];
+			const res = classes?.activities;
+			const list = res || [];
+			console.log(":list:", res)
 			handleActTypeFilter(actType, list);
 		} catch (err) {
 			handleApiError(err, 'Failed to fetch activities');
 		} finally {
 			setLoading(false);
-			hideLoading();
+			hideLoading2();
 		}
 	};
 
