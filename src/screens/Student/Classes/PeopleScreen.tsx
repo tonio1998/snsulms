@@ -19,13 +19,14 @@ import { getMyClassmates } from '../../../api/modules/classmatesApi.ts';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import Icon from 'react-native-vector-icons/Ionicons';
 import BackHeader from '../../../components/layout/BackHeader.tsx';
+import {useLoading2} from "../../../context/Loading2Context.tsx";
 
 const PeopleScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
 	const [classmates, setClassmates] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
-	const { showLoading, hideLoading } = useLoading();
+	const { showLoading2, hideLoading2 } = useLoading2();
 	const [searchQuery, setSearchQuery] = useState('');
 	const debounceTimeout = useRef(null);
 	const [page, setPage] = useState(1);
@@ -35,7 +36,7 @@ const PeopleScreen = ({ navigation, route }) => {
 		try {
 			if (pageNumber === 1) setClassmates([]);
 			setLoading(true);
-			showLoading('Loading...');
+			showLoading2('Loading...');
 
 			const filter = {
 				page: pageNumber,
@@ -68,7 +69,7 @@ const PeopleScreen = ({ navigation, route }) => {
 			handleApiError(error, 'Error fetching classmates');
 		} finally {
 			setLoading(false);
-			hideLoading();
+			hideLoading2();
 		}
 	};
 

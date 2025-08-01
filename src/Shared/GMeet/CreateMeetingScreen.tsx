@@ -19,9 +19,11 @@ import BackHeader from "../../components/layout/BackHeader.tsx";
 import { globalStyles } from "../../theme/styles.ts";
 import {getClassInfo} from "../../api/modules/classesApi.ts";
 import {postWall} from "../../api/modules/wallApi.ts";
+import {useLoading} from "../../context/LoadingContext.tsx";
 
 const CreateMeetingScreen = ({ navigation, route }) => {
     const { ClassID } = route.params;
+    const { showLoading, hideLoading } = useLoading();
     const [title, setTitle] = useState("SNSU Class Meeting");
     const [type, setType] = useState("instant");
     const [date, setDate] = useState(new Date(Date.now() + 10 * 60 * 1000));
@@ -45,15 +47,14 @@ const CreateMeetingScreen = ({ navigation, route }) => {
     }, []);
 
     const handleCreate = async () => {
+        showLoading("Creating Meeting...");
         try {
-            setLoading(true);
             const res = await createGoogleMeet({
                 title,
                 ClassID,
                 isScheduled: type === "scheduled",
                 dateTime: date,
             });
-            setLoading(false);
 
             const body = `**Meeting Created**  
                         [Join Here](${res})  
@@ -63,7 +64,7 @@ const CreateMeetingScreen = ({ navigation, route }) => {
 
             await postWall({
                 body,
-                remark: 'none',
+                remark: 'post',
                 ClassID,
                 MeetLink:res
             });
@@ -76,6 +77,8 @@ const CreateMeetingScreen = ({ navigation, route }) => {
         } catch (err) {
             setLoading(false);
             handleApiError(err, "gmeet");
+        } finally {
+            hideLoading();
         }
     };
 

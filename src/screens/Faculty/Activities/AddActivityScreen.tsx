@@ -85,8 +85,8 @@ const AddActivityScreen = ({ navigation, route }) => {
 
 
     const handleSubmit = async () => {
-        if (!form.Title || !form.Points || !form.DueDate) {
-            Alert.alert('Missing Fields', 'Title, Points, and Due Date are required.');
+        if (!form.Title || !form.Points) {
+            Alert.alert('Missing Fields', 'Titleand Points are required.');
             return;
         }
 
@@ -100,7 +100,7 @@ const AddActivityScreen = ({ navigation, route }) => {
             const payload = {
                 ...form,
                 Points: form.Points,
-                DueDate: form.DueDate.toISOString(),
+                DueDate: form.DueDate instanceof Date ? form.DueDate.toISOString() : null,
                 AcademicYear: acad,
                 ClassID,
                 ActivityTypeID

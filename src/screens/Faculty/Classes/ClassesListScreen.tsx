@@ -26,11 +26,12 @@ import { useLoading } from '../../../context/LoadingContext.tsx';
 import { getAcademicInfo } from '../../../utils/getAcademicInfo.ts';
 import { useAuth } from '../../../context/AuthContext.tsx';
 import { getFacClasses } from '../../../api/modules/classesApi.ts';
+import {useLoading2} from "../../../context/Loading2Context.tsx";
 
 const { height } = Dimensions.get('window');
 
 const ClassesListScreen = ({ navigation }) => {
-	const { showLoading, hideLoading } = useLoading();
+	const { showLoading2, hideLoading2 } = useLoading2();
 	const { user } = useAuth();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [acad, setAcad] = useState(null);
@@ -67,14 +68,14 @@ const ClassesListScreen = ({ navigation }) => {
 	const loadClassesOnline = useCallback(async () => {
 		try {
 			setLoading(true);
-			showLoading('Fetching classes...');
+			showLoading2('Fetching classes...');
 			const res = await getFacClasses(filter);
 			setClasses(res?.data ?? []);
 		} catch (err) {
 			handleApiError(err, 'Load Classes');
 		} finally {
 			setLoading(false);
-			hideLoading();
+			hideLoading2();
 		}
 	}, [filter]);
 

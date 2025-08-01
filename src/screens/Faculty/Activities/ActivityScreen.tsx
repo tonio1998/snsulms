@@ -121,7 +121,7 @@ const ActivityScreen = ({ navigation, route }) => {
 				<CText fontSize={16} fontStyle="SB" style={{ color: '#000' }}>{item?.Title}</CText>
 				<CText fontSize={14} style={{ color: '#444', marginTop: 4 }}>{item?.Description}</CText>
 				<View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-					<CText fontSize={12} style={{ color: '#777' }}>Due: {formatDate(item?.DueDate)}</CText>
+					{item?.DueDate && <CText fontSize={12} style={{ color: '#777' }}>Due: {formatDate(item?.DueDate)}</CText>}
 					<CText fontSize={12} style={{ color: '#777' }}>Created: {formatDate(item?.created_at, 'relative')}</CText>
 				</View>
 			</View>

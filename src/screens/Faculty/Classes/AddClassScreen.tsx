@@ -18,7 +18,8 @@ import { addClass } from '../../../api/modules/classesApi.ts';
 import BackHeader from "../../../components/layout/BackHeader.tsx";
 import {handleApiError} from "../../../utils/errorHandler.ts";
 import {useFocusEffect} from "@react-navigation/native";
-import {getAcademicInfo} from "../../../utils/getAcademicInfo.ts"; // Adjust to your real API path
+import {getAcademicInfo} from "../../../utils/getAcademicInfo.ts";
+import SmartSelectPicker from "../../../components/pickers/SmartSelectPicker.tsx"; // Adjust to your real API path
 
 const AddClassScreen = ({ navigation }) => {
     const [form, setForm] = useState({
@@ -117,12 +118,23 @@ const AddClassScreen = ({ navigation }) => {
                     />
 
                     <CText fontStyle="SB" style={styles.label}>Campus ID</CText>
-                    <TextInput
-                        style={styles.input}
-                        value={form.CampusID}
-                        onChangeText={(text) => handleChange('CampusID', text)}
-                        keyboardType="numeric"
-                    />
+                    {/*<TextInput*/}
+                    {/*    style={styles.input}*/}
+                    {/*    value={form.CampusID}*/}
+                    {/*    onChangeText={(text) => handleChange('CampusID', text)}*/}
+                    {/*    keyboardType="numeric"*/}
+                    {/*/>*/}
+
+                    <View style={{ zIndex: 9999, position: 'relative' }}>
+                        <SmartSelectPicker
+                            value={form.CampusID}
+                            onValueChange={(value) => handleChange('CampusID', value)}
+                            apiUrl="/select/campus"
+                            labelKey="CampusName"
+                            valueKey="CampusID"
+                            placeholder="Select Campus"
+                        />
+                    </View>
 
                     <CText fontStyle="SB" style={styles.label}>Attendance</CText>
                     <View style={styles.switchRow}>
