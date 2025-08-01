@@ -11,18 +11,18 @@ import {
 	StyleSheet,
 	ScrollView,
 } from 'react-native';
-import { globalStyles } from '../../../theme/styles.ts';
-import { theme } from '../../../theme';
-import { handleApiError } from '../../../utils/errorHandler.ts';
-import { useLoading } from '../../../context/LoadingContext.tsx';
+import { globalStyles } from '../../../../theme/styles.ts';
+import { theme } from '../../../../theme';
+import { handleApiError } from '../../../../utils/errorHandler.ts';
+import { useLoading } from '../../../../context/LoadingContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
-import { CText } from '../../../components/common/CText.tsx';
-import { getStudentActivities } from "../../../api/modules/activitiesApi.ts";
-import { formatDate } from "../../../utils/dateFormatter";
-import BackHeader from "../../../components/layout/BackHeader.tsx";
-import BackgroundWrapper from "../../../utils/BackgroundWrapper";
-import { NetworkContext } from "../../../context/NetworkContext.tsx";
-import { getOfflineActivities, saveActivitiesOffline } from "../../../utils/sqlite/offlineActivityService.ts";
+import { CText } from '../../../../components/common/CText.tsx';
+import { getStudentActivities } from "../../../../api/modules/activitiesApi.ts";
+import { formatDate } from "../../../../utils/dateFormatter";
+import BackHeader from "../../../../components/layout/BackHeader.tsx";
+import BackgroundWrapper from "../../../../utils/BackgroundWrapper";
+import { NetworkContext } from "../../../../context/NetworkContext.tsx";
+import { getOfflineActivities, saveActivitiesOffline } from "../../../../utils/sqlite/offlineActivityService.ts";
 
 const MaterialsScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;

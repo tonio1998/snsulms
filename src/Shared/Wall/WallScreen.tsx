@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, {useCallback, useContext, useEffect, useRef, useState} from 'react';
 import {
 	View,
 	Image,
@@ -12,7 +12,8 @@ import {
 	FlatList,
 	Modal,
 	ActivityIndicator,
-	Vibration, Linking,
+	Vibration,
+	Linking,
 } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { NetworkContext } from '../../context/NetworkContext.tsx';
@@ -31,10 +32,8 @@ import { getWallVersion } from '../../api/modules/Versioning/versionna.ts';
 import { CACHE_REFRESH } from '../../../env.ts';
 import notificationEmitter from '../../utils/notificationEmitter.ts';
 import { sortByDateDesc } from '../../utils/cache/dataHelpers';
-import {GoogleSignin} from "@react-native-google-signin/google-signin";
-import api from "../../api/api.ts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {createGoogleMeet} from "../../utils/gmeet/gmeet.ts";
+import { useClass } from '../../context/SharedClassContext.tsx';
+import {useFocusEffect} from "@react-navigation/native";
 
 const { height } = Dimensions.get('window');
 
@@ -42,8 +41,8 @@ let lastWallVersionCheck = 0;
 let lastWallVersionResult = null;
 
 const WallScreen = ({ navigation, route }) => {
-	const ClassID = route.params.ClassID;
-	console.log("WallScreen: ", route.params)
+	const { classes, refresh } = useClass();
+	const ClassID = classes?.ClassID;
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
@@ -55,6 +54,12 @@ const WallScreen = ({ navigation, route }) => {
 	const heartScales = useRef({}).current;
 	const [showModal, setShowModal] = useState(false);
 	const slideAnim = useRef(new Animated.Value(height)).current;
+
+	useFocusEffect(
+		useCallback(() => {
+			refresh();
+		}, [refresh])
+	);
 
 	const getCachedWallVersion = async (filter) => {
 		const now = Date.now();
@@ -123,11 +128,27 @@ const WallScreen = ({ navigation, route }) => {
 	};
 
 	useEffect(() => {
-		fetch(1);
 		const handler = () => fetch(1);
 		notificationEmitter.on('newMessage', handler);
 		return () => notificationEmitter.off('newMessage', handler);
 	}, []);
+
+	useEffect(() => {
+		if (ClassID) {
+			fetch(1);
+		}
+	}, [ClassID]);
+
+	useEffect(() => {
+		if (ClassID) {
+			setWall([]);
+			setPage(1);
+			setHasMore(true);
+			fetch(1);
+		}
+	}, [ClassID]);
+
+
 
 	const openModal = () => {
 		setShowModal(true);
@@ -155,7 +176,6 @@ const WallScreen = ({ navigation, route }) => {
 			navigation.navigate('ClassMeeting', { ClassID });
 		}
 	};
-
 
 	const handleRefresh = () => fetch(1, true);
 
@@ -210,77 +230,89 @@ const WallScreen = ({ navigation, route }) => {
 	};
 
 	const renderItem = ({ item }) => (
-		<View style={styles.postCard} key={item.id}>
-			<View style={styles.postHeader}>
-				<Image
-					source={
-						item.created_by?.avatar
-							? { uri: `${item.created_by.avatar}` }
-							: {
-								uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-									item.created_by?.name || 'User'
-								)}&background=random`,
-							}
-					}
-					style={styles.avatar}
-				/>
-				<View style={{ marginLeft: 10, flex: 1 }}>
-					<CText fontSize={14.5} fontStyle="SB">
-						{item.created_by?.name.toUpperCase()}
-					</CText>
-					<CText fontSize={11} color="#777">
-						{formatDate(item.created_at, 'relative')}
-					</CText>
-				</View>
-			</View>
-
-			{item.body ? (
-				<RenderHtml
-					contentWidth={Dimensions.get('window').width - 40}
-					source={{ html: item.body }}
-					baseStyle={styles.postBody}
-				/>
-			) : null}
-
-			<View style={[styles.postActions, {justifyContent: 'space-between'}]}>
-				<View style={[globalStyles.cardRow, {justifyContent: 'space-between', width: 80}]}>
-					<TouchableOpacity style={styles.actionBtn} onPress={() => handleReaction(item.id)}>
-						<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
-							<Icon
-								name={item.is_react_by_you ? 'heart' : 'heart-outline'}
-								size={20}
-								color={item.is_react_by_you ? theme.colors.light.primary : '#aaa'}
-							/>
-						</Animated.View>
-						<CText fontSize={14} style={styles.reactionCount}>
-							{item.reactions_count > 0 ? item.reactions_count : ''}
+		<>
+			<View style={styles.postCard} key={item.id}>
+				<View style={styles.postHeader}>
+					<Image
+						source={
+							item.created_by?.avatar
+								? { uri: `${item.created_by.avatar}` }
+								: {
+									uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+										item.created_by?.name || 'User'
+									)}&background=random`,
+								}
+						}
+						style={styles.avatar}
+					/>
+					<View style={{ marginLeft: 10, flex: 1 }}>
+						<CText fontSize={14.5} fontStyle="SB">
+							{item.created_by?.name.toUpperCase()}
 						</CText>
-					</TouchableOpacity>
-
-					<TouchableOpacity style={styles.actionBtn} onPress={() => handleComment(item.id)}>
-						<Icon name="chatbubble-outline" size={20} color="#aaa" />
-						<CText fontSize={14} style={styles.reactionCount}>
-							{item.comments?.length > 0 ? item.comments.length : ''}
+						<CText fontSize={11} color="#777">
+							{formatDate(item.created_at, 'relative')}
 						</CText>
-					</TouchableOpacity>
+					</View>
 				</View>
-				{item.MeetLink && (
-					<View style={{ marginTop: 10, alignItems: 'flex-start' }}>
-						<TouchableOpacity
-							style={styles.gmeetJoinButton}
-							onPress={() => Linking.openURL(item.MeetLink)}
-						>
-							<Icon name="videocam" size={18} color="#188038" style={{ marginRight: 8 }} />
-							<CText fontSize={14} style={styles.gmeetJoinText}>
-								Join with Google Meet
+
+				{item.body ? (
+					<RenderHtml
+						contentWidth={Dimensions.get('window').width - 40}
+						source={{ html: item.body }}
+						baseStyle={styles.postBody}
+					/>
+				) : null}
+
+				<View style={[styles.postActions, { justifyContent: 'space-between' }]}>
+					<View style={[globalStyles.cardRow, { justifyContent: 'space-between', width: 80 }]}>
+						<TouchableOpacity style={styles.actionBtn} onPress={() => handleReaction(item.id)}>
+							<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
+								<Icon
+									name={item.is_react_by_you ? 'heart' : 'heart-outline'}
+									size={20}
+									color={item.is_react_by_you ? theme.colors.light.primary : '#aaa'}
+								/>
+							</Animated.View>
+							<CText fontSize={14} style={styles.reactionCount}>
+								{item.reactions_count > 0 ? item.reactions_count : ''}
+							</CText>
+						</TouchableOpacity>
+
+						<TouchableOpacity style={styles.actionBtn} onPress={() => handleComment(item.id)}>
+							<Icon name="chatbubble-outline" size={20} color="#aaa" />
+							<CText fontSize={14} style={styles.reactionCount}>
+								{item.comments?.length > 0 ? item.comments.length : ''}
 							</CText>
 						</TouchableOpacity>
 					</View>
-				)}
-
+					{item.MeetLink && (
+						<View style={{ marginTop: 10, alignItems: 'flex-start' }}>
+							<TouchableOpacity
+								style={styles.gmeetJoinButton}
+								onPress={() => Linking.openURL(item.MeetLink)}
+							>
+								<Icon name="videocam" size={18} color="#188038" style={{ marginRight: 8 }} />
+								<CText fontSize={14} style={styles.gmeetJoinText}>
+									Join with Google Meet
+								</CText>
+							</TouchableOpacity>
+						</View>
+					)}
+				</View>
 			</View>
-		</View>
+		</>
 	);
+
+
+	if (!classes || !ClassID) {
+		return (
+			<>
+				<SafeAreaView style={globalStyles.safeArea}>
+					<ActivityIndicator size="large" color={theme.colors.light.primary}/>
+				</SafeAreaView>
+			</>
+		);
+	}
 
 	return (
 		<>
@@ -289,7 +321,7 @@ const WallScreen = ({ navigation, route }) => {
 				<View style={{ flex: 1, paddingHorizontal: 10 }}>
 					<FlatList
 						data={wall}
-						keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+						keyExtractor={(item, index) => item.id?.toString() || index.id?.toString()}
 						renderItem={renderItem}
 						contentContainerStyle={{ paddingBottom: 100 }}
 						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
@@ -317,16 +349,17 @@ const WallScreen = ({ navigation, route }) => {
 								<TouchableOpacity style={globalStyles.option} onPress={() => handleWallOption('post')}>
 									<CText fontStyle="SB" fontSize={16}>Post to Wall</CText>
 								</TouchableOpacity>
-								<TouchableOpacity style={globalStyles.option} onPress={() => handleWallOption('meet')}>
-									<CText fontStyle="SB" fontSize={16}>Create Meeting</CText>
-								</TouchableOpacity>
+								{(classes?.MeetOK === 'Y' || classes?.created_by === user?.id) && (
+									<TouchableOpacity style={globalStyles.option} onPress={() => handleWallOption('meet')}>
+										<CText fontStyle="SB" fontSize={16}>Create Meeting</CText>
+									</TouchableOpacity>
+								)}
 								<TouchableOpacity style={globalStyles.cancel} onPress={closeModal}>
 									<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>
 								</TouchableOpacity>
 							</Animated.View>
 						</Modal>
 					)}
-
 				</View>
 			</SafeAreaView>
 		</>
