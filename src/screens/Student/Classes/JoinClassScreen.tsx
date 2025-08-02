@@ -1,12 +1,13 @@
 import React, { useState, useContext } from 'react';
 import {
     View,
-    Text,
     TextInput,
     TouchableOpacity,
     SafeAreaView,
     Alert,
     StyleSheet,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import { globalStyles } from '../../../theme/styles.ts';
 import { theme } from '../../../theme';
@@ -16,7 +17,8 @@ import { joinClassByCode } from '../../../api/modules/classesApi.ts';
 import { handleApiError } from '../../../utils/errorHandler.ts';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import { NetworkContext } from '../../../context/NetworkContext.tsx';
-import {useAlert} from "../../../components/CAlert.tsx";
+import { useAlert } from '../../../components/CAlert.tsx';
+import BackHeader from "../../../components/layout/BackHeader.tsx";
 
 const JoinClassScreen = ({ navigation }) => {
     const [classCode, setCode] = useState('');
@@ -38,8 +40,7 @@ const JoinClassScreen = ({ navigation }) => {
         try {
             showLoading('Joining class...');
             const res = await joinClassByCode(classCode.trim());
-            console.log('res', res);
-            if(res.success) {
+            if (res.success) {
                 showAlert('success', 'Success', 'You’ve successfully joined the class!');
                 navigation.goBack();
             } else {
@@ -54,61 +55,88 @@ const JoinClassScreen = ({ navigation }) => {
 
     return (
         <>
-            <CustomHeader title="Join Class" />
+            <BackHeader title="Join Class" />
             <SafeAreaView style={globalStyles.safeArea}>
-                <View style={styles.container}>
-                    <CText fontStyle="B" fontSize={16} style={styles.label}>
-                        Enter the class code provided by your teacher
-                    </CText>
-
-                    <TextInput
-                        style={styles.input}
-                        placeholder="e.g., ABC123"
-                        placeholderTextColor="#999"
-                        value={classCode}
-                        onChangeText={setCode}
-                        autoCapitalize="characters"
-                        autoCorrect={false}
-                    />
-
-                    <TouchableOpacity style={styles.button} onPress={handleJoinClass}>
-                        <CText fontStyle="B" fontSize={16} style={{ color: '#fff' }}>
-                            Join
+                <KeyboardAvoidingView
+                    style={styles.wrapper}
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                >
+                    <View style={styles.container}>
+                        <CText fontStyle="B" fontSize={18} style={styles.label}>
+                            Enter the class code provided by your teacher
                         </CText>
-                    </TouchableOpacity>
-                </View>
+
+                        <TextInput
+                            style={styles.input}
+                            placeholder="e.g., ABC123"
+                            placeholderTextColor="#999"
+                            value={classCode}
+                            onChangeText={setCode}
+                            autoCapitalize="characters"
+                            autoCorrect={false}
+                        />
+
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={handleJoinClass}
+                            activeOpacity={0.85}
+                        >
+                            <CText fontStyle="B" fontSize={16} style={styles.buttonText}>
+                                Join
+                            </CText>
+                        </TouchableOpacity>
+                    </View>
+                </KeyboardAvoidingView>
             </SafeAreaView>
         </>
     );
 };
 
 const styles = StyleSheet.create({
+    wrapper: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 24,
         justifyContent: 'center',
     },
     label: {
-        marginBottom: 12,
+        marginBottom: 16,
         textAlign: 'center',
+        color: theme.colors.light.primary,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
-        padding: 14,
+        borderColor: theme.colors.light.primary,
+        borderRadius: theme.radius.sm,
+        paddingVertical: 14,
+        paddingHorizontal: 18,
         fontSize: 18,
         backgroundColor: '#fff',
         color: '#000',
         textAlign: 'center',
         letterSpacing: 2,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 1 },
+        shadowRadius: 4,
     },
     button: {
         backgroundColor: theme.colors.light.primary,
         paddingVertical: 14,
-        borderRadius: 10,
+        borderRadius: theme.radius.sm,
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: 24,
+        shadowColor: theme.colors.light.primary,
+        shadowOpacity: 0.25,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 6,
+        elevation: 3,
+    },
+    buttonText: {
+        color: '#fff',
     },
 });
 

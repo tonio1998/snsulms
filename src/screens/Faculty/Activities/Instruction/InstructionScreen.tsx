@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		paddingHorizontal: 10,
 		paddingVertical: 10,
-		borderRadius: 6,
+		borderRadius: theme.radius.xs,
 		backgroundColor: theme.colors.light.primary,
 	},
 	submissionCard: {
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
 		padding: 14,
 		marginBottom: 10,
 		backgroundColor: '#fff',
-		borderRadius: 12,
+		borderRadius: theme.radius.xs,
 		elevation: 2,
 		shadowColor: '#000',
 		shadowOpacity: 0.05,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
 	subText: { fontSize: 12, color: '#777' },
 	card: {
 		backgroundColor: 'rgba(255,255,255,0.95)',
-		borderRadius: 16,
+		borderRadius: theme.radius.sm,
 		padding: 16,
 		marginBottom: 16,
 		elevation: 2,

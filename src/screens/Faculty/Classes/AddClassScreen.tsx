@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     input: {
         borderWidth: 1,
         borderColor: '#ccc',
-        borderRadius: 10,
+        borderRadius: theme.radius.xs,
         padding: 12,
         fontSize: 16,
         backgroundColor: '#fff',
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     button: {
         backgroundColor: theme.colors.light.primary,
         paddingVertical: 12,
-        borderRadius: 8,
+        borderRadius: theme.radius.xs,
         alignItems: 'center',
         marginTop: 30,
     },

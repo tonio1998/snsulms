@@ -92,7 +92,7 @@ export default function LoginOptionsScreen() {
 				error?.response?.data?.message ||
 				error?.message ||
 				'Something went wrong during Google login.';
-			Alert.alert('Login Failed', message);
+			Alert.alert('Login Failed', 'Something went wrong during Google login.');
 			handleApiError(error, 'Google Login');
 		} finally {
 			hideLoading();
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		paddingVertical: 14,
 		paddingHorizontal: 20,
-		borderRadius: 12,
+		borderRadius: theme.radius.sm,
 		width: width * 0.8,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		paddingVertical: 14,
 		paddingHorizontal: 20,
-		borderRadius: 12,
+		borderRadius: theme.radius.sm,
 		width: width * 0.8,
 	},
 	authText: {
