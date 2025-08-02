@@ -11,7 +11,7 @@ import {
 	Platform,
 	UIManager,
 	Clipboard,
-	Alert,
+	Alert, Modal, Animated, Easing,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -41,6 +41,8 @@ const ClassesListScreen = ({ navigation }) => {
 	const [classes, setClasses] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [expanded, setExpanded] = useState(null);
+	const [showModal, setShowModal] = useState(false);
+	const slideAnim = useRef(new Animated.Value(height)).current;
 
 	useFocusEffect(
 		useCallback(() => {
@@ -68,7 +70,7 @@ const ClassesListScreen = ({ navigation }) => {
 			const res = await getFacClasses(filter);
 			setClasses(res?.data ?? []);
 		} catch (err) {
-			handleApiError(err, 'Load Classes');
+			// handleApiError(err, 'Load Classes');
 		} finally {
 			setLoading(false);
 			hideLoading2();
@@ -97,14 +99,40 @@ const ClassesListScreen = ({ navigation }) => {
 		setExpanded((prev) => (prev === id ? null : id));
 	};
 
+	const openModal = () => {
+		setShowModal(true);
+		Animated.timing(slideAnim, {
+			toValue: 0,
+			duration: 300,
+			easing: Easing.out(Easing.ease),
+			useNativeDriver: true,
+		}).start();
+	};
+
+	const closeModal = () => {
+		Animated.timing(slideAnim, {
+			toValue: height,
+			duration: 250,
+			useNativeDriver: true,
+		}).start(() => setShowModal(false));
+	};
+
+	const handleOption = (type) => {
+		closeModal();
+		if (type === 'manual') {
+			navigation.navigate('AddClass');
+		} else if (type === 'fetch') {
+			navigation.navigate('FetchEnrollment');
+		}
+	};
+
+
 	const handleCopy = (text) => {
 		Clipboard.setString(text);
-		// Alert.alert('Copied', `Class Code "${text}" copied to clipboard.`);
 	};
 
 	const handleDuplicateClass = (item) => {
 		Alert.alert('Duplicate Class', `This would duplicate the class: ${item.CourseCode} - ${item.Section}`);
-		// Add actual duplication logic here
 	};
 
 	const renderClassItem = ({ item }) => {
@@ -197,6 +225,27 @@ const ClassesListScreen = ({ navigation }) => {
 						onRefresh={loadClassesOnline}
 					/>
 				</View>
+
+				<TouchableOpacity style={globalStyles.fab} activeOpacity={0.7} onPress={openModal}>
+					<Icon name="add" size={28} color="#fff" />
+				</TouchableOpacity>
+
+				{showModal && (
+					<Modal transparent visible={showModal} animationType="fade">
+						<TouchableOpacity style={globalStyles.overlay} activeOpacity={1} onPress={closeModal} />
+						<Animated.View style={[globalStyles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
+							<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('manual')}>
+								<CText fontStyle="SB" fontSize={16}>Add Class</CText>
+							</TouchableOpacity>
+							{/*<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('fetch')}>*/}
+							{/*	<CText fontStyle="SB" fontSize={16}>Import</CText>*/}
+							{/*</TouchableOpacity>*/}
+							<TouchableOpacity style={globalStyles.cancel} onPress={closeModal}>
+								<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>
+							</TouchableOpacity>
+						</Animated.View>
+					</Modal>
+				)}
 			</SafeAreaView>
 		</>
 	);
@@ -210,8 +259,9 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 		borderWidth: 1,
 		borderColor: '#ccc',
-		borderRadius: 10,
-		paddingHorizontal: 12,
+		borderRadius: theme.radius.sm,
+		paddingHorizontal: 15,
+		height: 45,
 		backgroundColor: '#f9f9f9',
 	},
 	searchInput: { flex: 1, height: 40, fontSize: 15, color: '#000' },

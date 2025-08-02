@@ -105,16 +105,14 @@ const SubmissionListScreen = ({ navigation }) => {
 				</View>
 
 				<View style={styles.detailsRow}>
-					{isSubmitted && (
-						<View style={styles.statusBox}>
-							<CText fontSize={13}>Submitted</CText>
-							<Icon
-								name="checkmark-circle"
-								size={22}
-								color={theme.colors.light.primary}
-							/>
-						</View>
-					)}
+					<View style={styles.statusBox}>
+						<Icon
+							name={isSubmitted ? 'checkmark-circle' : 'checkmark-circle-outline'}
+							size={22}
+							color={isSubmitted ? theme.colors.light.primary : '#ccc'}
+						/>
+						<CText fontSize={13}>{isSubmitted ? 'Turned in' : 'Not submitted'}</CText>
+					</View>
 					{typeof grade === 'number' && (
 						<View style={styles.statusBox}>
 							<CText fontSize={13}>Points</CText>

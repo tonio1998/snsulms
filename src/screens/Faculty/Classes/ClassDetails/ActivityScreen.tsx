@@ -2,8 +2,6 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import {
 	View,
 	FlatList,
-	Text,
-	ActivityIndicator,
 	TouchableOpacity,
 	RefreshControl,
 	SafeAreaView,
@@ -17,20 +15,18 @@ import {
 import { globalStyles } from '../../../../theme/styles.ts';
 import { theme } from '../../../../theme';
 import { handleApiError } from '../../../../utils/errorHandler.ts';
-import { useLoading } from '../../../../context/LoadingContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
 import { CText } from '../../../../components/common/CText.tsx';
-import { getActivities } from '../../../../api/modules/activitiesApi.ts';
 import { formatDate } from '../../../../utils/dateFormatter';
 import BackHeader from '../../../../components/layout/BackHeader.tsx';
 import { NetworkContext } from '../../../../context/NetworkContext.tsx';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {useClass} from "../../../../context/SharedClassContext.tsx";
-import {useLoading2} from "../../../../context/Loading2Context.tsx";
+import { useClass } from '../../../../context/SharedClassContext.tsx';
+import { useLoading2 } from '../../../../context/Loading2Context.tsx';
 
 const { height } = Dimensions.get('window');
 
-const ActivityScreen = ({ navigation, route }) => {
+const ActivityScreen = ({ navigation }) => {
 	const { classes, refresh } = useClass();
 	const ClassID = classes.ClassID;
 	const network = useContext(NetworkContext);
@@ -87,15 +83,23 @@ const ActivityScreen = ({ navigation, route }) => {
 	const fetchActivities = async () => {
 		try {
 			if (loading) return;
-			// setLoading(true);
 			showLoading2('Loading activities...');
-
 			if (!network?.isOnline) return;
 
 			const res = classes?.activities;
 			const list = res || [];
-			console.log(":list:", res)
-			handleActTypeFilter(actType, list);
+
+			const enriched = list.map(item => {
+				const total = item.student_activity?.length || 0;
+				const submitted = item.student_activity?.filter(stu => stu.DateSubmitted)?.length || 0;
+				const CompletedPercent = total === 0 ? 0 : Math.round((submitted / total) * 100);
+				return {
+					...item,
+					CompletedPercent,
+				};
+			});
+
+			handleActTypeFilter(actType, enriched);
 		} catch (err) {
 			handleApiError(err, 'Failed to fetch activities');
 		} finally {
@@ -126,30 +130,69 @@ const ActivityScreen = ({ navigation, route }) => {
 	};
 
 	const renderItem = ({ item }) => (
-		<TouchableOpacity key={item.ActivityID} style={styles.card} onPress={() => handleViewAct(item.Title, item.ActivityID)}>
-			<View style={{ padding: 16 }}>
-				<CText fontSize={16} fontStyle="SB" style={{ color: '#000' }}>{item?.Title}</CText>
-				<CText fontSize={14} style={{ color: '#444', marginTop: 4 }}>{item?.Description}</CText>
-				<View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-					{item?.DueDate && <CText fontSize={12} style={{ color: '#777' }}>Due: {formatDate(item?.DueDate)}</CText>}
-					<CText fontSize={12} style={{ color: '#777' }}>Created: {formatDate(item?.created_at, 'relative')}</CText>
+		<TouchableOpacity
+			key={item.ActivityID}
+			style={styles.card}
+			onPress={() => handleViewAct(item.Title, item.ActivityID)}
+		>
+			<View style={styles.cardInner}>
+				<CText fontSize={17} fontStyle="SB" style={styles.cardTitle}>
+					{item?.Title}
+				</CText>
+
+				{item?.Description?.trim() !== '' && (
+					<CText fontSize={14} style={styles.cardDesc}>
+						{item?.Description}
+					</CText>
+				)}
+
+				<View style={styles.progressSection}>
+					<Icon name="checkmark-done" size={16} color={theme.colors.light.primary} />
+					<CText fontSize={13} style={styles.percentText}>
+						{item?.CompletedPercent || 0}% completed
+					</CText>
+				</View>
+
+				<View style={styles.cardFooter}>
+					{item?.DueDate && (
+						<CText fontSize={12} style={styles.cardMeta}>
+							Due: {formatDate(item?.DueDate)}
+						</CText>
+					)}
+					<CText fontSize={12} style={styles.cardMeta}>
+						Created: {formatDate(item?.created_at, 'relative')}
+					</CText>
 				</View>
 			</View>
 		</TouchableOpacity>
 	);
 
 	const renderFilterHeader = () => (
-		<ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 10, marginBottom: 10 }}>
-			<View style={{ flexDirection: 'row', gap: 8, marginHorizontal: 20 }}>
-				{activityTypes.map((type, idx) => (
-					<TouchableOpacity
-						key={idx}
-						onPress={() => handleActTypeFilter(type.value)}
-						style={[styles.filterBtn, actType === type.value && styles.activeFilterBtn]}
-					>
-						<CText style={{ color: actType === type.value ? '#fff' : '#000' }} fontStyle="SB">{type.label}</CText>
-					</TouchableOpacity>
-				))}
+		<ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+			<View style={{ flexDirection: 'row', gap: 10 }}>
+				{activityTypes.map((type, idx) => {
+					const isActive = actType === type.value;
+					return (
+						<TouchableOpacity
+							key={idx}
+							onPress={() => handleActTypeFilter(type.value)}
+							style={[
+								styles.filterBtn,
+								isActive && styles.activeFilterBtn,
+								{ backgroundColor: isActive ? theme.colors.light.primary : '#f3f4f6' },
+							]}>
+							<CText
+								style={{
+									color: isActive ? '#fff' : '#111',
+									fontSize: 13,
+								}}
+								fontStyle="SB"
+							>
+								{type.label}
+							</CText>
+						</TouchableOpacity>
+					);
+				})}
 			</View>
 		</ScrollView>
 	);
@@ -211,47 +254,78 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		backgroundColor: '#fff',
-		borderTopLeftRadius: 16,
-		borderTopRightRadius: 16,
-		paddingVertical: 20,
-		paddingHorizontal: 16,
-		elevation: 6,
+		borderTopLeftRadius: 24,
+		borderTopRightRadius: 24,
+		paddingVertical: 24,
+		paddingHorizontal: 20,
+		elevation: 8,
 		shadowColor: '#000',
-		shadowOpacity: 0.15,
-		shadowOffset: { width: 0, height: -3 },
-		shadowRadius: 6,
+		shadowOpacity: 0.1,
+		shadowOffset: { width: 0, height: -4 },
+		shadowRadius: 10,
 	},
 	option: {
-		paddingVertical: 14,
+		paddingVertical: 16,
 		borderBottomWidth: 1,
-		borderColor: '#f0f0f0',
+		borderColor: '#e5e7eb',
 	},
 	cancel: {
-		marginTop: 18,
+		marginTop: 22,
 		alignItems: 'center',
 	},
 	card: {
-		backgroundColor: '#ffffff',
-		borderRadius: 12,
-		padding: 8,
-		marginBottom: 12,
-		elevation: 2,
+		backgroundColor: '#fff',
+		borderRadius: theme.radius.xs,
+		padding: 0,
+		marginBottom: 14,
+		elevation: 1,
 		shadowColor: '#000',
-		shadowOpacity: 0.07,
-		shadowOffset: { width: 0, height: 2 },
-		shadowRadius: 3,
+		shadowOpacity: 0.06,
+		shadowOffset: { width: 0, height: 1 },
+		shadowRadius: 2,
+	},
+	cardInner: {
+		padding: 16,
+	},
+	cardTitle: {
+		color: '#111',
+	},
+	cardDesc: {
+		color: '#555',
+		marginTop: 6,
+		lineHeight: 20,
+	},
+	cardFooter: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		marginTop: 12,
+	},
+	cardMeta: {
+		color: '#888',
 	},
 	filterBtn: {
-		borderRadius: 20,
+		borderRadius: theme.radius.xs,
 		paddingVertical: 8,
-		paddingHorizontal: 16,
-		backgroundColor: '#f3f4f6',
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		paddingHorizontal: 18,
+		// borderWidth: 1,
+		borderColor: '#d1d5db',
 	},
 	activeFilterBtn: {
-		backgroundColor: theme.colors.light.primary,
 		borderColor: theme.colors.light.primary,
+	},
+	progressSection: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginTop: 10,
+		backgroundColor: '#f3f4f6',
+		paddingVertical: 5,
+		paddingHorizontal: 10,
+		borderRadius: theme.radius.xs,
+		alignSelf: 'flex-start',
+		gap: 6,
+	},
+	percentText: {
+		color: '#111',
 	},
 });
 

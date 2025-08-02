@@ -201,26 +201,18 @@ const ActivitiesScreen = ({ navigation }) => {
 						</View>
 					)}
 
-					{loading ? (
-						<ActivityIndicator
-							size="large"
-							color={theme.colors.light.primary}
-							style={{ marginTop: 30 }}
-						/>
-					) : (
-						<FlatList
-							data={data}
-							keyExtractor={(item, index) => item.ClassID?.toString() ?? index.toString()}
-							renderItem={renderSubjectItem}
-							refreshing={refreshing}
-							onRefresh={handleRefresh}
-							ListEmptyComponent={
-								<Text style={{ textAlign: 'center', marginTop: 30, color: '#888' }}>
-									No activities found.
-								</Text>
-							}
-						/>
-					)}
+					<FlatList
+						data={data}
+						keyExtractor={(item, index) => item.ClassID?.toString() ?? index.toString()}
+						renderItem={renderSubjectItem}
+						refreshing={refreshing}
+						onRefresh={handleRefresh}
+						ListEmptyComponent={
+							<Text style={{ textAlign: 'center', marginTop: 30, color: '#888' }}>
+								No activities found.
+							</Text>
+						}
+					/>
 				</View>
 			</SafeAreaView>
 		</>

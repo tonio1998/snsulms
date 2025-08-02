@@ -307,6 +307,7 @@ const WallScreen = ({ navigation, route }) => {
 	if (!classes || !ClassID) {
 		return (
 			<>
+				<BackHeader title="Wall" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
 				<SafeAreaView style={globalStyles.safeArea}>
 					<ActivityIndicator size="large" color={theme.colors.light.primary}/>
 				</SafeAreaView>
@@ -375,7 +376,7 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		borderColor: '#dcdcdc',
 		borderWidth: 1,
-		borderRadius: 8,
+		borderRadius: theme.radius.xs,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 1 },
 		shadowOpacity: 0.1,
@@ -396,7 +397,7 @@ const styles = StyleSheet.create({
 	},
 	postCard: {
 		backgroundColor: '#fff',
-		borderRadius: 10,
+		borderRadius: theme.radius.xs,
 		padding: 14,
 		marginBottom: 10,
 		marginHorizontal: 5,
