@@ -315,7 +315,7 @@ const WallScreen = ({ navigation, route }) => {
 	return (
 		<>
 			<BackHeader title="Wall" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-			<SafeAreaView style={globalStyles.safeArea}>
+			<SafeAreaView style={[globalStyles.safeArea]}>
 				<View style={{ flex: 1, paddingHorizontal: 10 }}>
 					<FlatList
 						data={wall}

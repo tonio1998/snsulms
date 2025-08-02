@@ -62,8 +62,8 @@ const JoinClassScreen = ({ navigation }) => {
                     behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 >
                     <View style={styles.container}>
-                        <CText fontStyle="B" fontSize={18} style={styles.label}>
-                            Enter the class code provided by your teacher
+                        <CText fontStyle="SB" fontSize={18} style={styles.label}>
+                            Ask your teacher for the class code, then enter it below
                         </CText>
 
                         <TextInput
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     label: {
         marginBottom: 16,
         textAlign: 'center',
-        color: theme.colors.light.primary,
+        color: theme.colors.light.text,
     },
     input: {
         borderWidth: 1,
