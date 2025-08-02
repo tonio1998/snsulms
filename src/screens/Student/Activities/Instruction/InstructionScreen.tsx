@@ -177,8 +177,8 @@ const InstructionScreen = ({ navigation }) => {
 					<View style={styles.profileRow}>
 						<ShimmerPlaceHolder style={styles.avatar} />
 						<View style={styles.profileInfo}>
-							<ShimmerPlaceHolder style={{ width: 150, marginBottom: 10 }} />
-							<ShimmerPlaceHolder style={{ width: 100 }} />
+							<ShimmerPlaceHolder style={{ width: 150, marginBottom: 10, borderRadius: 6 }} />
+							<ShimmerPlaceHolder style={{ width: 100, borderRadius: 6 }} />
 						</View>
 					</View>
 				) : (
@@ -205,7 +205,7 @@ const InstructionScreen = ({ navigation }) => {
 				<ShimmerPlaceHolder
 					loading={true}
 					LinearGradient={LinearGradient}
-					style={{ width: '100%', height: 100, borderRadius: 12 }}
+					style={{ width: '100%', height: 100, borderRadius: 6 }}
 					autoRun
 				/>
 			</View>
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
 		padding: 14,
 		marginBottom: 10,
 		backgroundColor: '#fff',
-		borderRadius: 12,
+		borderRadius: 6,
 		elevation: 2,
 		shadowColor: '#000',
 		shadowOpacity: 0.05,
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
 	subText: { fontSize: 12, color: '#777' },
 	card: {
 		backgroundColor: 'rgba(255,255,255,0.95)',
-		borderRadius: 16,
+		borderRadius: 6,
 		padding: 16,
 		marginBottom: 16,
 		elevation: 2,
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
 	emptyText: { textAlign: 'center', paddingVertical: 20, color: '#aaa', fontSize: 13 },
 	profileRow: { flexDirection: 'row', alignItems: 'center' },
 	profileInfo: { marginLeft: 10, flex: 1 },
-	avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#ccc' },
+	avatar: { width: 40, height: 40, borderRadius: 6, backgroundColor: '#ccc' },
 });
 
 export default InstructionScreen;

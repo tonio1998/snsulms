@@ -235,7 +235,7 @@ export default function SubmissionScreen({ navigation, route }) {
 			/>
 				<SafeAreaView style={globalStyles.safeArea}>
 					{loadingSubmissions ? (
-						<ActivityIndicator size="large" color={theme.colors.light.card} />
+						<ActivityIndicator size="large" color={theme.colors.light.primary} />
 					) : (
 						<FlatList
 							data={submissions}
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
 		padding: 14,
 		marginBottom: 10,
 		backgroundColor: '#fff',
-		borderRadius: 10,
+		borderRadius: theme.radius.sm,
 		elevation: 1,
 		shadowColor: '#000',
 		shadowOpacity: 0.05,

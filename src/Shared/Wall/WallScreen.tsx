@@ -322,7 +322,7 @@ const WallScreen = ({ navigation, route }) => {
 				<View style={{ flex: 1, paddingHorizontal: 10 }}>
 					<FlatList
 						data={wall}
-						keyExtractor={(item, index) => item.id?.toString() || index.id?.toString()}
+						keyExtractor={(item, index) => `${item.id || 'wall'}-${index}`}
 						renderItem={renderItem}
 						contentContainerStyle={{ paddingBottom: 100 }}
 						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
