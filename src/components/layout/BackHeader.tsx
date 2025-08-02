@@ -128,6 +128,7 @@ const styles = StyleSheet.create({
 		top: Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44,
 		left: 0,
 		right: 0,
+		// borderRadius: 100
 	},
 
 	backButton: {

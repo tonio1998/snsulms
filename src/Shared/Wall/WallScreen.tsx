@@ -286,15 +286,12 @@ const WallScreen = ({ navigation, route }) => {
 						</TouchableOpacity>
 					</View>
 					{item.MeetLink && (
-						<View style={{ marginTop: 10, alignItems: 'flex-start' }}>
+						<View style={{ alignItems: 'flex-start' }}>
 							<TouchableOpacity
 								style={styles.gmeetJoinButton}
 								onPress={() => Linking.openURL(item.MeetLink)}
 							>
-								<Icon name="videocam" size={18} color="#188038" style={{ marginRight: 8 }} />
-								<CText fontSize={14} style={styles.gmeetJoinText}>
-									Join with Google Meet
-								</CText>
+								<Icon name="videocam" size={18} color="#188038"/>
 							</TouchableOpacity>
 						</View>
 					)}
@@ -318,11 +315,11 @@ const WallScreen = ({ navigation, route }) => {
 	return (
 		<>
 			<BackHeader title="Wall" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-			<SafeAreaView style={globalStyles.safeArea}>
+			<SafeAreaView style={[globalStyles.safeArea]}>
 				<View style={{ flex: 1, paddingHorizontal: 10 }}>
 					<FlatList
 						data={wall}
-						keyExtractor={(item, index) => item.id?.toString() || index.id?.toString()}
+						keyExtractor={(item, index) => `${item.id || 'wall'}-${index}`}
 						renderItem={renderItem}
 						contentContainerStyle={{ paddingBottom: 100 }}
 						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
@@ -371,8 +368,8 @@ const styles = StyleSheet.create({
 	gmeetJoinButton: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		paddingVertical: 10,
-		paddingHorizontal: 16,
+		padding: 10,
+		paddingHorizontal: 12,
 		backgroundColor: '#fff',
 		borderColor: '#dcdcdc',
 		borderWidth: 1,
@@ -381,7 +378,7 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 1 },
 		shadowOpacity: 0.1,
 		shadowRadius: 1.41,
-		elevation: 2,
+		// elevation: 2,
 	},
 
 	gmeetJoinText: {

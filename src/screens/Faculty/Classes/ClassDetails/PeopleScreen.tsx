@@ -42,13 +42,15 @@ const PeopleScreen = () => {
 			if (filters.search) {
 				const query = filters.search.toLowerCase();
 				list = list.filter((x) =>
-					`${x.student_info?.FirstName} ${x.student_info?.LastName}`.toLowerCase().includes(query)
+					`${x.details?.FirstName} ${x.details?.LastName}`.toLowerCase().includes(query)
 				);
 			}
 
 			list.sort((a, b) =>
 				(a.student_info?.FirstName || '').localeCompare(b.student_info?.FirstName || '')
 			);
+
+			console.log(list);
 
 			setClassmates(list);
 		} catch (err) {

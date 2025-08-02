@@ -50,10 +50,11 @@ const PeopleScreen = ({ navigation, route }) => {
 
 			const response = await getMyClassmates(filter);
 			let List = response?.data ?? [];
+			console.log("student list", List);
 
 			List.sort((a, b) => {
-				const nameA = a.student_info?.FirstName?.toLowerCase() || '';
-				const nameB = b.student_info?.FirstName?.toLowerCase() || '';
+				const nameA = a.details?.FirstName?.toLowerCase() || '';
+				const nameB = b.details?.FirstName?.toLowerCase() || '';
 				return nameA.localeCompare(nameB);
 			});
 
