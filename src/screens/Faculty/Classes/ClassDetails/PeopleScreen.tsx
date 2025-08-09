@@ -8,7 +8,7 @@ import {
 	Image,
 	StyleSheet,
 	RefreshControl,
-	Linking,
+	Linking, ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -21,20 +21,13 @@ import { handleApiError } from '../../../../utils/errorHandler.ts';
 import { useClass } from '../../../../context/SharedClassContext.tsx';
 
 const PeopleScreen = () => {
-	const { classes, refresh, loading } = useClass();
-	const ClassID = classes.ClassID;
+	const { classes } = useClass();
+	const ClassID = classes?.ClassID;
 	const [classmates, setClassmates] = useState([]);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [refreshing, setRefreshing] = useState(false);
 	const { showLoading, hideLoading } = useLoading();
 	const debounceTimeout = useRef(null);
-
-	useFocusEffect(
-		useCallback(() => {
-			refresh();
-		}, [refresh])
-	);
-
 	const fetchClassmates = async (filters = {}) => {
 		try {
 			showLoading('Loading...');

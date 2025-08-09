@@ -51,6 +51,8 @@ import {syncAllTables} from "./src/services/syncService";
 import {tableConfigs} from "./src/config/syncTables";
 import CreateMeetingScreen from "./src/Shared/GMeet/CreateMeetingScreen.tsx";
 import {Loading2Provider} from "./src/context/Loading2Context.tsx";
+import {GestureHandlerRootView} from "react-native-gesture-handler";
+import SurveyBottomTabNav from "./src/navigation/Survey/SurveyBottomTabNav.tsx";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -180,6 +182,7 @@ const AppNavigator = () => {
                     <NavigationContainer ref={navigationRef} onReady={tryFlushPendingNavigation}>
                         <Stack.Navigator screenOptions={{ headerShown: false }}>
                             <Stack.Screen name="MainTabs" component={BottomTabNav} />
+                            <Stack.Screen name="SurveyTest" component={SurveyBottomTabNav} />
                             <Stack.Screen name="JoinClass" component={JoinClassScreen} />
                             <Stack.Screen name="AddClass" component={AddClassScreen} />
                             <Stack.Screen name="AddActivity" component={AddActivityScreen} />
@@ -217,7 +220,9 @@ export default function App(): React.JSX.Element {
                 <CAlert>
                     <NetworkProvider>
                         <AuthProvider>
-                            <AppNavigator />
+                            <GestureHandlerRootView style={{ flex: 1 }}>
+                                <AppNavigator />
+                            </GestureHandlerRootView>
                         </AuthProvider>
                         <StatusIndicator />
                     </NetworkProvider>

@@ -68,7 +68,14 @@ const ClassesScreen = ({ navigation }) => {
 				AcademicYear: acad,
 			};
 			const res = await getMyClasses(filter);
-			setClasses(res?.data || []);
+			const sortedClasses = (res?.data || []).sort((a, b) => {
+				const aAssigned = a.student_activity?.filter(act => act.SubmissionType === 'Assigned').length || 0;
+				const bAssigned = b.student_activity?.filter(act => act.SubmissionType === 'Assigned').length || 0;
+				if (aAssigned === 0 && bAssigned !== 0) return 1;
+				if (aAssigned !== 0 && bAssigned === 0) return -1;
+				return 0;
+			});
+			setClasses(sortedClasses);
 		} catch (err) {
 			handleApiError(err);
 		} finally {
@@ -157,7 +164,7 @@ const ClassesScreen = ({ navigation }) => {
 								})
 							}
 						>
-							<CText fontSize={14} fontStyle="B" style={{ color: '#fff' }}>
+							<CText fontSize={14} fontStyle="SB" style={{ color: '#fff', padding: 5 }}>
 								View Class
 							</CText>
 						</TouchableOpacity>

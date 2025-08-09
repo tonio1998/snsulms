@@ -92,9 +92,6 @@ const ActivityScreen = ({ navigation, route }) => {
 							{submitted && (
 								<Icon name="checkmark-circle" size={22} color={theme.colors.light.success} />
 							)}
-							{!submitted && (
-								<Icon name="checkmark-circle-outline" size={22} color={theme.colors.light.danger} />
-							)}
 						</View>
 					</View>
 					<CText fontSize={14} style={styles.desc}>{act?.Description}</CText>

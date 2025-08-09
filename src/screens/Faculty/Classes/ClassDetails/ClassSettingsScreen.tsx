@@ -4,7 +4,7 @@ import {
 	SafeAreaView,
 	ScrollView,
 	Switch,
-	StyleSheet,
+	StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { globalStyles } from '../../../../theme/styles.ts';
 import { theme } from '../../../../theme';
@@ -19,7 +19,7 @@ import {useClass} from "../../../../context/SharedClassContext.tsx";
 
 const ClassSettingsScreen = ({ route }) => {
 	const { classes } = useClass();
-	const ClassID = classes.ClassID;
+	const ClassID = classes?.ClassID;
 	const { showLoading2, hideLoading2 } = useLoading2();
 	const network = useContext(NetworkContext);
 
@@ -27,6 +27,16 @@ const ClassSettingsScreen = ({ route }) => {
 		MeetOK: false,
 		Attendance: false,
 	});
+
+	useEffect(() => {
+		if (classes) {
+			setSettings({
+				MeetOK: classes.MeetOK === 'Y',
+				Attendance: classes.Attendance === 'Y',
+			});
+		}
+	}, [classes]);
+
 
 	useEffect(() => {
 		fetchClassSettings();
@@ -51,9 +61,7 @@ const ClassSettingsScreen = ({ route }) => {
 			setSettings((prev) => ({ ...prev, [key]: newValue }));
 
 			const valueToSave = newValue ? 'Y' : 'N';
-			console.log("valueToSave: ", valueToSave)
 			const res = await updateClassSetting(ClassID, key, valueToSave);
-			console.log('res:', res);
 		} catch (err) {
 			handleApiError(err, `Failed to toggle ${key}`);
 		}

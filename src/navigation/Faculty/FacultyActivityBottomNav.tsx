@@ -1,25 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Dimensions, StatusBar, TouchableOpacity, View } from 'react-native';
+import { Dimensions } from 'react-native';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {createNativeStackNavigator} from "@react-navigation/native-stack";
-import {useAccess} from "../../hooks/useAccess.ts";
-import {theme} from "../../theme";
+import { theme } from '../../theme';
 import { CText } from '../../components/common/CText.tsx';
-import WallScreen from "../../Shared/Wall/WallScreen.tsx";
-import ActivityScreen from "../../screens/Student/Classes/ActivityScreen.tsx";
-import PostWallScreen from "../../Shared/Wall/PostWallScreen.tsx";
-import WallCommentsScreen from "../../Shared/Wall/WallCommentScreen.tsx";
-import PeopleScreen from "../../screens/Student/Classes/PeopleScreen.tsx";
-import SubmissionScreen from "../../screens/Student/Activities/Submission/SubmissionScreen.tsx";
-import {ActivityProvider} from "../../context/SharedActivityContext.tsx";
-import ClassesScreen from "../../screens/Student/Classes/ClassesScreen.tsx";
-import {FacActivityProvider} from "../../context/FacSharedActivityContext.tsx";
-import InstructionScreen from "../../screens/Faculty/Activities/Instruction/InstructionScreen.tsx";
-import SubmissionListScreen from "../../screens/Faculty/Activities/Submission/SubmissionListScreen.tsx";
-const Tab = createBottomTabNavigator();
-const ClassesDetailsStack = createNativeStackNavigator();
-const SubmissionStack = createNativeStackNavigator();
+
+import InstructionScreen from '../../screens/Faculty/Activities/Instruction/InstructionScreen.tsx';
+import SubmissionListScreen from '../../screens/Faculty/Activities/Submission/SubmissionListScreen.tsx';
+
+import { FacActivityProvider } from '../../context/FacSharedActivityContext.tsx';
+
+const Tab = createMaterialTopTabNavigator();
+
 function useOrientation() {
 	const [isLandscape, setIsLandscape] = useState(
 		Dimensions.get('window').width > Dimensions.get('window').height
@@ -35,92 +27,67 @@ function useOrientation() {
 	return isLandscape;
 }
 
-export default function FacultyActivityBottomNav({route, navigation}) {
+export default function FacultyActivitySwipeTabs({ route }) {
 	const ActivityID = route.params.ActivityID;
 	const isLandscape = useOrientation();
-	const { hasRole, can } = useAccess();
 
 	return (
-		<>
-			<FacActivityProvider ActivityID={ActivityID}>
-				<Tab.Navigator
-					screenOptions={({ route }) => ({
-						tabBarIcon: ({ color, size, focused }) => {
-							let iconName = 'ellipse-outline';
-							switch (route.name) {
-								case 'Instruction':
-									iconName = focused ? 'reader' : 'reader-outline';
-									break;
-								case 'Submission':
-									iconName = focused ? 'cloud-upload' : 'cloud-upload-outline';
-									break;
-								case 'Submissions':
-									iconName = focused ? 'reader' : 'reader-outline';
-									break;
-								case 'Comments':
-									iconName = focused ? 'chatbox-ellipses' : 'chatbox-ellipses-outline';
-									break;
-								default:
-									iconName = 'ellipse';
-							}
-
-							return <Icon name={iconName} size={20} color={focused ? theme.colors.light.primary : '#9F9F9F'} />;
-						},
-						tabBarLabel: ({ color, focused }) => (
-							focused ? <CText
-								numberOfLines={1}
-								style={{
-									color,
-									fontWeight: 'bold',
-									fontSize: 12,
-									textAlign: 'center',
-								}}
-							>
-								{route.name}
-							</CText> : <CText
-								numberOfLines={1}
-								style={{
-									color: '#9F9F9F',
-									fontWeight: 'normal',
-									fontSize: 12,
-									textAlign: 'center',
-								}}
-							>
-								{route.name}
-							</CText>
-						),
-						tabBarLabelPosition: isLandscape ? 'beside-icon' : 'below-icon',
-						tabBarActiveTintColor: theme.colors.light.primary,
-						tabBarInactiveTintColor: theme.colors.light.primary,
-						headerShown: false,
-						tabBarStyle: {
-							backgroundColor: theme.colors.light.card,
-							height: isLandscape ? 55 : 65,
-							paddingTop: 4,
-							paddingBottom: isLandscape ? 4 : 10,
-							shadowColor: '#000',
-							shadowOffset: { width: 0, height: -2 },
-							shadowOpacity: 0.1,
-							shadowRadius: 10,
-							borderColor: '#ccc',
-							flexDirection: isLandscape ? 'row' : 'column',
-						},
-					})}
-				>
-					<Tab.Screen name="Instruction" component={InstructionScreen} />
-					<Tab.Screen name="Submissions" component={SubmissionStackScreen} />
-				</Tab.Navigator>
-			</FacActivityProvider>
-		</>
-	);
-}
-
-function SubmissionStackScreen({route}) {
-	return (
-		<>
-			<SubmissionStack.Navigator screenOptions={{ headerShown: false }}>
-				<SubmissionStack.Screen name="Submissions" component={SubmissionListScreen}/>
-			</SubmissionStack.Navigator>
-		</>
+		<FacActivityProvider ActivityID={ActivityID}>
+			<Tab.Navigator
+				tabBarPosition="bottom" // put tabs at bottom
+				swipeEnabled={true} // enable swipe gestures
+				screenOptions={({ route }) => ({
+					tabBarIcon: ({ focused, color }) => {
+						let iconName = 'ellipse-outline';
+						switch (route.name) {
+							case 'Instruction':
+								iconName = focused ? 'reader' : 'reader-outline';
+								break;
+							case 'Submissions':
+								iconName = focused ? 'reader' : 'reader-outline';
+								break;
+							default:
+								iconName = 'ellipse';
+						}
+						return <Icon name={iconName} size={20} color={color} />;
+					},
+					tabBarLabel: ({ focused, color }) => (
+						<CText
+							numberOfLines={1}
+							style={{
+								color: focused ? color : '#9F9F9F',
+								fontWeight: focused ? 'bold' : 'normal',
+								fontSize: 12,
+								textAlign: 'center',
+							}}
+						>
+							{route.name}
+						</CText>
+					),
+					tabBarActiveTintColor: theme.colors.light.primary,
+					tabBarInactiveTintColor: '#9F9F9F',
+					tabBarIndicatorStyle: {
+						backgroundColor: theme.colors.light.primary,
+					},
+					tabBarStyle: {
+						backgroundColor: theme.colors.light.card,
+						height: isLandscape ? 55 : 65,
+						paddingTop: 4,
+						paddingBottom: isLandscape ? 4 : 10,
+						shadowColor: '#000',
+						shadowOffset: { width: 0, height: -2 },
+						shadowOpacity: 0.1,
+						shadowRadius: 10,
+						borderColor: '#ccc',
+						flexDirection: isLandscape ? 'row' : 'column',
+					},
+					tabBarLabelPosition: isLandscape ? 'beside-icon' : 'below-icon',
+					headerShown: false,
+				})}
+			>
+				<Tab.Screen name="Instruction" component={InstructionScreen} />
+				<Tab.Screen name="Submissions" component={SubmissionListScreen} />
+			</Tab.Navigator>
+		</FacActivityProvider>
 	);
 }
