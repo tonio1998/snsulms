@@ -8,6 +8,7 @@ import {theme} from "../../theme";
 import {useAuth} from "../../context/AuthContext.tsx";
 import {useAccess} from "../../hooks/useAccess.ts";
 import InfoScreen from "../../Shared/Survey/InfoScreen.tsx";
+import QuestionsScreen from "../../Shared/Survey/QuestionsScreen.tsx";
 const Tab = createMaterialTopTabNavigator();
 
 const currentColors = theme.colors.light;
@@ -22,7 +23,7 @@ export default function SurveyBottomTabNav({ route }) {
 			initialRouteName="Info"
 			tabBarPosition="bottom"
 			screenOptions={({ route }) => ({
-				swipeEnabled: true,
+				swipeEnabled: false,
 				tabBarShowIcon: true,
 				tabBarPressColor: currentColors.primary,
 				tabBarIndicatorStyle: {
@@ -34,7 +35,7 @@ export default function SurveyBottomTabNav({ route }) {
 						case 'Info':
 							iconName = focused ? 'information-circle' : 'information-circle-outline';
 							break;
-						case 'Add Questions':
+						case 'Questions':
 							iconName = focused ? 'add-circle' : 'add-circle-outline';
 							break;
 						case 'Responses':
@@ -80,7 +81,7 @@ export default function SurveyBottomTabNav({ route }) {
 			})}
 		>
 			<Tab.Screen name="Info" component={InfoScreen} initialParams={{ SurveyID: SurveyID}}/>
-			<Tab.Screen name="Add Questions" component={HomeScreen} initialParams={{ SurveyID: SurveyID}}/>
+			<Tab.Screen name="Questions" component={QuestionsScreen} initialParams={{ SurveyID: SurveyID}}/>
 			<Tab.Screen name="Responses" component={HomeScreen} initialParams={{ SurveyID: SurveyID}}/>
 		</Tab.Navigator>
 	);

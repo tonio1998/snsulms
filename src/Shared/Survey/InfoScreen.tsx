@@ -97,14 +97,14 @@ export default function InfoScreen({ navigation, route }) {
         <>
             <BackHeader title="Info" />
             <SafeAreaView style={globalStyles.safeArea}>
+                <View style={styles.cardHeader}>
+                    <CText>Title</CText>
+                    <CText fontSize={17} fontStyle="B">{data.Title || 'Untitled Form'}</CText>
+                    {data.Description ? (
+                        <CText fontSize={15} style={styles.descText}>{data.Description}</CText>
+                    ) : null}
+                </View>
                 <ScrollView contentContainerStyle={styles.container}>
-                    <View style={styles.cardHeader}>
-                        <CText fontSize={20} fontStyle="B">{data.Title || 'Untitled Form'}</CText>
-                        {data.Description ? (
-                            <CText fontSize={15} style={styles.descText}>{data.Description}</CText>
-                        ) : null}
-                    </View>
-
                     <CText fontSize={18} fontStyle="SB" style={styles.sectionTitle}>Quick Settings</CText>
                     {settingCards.map(({ label, key, description }) => (
                         <View key={key} style={styles.card}>
@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         borderWidth: 1,
         borderColor: '#eee',
+        marginHorizontal: 20
     },
     descText: {
         marginTop: 4,
