@@ -14,7 +14,11 @@ export const getSurveyData = async (data) => {
 };
 
 export const updateSurveyData = async (SurveyID, payload) => {
-    console.log(payload);
     const response = await api.put(`/survey/${SurveyID}`, payload);
     return response.data;
 };
+
+export const fetchSections = async (FormID) => {
+console.log("FormIDFormIDFormID: ", FormID)
+    const response = await api.get(`survey/`)
+}

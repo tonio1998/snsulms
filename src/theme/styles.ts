@@ -35,8 +35,8 @@ export const globalStyles = StyleSheet.create({
     },
     fab: {
         position: 'absolute',
-        right: 20,
-        bottom: 15,
+        right: 10,
+        bottom: 10,
         width: 55,
         height: 55,
         borderRadius: 30,
