@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { getClassInfo } from '../api/modules/classesApi.ts';
-import { NetworkContext } from './NetworkContext.tsx';
+import {createContext, useCallback, useContext, useEffect, useRef, useState} from "react";
+import {NetworkContext} from "./NetworkContext.tsx";
+import {getClassInfo} from "../api/modules/classesApi.ts";
 
 const ClassContext = createContext(null);
 
@@ -9,19 +9,21 @@ export const ClassProvider = ({ children, ClassID }) => {
     const [loading, setLoading] = useState(false);
     const [loadingSubmissions, setLoadingSubmissions] = useState(false);
     const network = useContext(NetworkContext);
+    const fetchedRef = useRef(false);
 
     const fetch = useCallback(async () => {
+        if (loading || fetchedRef.current) return;
+        setLoading(true);
         try {
-            if (loading) return;
-            setLoading(true);
             const res = await getClassInfo({ ClassID });
             setClasses(res);
+            fetchedRef.current = true;
         } catch (error) {
             console.error('Error fetching class:', error);
         } finally {
             setLoading(false);
         }
-    }, [ClassID]);
+    }, [loading, ClassID]);
 
     useEffect(() => {
         fetch();

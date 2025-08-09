@@ -10,7 +10,7 @@ import {
 	Modal,
 	Animated,
 	Easing,
-	Dimensions,
+	Dimensions, ActivityIndicator,
 } from 'react-native';
 import { globalStyles } from '../../../../theme/styles.ts';
 import { theme } from '../../../../theme';
@@ -28,7 +28,8 @@ const { height } = Dimensions.get('window');
 
 const ActivityScreen = ({ navigation }) => {
 	const { classes, refresh } = useClass();
-	const ClassID = classes.ClassID;
+	const ClassID = classes?.ClassID;
+
 	const network = useContext(NetworkContext);
 	const { showLoading2, hideLoading2 } = useLoading2();
 

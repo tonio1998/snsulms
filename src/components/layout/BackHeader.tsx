@@ -12,6 +12,12 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 
+// NEW modern Gesture API imports
+import {
+	GestureDetector,
+	Gesture,
+} from 'react-native-gesture-handler';
+
 const generateCircles = (count = 4) => {
 	const fixedPositions = [
 		{ top: 30, left: 20 },
@@ -56,6 +62,13 @@ const BackHeader = ({
 		}
 	};
 
+	// Create an empty gesture to intercept touches and block swipe-back here
+	const blockSwipeGesture = Gesture.Pan()
+		.onTouchesMove(() => {
+			// Do nothing, just block swipe gestures on this area
+		})
+		.enabled(true);
+
 	return (
 		<>
 			<StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
@@ -80,6 +93,9 @@ const BackHeader = ({
 					/>
 				))}
 			</LinearGradient>
+
+			{/* GestureDetector intercepts swipe gestures here */}
+			<GestureDetector gesture={blockSwipeGesture}>
 				<View style={styles.headerWrapper}>
 					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
 						<Icon name={icon} size={25} color="#000" />
@@ -102,6 +118,7 @@ const BackHeader = ({
 						<View style={styles.rightButtonContainer}>{rightButton}</View>
 					)}
 				</View>
+			</GestureDetector>
 		</>
 	);
 };
@@ -113,8 +130,6 @@ const styles = StyleSheet.create({
 		top: 0,
 		left: 0,
 		right: 0,
-		// justifyContent: 'center',
-		// alignItems: 'center',
 		zIndex: -1,
 	},
 
@@ -128,7 +143,6 @@ const styles = StyleSheet.create({
 		top: Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44,
 		left: 0,
 		right: 0,
-		// borderRadius: 100
 	},
 
 	backButton: {

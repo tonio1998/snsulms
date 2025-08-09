@@ -23,9 +23,11 @@ import BackHeader from "../../../../components/layout/BackHeader.tsx";
 import BackgroundWrapper from "../../../../utils/BackgroundWrapper";
 import { NetworkContext } from "../../../../context/NetworkContext.tsx";
 import { getOfflineActivities, saveActivitiesOffline } from "../../../../utils/sqlite/offlineActivityService.ts";
+import {useClass} from "../../../../context/SharedClassContext.tsx";
 
 const MaterialsScreen = ({ navigation, route }) => {
-	const ClassID = route.params.ClassID;
+	const { classes } = useClass();
+	const ClassID = classes?.ClassID;
 	const Type = route.params.type;
 	const network = useContext(NetworkContext);
 	const [activities, setActivities] = useState([]);

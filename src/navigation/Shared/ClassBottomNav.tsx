@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Dimensions } from 'react-native';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAccess } from "../../hooks/useAccess.ts";
@@ -9,7 +9,6 @@ import { CText } from '../../components/common/CText.tsx';
 import WallScreen from "../../Shared/Wall/WallScreen.tsx";
 import ActivityScreen from "../../screens/Student/Classes/ActivityScreen.tsx";
 import MaterialScreen from "../../screens/Student/Classes/MaterialScreen.tsx";
-
 import ActivityScreenFac from "../../screens/Faculty/Classes/ClassDetails/ActivityScreen.tsx";
 import PeopleScreenFac from "../../screens/Faculty/Classes/ClassDetails/PeopleScreen.tsx";
 import MaterialScreenFac from "../../screens/Faculty/Classes/ClassDetails/MaterialScreen.tsx";
@@ -19,7 +18,7 @@ import { ClassProvider, useClass } from "../../context/SharedClassContext.tsx";
 import PeopleScreen from "../../screens/Faculty/Classes/ClassDetails/PeopleScreen.tsx";
 import ScanScreen from "../../Shared/Scanner/ScanScreen.tsx";
 
-const Tab = createBottomTabNavigator();
+const Tab = createMaterialTopTabNavigator();
 const ClassesDetailsStack = createNativeStackNavigator();
 
 function useOrientation() {
@@ -54,8 +53,10 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 
 	return (
 		<Tab.Navigator
+			tabBarPosition="bottom"
+			swipeEnabled={true}
 			screenOptions={({ route }) => ({
-				tabBarIcon: ({ color, size, focused }) => {
+				tabBarIcon: ({ focused, color }) => {
 					let iconName = 'ellipse-outline';
 					switch (route.name) {
 						case 'Wall':
@@ -85,9 +86,9 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 						default:
 							iconName = 'ellipse';
 					}
-					return <Icon name={iconName} size={20} color={focused ? theme.colors.light.primary : '#9F9F9F'} />;
+					return <Icon name={iconName} size={20} color={color} />;
 				},
-				tabBarLabel: ({ color, focused }) => (
+				tabBarLabel: ({ focused, color }) => (
 					<CText
 						numberOfLines={1}
 						style={{
@@ -102,8 +103,7 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 				),
 				tabBarLabelPosition: isLandscape ? 'beside-icon' : 'below-icon',
 				tabBarActiveTintColor: theme.colors.light.primary,
-				tabBarInactiveTintColor: theme.colors.light.primary,
-				headerShown: false,
+				tabBarInactiveTintColor: '#9F9F9F',
 				tabBarStyle: {
 					backgroundColor: theme.colors.light.card,
 					height: isLandscape ? 55 : 65,
@@ -116,6 +116,10 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 					borderColor: '#ccc',
 					flexDirection: isLandscape ? 'row' : 'column',
 				},
+				tabBarIndicatorStyle: {
+					backgroundColor: theme.colors.light.primary,
+				},
+				headerShown: false,
 			})}
 		>
 			<Tab.Screen
@@ -134,7 +138,6 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 			{hasRole('ACAD') && (
 				<>
 					<Tab.Screen name="Activities" component={ActivityScreenFac} initialParams={{ ClassID }} />
-
 					{classes?.Attendance === 'Y' && (
 						<Tab.Screen name="Scan" component={ScanScreen} initialParams={{ ClassID }} />
 					)}

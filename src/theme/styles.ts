@@ -36,9 +36,9 @@ export const globalStyles = StyleSheet.create({
     fab: {
         position: 'absolute',
         right: 20,
-        bottom: 25,
-        width: 60,
-        height: 60,
+        bottom: 15,
+        width: 55,
+        height: 55,
         borderRadius: 30,
         backgroundColor: theme.colors.light.primary,
         justifyContent: 'center',
