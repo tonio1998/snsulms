@@ -75,3 +75,16 @@ export const getAddressFromCoords = async (latitude, longitude) => {
     return 'Error fetching address';
   }
 };
+
+export const formatTime = (minutes) => {
+  const totalSeconds = Math.max(minutes * 60, 0);
+  const mm = Math.floor(totalSeconds / 60);
+  const ss = totalSeconds % 60;
+  return `${mm}:${ss.toString().padStart(2, "0")}`;
+};
+
+export const formatMMSS = (seconds) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+};
