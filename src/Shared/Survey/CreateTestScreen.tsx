@@ -17,7 +17,7 @@ import {CText} from "../../components/common/CText.tsx";
 import {theme} from "../../theme";
 import {useLoading} from "../../context/LoadingContext.tsx";
 import {useAlert} from "../../components/CAlert.tsx";
-import {getTestBuilderData} from "../../api/modules/testbuilderApi.ts";
+import {getTestBuilderData} from "../../api/testBuilder/testbuilderApi.ts";
 import {ShimmerList} from "../../components/loaders/ShimmerList.tsx";
 import {formatDate} from "../../utils/dateFormatter";
 

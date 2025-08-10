@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
 	rightButtonContainer: {
 		position: 'absolute',
 		right: 16,
-		height: 40,
+		// height: 40,
 		justifyContent: 'center',
 		alignItems: 'center',
 	},

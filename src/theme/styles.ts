@@ -8,7 +8,7 @@ let PrimaryColorHex = theme.colors.light.primary;
 export const globalStyles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0)',
     },
     modalContainer: {
         position: 'absolute',
@@ -21,7 +21,13 @@ export const globalStyles = StyleSheet.create({
         paddingTop: 12,
         paddingHorizontal: 24,
         elevation: 20,
-        shadowColor: '#000',
+        shadowColor: theme.colors.light.primary,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+        marginBottom: 15,
+        color: "#222",
     },
     option: {
         paddingVertical: 16,
@@ -35,8 +41,8 @@ export const globalStyles = StyleSheet.create({
     },
     fab: {
         position: 'absolute',
-        right: 10,
-        bottom: 10,
+        right: 15,
+        bottom: 15,
         width: 55,
         height: 55,
         borderRadius: 30,

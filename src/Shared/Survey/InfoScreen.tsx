@@ -4,7 +4,7 @@ import { globalStyles } from "../../theme/styles.ts";
 import BackHeader from "../../components/layout/BackHeader.tsx";
 import { useLoading } from "../../context/LoadingContext.tsx";
 import { useAlert } from "../../components/CAlert.tsx";
-import { getSurveyData, updateSurveyData } from "../../api/modules/testbuilderApi.ts";
+import { getSurveyData, updateSurveyData } from "../../api/testBuilder/testbuilderApi.ts";
 import { handleApiError } from "../../utils/errorHandler.ts";
 import { CText } from "../../components/common/CText.tsx";
 import { theme } from "../../theme";
