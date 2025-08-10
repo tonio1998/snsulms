@@ -1,16 +1,16 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useCallback, memo } from "react";
 import {
     View,
     Text,
-    FlatList,
+    ScrollView,
     TouchableOpacity,
     StyleSheet,
     SafeAreaView,
     ActivityIndicator,
     Alert,
     TextInput,
+    KeyboardAvoidingView,
     Platform,
-    UIManager,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -23,51 +23,103 @@ import { CText } from "../../components/common/CText.tsx";
 import { useLoading } from "../../context/LoadingContext.tsx";
 import { handleApiError } from "../../utils/errorHandler.ts";
 import SurveyTimer from "../../components/testBuilder/SurveyTimer.tsx";
+import { useAlert } from "../../components/CAlert.tsx";
 
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
+function shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
 }
+
 export default function QuizScreen({ navigation, route }) {
     const [sections, setSections] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
     const [isStarted, setIsStarted] = useState(false);
     const [form, setForm] = useState({});
     const { showLoading, hideLoading } = useLoading();
+    const { showAlert } = useAlert();
     const [answers, setAnswers] = useState({});
-    const [response, setResponse] = useState(null);
+    const [missingRequired, setMissingRequired] = useState([]);
+    const [gamified, setGamified] = useState(false);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [shuffledQuestions, setShuffledQuestions] = useState([]);
+    const [timeLeft, setTimeLeft] = useState(0);
+
     const SurveyID = route.params.SurveyID;
 
-    const loadSections = async () => {
+    const loadSections = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getSurveyData({ SurveyID });
             setForm(data);
+            setGamified(data?.isCardView)
             setSections(data?.sections || []);
             const init = await initSurvey(SurveyID);
             if (init) setResponse(init);
+
+            // If shuffle enabled, flatten and shuffle questions for gamified mode
+            if (data?.isShuffle) {
+                const allQs = data.sections.flatMap((sec) => {
+                    // Shuffle choices inside questions too
+                    const shuffledQs = sec.questions.map((q) => {
+                        let opts = [];
+                        try {
+                            opts = typeof q.Options === "string" ? JSON.parse(q.Options) : q.Options || [];
+                        } catch {
+                            opts = [];
+                        }
+                        return { ...q, _shuffledOptions: shuffleArray(opts) };
+                    });
+                    return shuffledQs;
+                });
+                setShuffledQuestions(shuffleArray(allQs));
+            } else {
+                // no shuffle, but still set _shuffledOptions to original options for consistency
+                const allQs = data.sections.flatMap((sec) =>
+                    sec.questions.map((q) => {
+                        let opts = [];
+                        try {
+                            opts = typeof q.Options === "string" ? JSON.parse(q.Options) : q.Options || [];
+                        } catch {
+                            opts = [];
+                        }
+                        return { ...q, _shuffledOptions: opts };
+                    }),
+                );
+                setShuffledQuestions(allQs);
+            }
         } catch (error) {
+            handleApiError(error, "dfdf");
             Alert.alert("Error", "Failed to load sections from server.");
         } finally {
             setLoading(false);
         }
-    };
+    }, [SurveyID]);
+
+    const [response, setResponse] = useState(null);
 
     useEffect(() => {
         loadSections();
-    }, [SurveyID]);
+    }, [loadSections]);
 
-    const handleAnswerChange = (questionId, value) => {
-        setAnswers((prev) => ({ ...prev, [questionId]: value }));
-    };
+    const handleAnswerChange = useCallback((questionId, value) => {
+        setAnswers((prev) => {
+            if (prev[questionId] === value) return prev;
+            return { ...prev, [questionId]: value };
+        });
+        setMissingRequired((prev) => prev.filter((id) => id !== questionId));
+    }, []);
 
-    const handleStart = async () => {
+    const handleStart = useCallback(async () => {
         showLoading("Starting...");
         try {
             const res = await startSurvey(response?.id);
             if (res) {
                 const startSeconds = Math.max(res?.RemainingTime || 0, 0) * 60;
-                await AsyncStorage.setItem(`surveyTimer_${res.id}`, startSeconds.toString());
+                await AsyncStorage.setItem(`surveyTimer_${response?.id}`, startSeconds.toString());
                 setIsStarted(true);
             }
         } catch (error) {
@@ -75,25 +127,61 @@ export default function QuizScreen({ navigation, route }) {
         } finally {
             hideLoading();
         }
+    }, [response, showLoading, hideLoading]);
+
+    const handleSubmitForm = useCallback(async () => {
+        const requiredQuestions = sections.flatMap((section) => section.questions.filter((q) => q.isRequired));
+        const missing = requiredQuestions
+            .filter((q) => {
+                const ans = answers[q.id];
+                if (q.AnswerType === "checkbox") {
+                    return !Array.isArray(ans) || ans.length === 0;
+                }
+                return ans === undefined || ans === null || ans === "";
+            })
+            .map((q) => q.id);
+
+        if (missing.length > 0) {
+            setMissingRequired(missing);
+            return;
+        } else {
+            setMissingRequired([]);
+        }
+
+        try {
+            showLoading("Submitting the form...");
+            await endSurvey(response?.id, answers);  // Pass answers here
+            showAlert("success", "Success", "Form has been submitted.");
+            setIsStarted(false);
+        } catch (error) {
+            handleApiError(error, "Submission failed");
+        } finally {
+            hideLoading();
+        }
+    }, [answers, response, sections, showAlert, showLoading, hideLoading]);
+
+    const handleTimeUpdate = async (seconds) => {
+        setTimeLeft(seconds);
+
+        if(timeLeft === 0){
+            await endSurvey(response?.id)
+        }
     };
 
-    const AnswerInput = ({ question }) => {
-        const answer = answers[question.id] ?? null;
-        let parsedChoices = [];
-        try {
-            parsedChoices = typeof question.Options === "string" ? JSON.parse(question.Options) : question.Options;
-        } catch {
-            parsedChoices = [];
-        }
+    // Modified AnswerInput to use _shuffledOptions if available
+    const AnswerInput = memo(({ question, answer, onChange }) => {
+        const parsedChoices = question._shuffledOptions || [];
         switch (question.AnswerType) {
             case "short":
                 return (
                     <TextInput
                         style={styles.shortInput}
                         value={answer || ""}
-                        onChangeText={(text) => handleAnswerChange(question.id, text)}
+                        onChangeText={(text) => onChange(question.id, text)}
                         placeholder="Your answer"
                         placeholderTextColor="#ccc"
+                        blurOnSubmit={false}
+                        keyboardShouldPersistTaps="handled"
                     />
                 );
             case "par":
@@ -101,21 +189,28 @@ export default function QuizScreen({ navigation, route }) {
                     <TextInput
                         style={styles.paragraphInput}
                         value={answer || ""}
-                        onChangeText={(text) => handleAnswerChange(question.id, text)}
+                        onChangeText={(text) => onChange(question.id, text)}
                         placeholder="Your answer"
                         multiline
                         numberOfLines={4}
+                        blurOnSubmit={false}
+                        keyboardShouldPersistTaps="handled"
                     />
                 );
             case "mc":
                 return (
                     <View>
-                        {(Array.isArray(parsedChoices) ? parsedChoices : []).map((opt, i) => (
-                            <TouchableOpacity key={i} style={styles.optionRow} onPress={() => handleAnswerChange(question.id, opt)}>
+                        {parsedChoices.map((opt, i) => (
+                            <TouchableOpacity
+                                key={i}
+                                style={styles.optionRow}
+                                onPress={() => onChange(question.id, opt)}
+                                activeOpacity={0.7}
+                            >
                                 <Icon
-                                    name={answers[question.id] === opt ? "radio-button-on" : "radio-button-off"}
+                                    name={answer === opt ? "radio-button-on" : "radio-button-off"}
                                     size={22}
-                                    color={answers[question.id] === opt ? theme.colors.light.primary : "#888"}
+                                    color={answer === opt ? theme.colors.light.primary : "#888"}
                                     style={{ marginRight: 8 }}
                                 />
                                 <Text style={{ fontSize: 16 }}>{opt}</Text>
@@ -126,21 +221,22 @@ export default function QuizScreen({ navigation, route }) {
             case "checkbox":
                 return (
                     <View>
-                        {(Array.isArray(parsedChoices) ? parsedChoices : []).map((opt, i) => {
-                            const selected = Array.isArray(answers[question.id]) && answers[question.id].includes(opt);
+                        {parsedChoices.map((opt, i) => {
+                            const selected = Array.isArray(answer) && answer.includes(opt);
                             return (
                                 <TouchableOpacity
                                     key={i}
                                     style={styles.optionRow}
                                     onPress={() => {
-                                        let newAnswer = Array.isArray(answers[question.id]) ? [...answers[question.id]] : [];
+                                        let newAnswer = Array.isArray(answer) ? [...answer] : [];
                                         if (selected) {
                                             newAnswer = newAnswer.filter((a) => a !== opt);
                                         } else {
                                             newAnswer.push(opt);
                                         }
-                                        handleAnswerChange(question.id, newAnswer);
+                                        onChange(question.id, newAnswer);
                                     }}
+                                    activeOpacity={0.7}
                                 >
                                     <Icon
                                         name={selected ? "checkbox" : "square-outline"}
@@ -167,7 +263,8 @@ export default function QuizScreen({ navigation, route }) {
                                 <TouchableOpacity
                                     key={val}
                                     style={[styles.linearScaleCircle, selected && { backgroundColor: theme.colors.light.primary }]}
-                                    onPress={() => handleAnswerChange(question.id, val)}
+                                    onPress={() => onChange(question.id, val)}
+                                    activeOpacity={0.7}
                                 >
                                     <Text style={[styles.linearScaleText, selected && { color: "#fff" }]}>{val}</Text>
                                 </TouchableOpacity>
@@ -178,16 +275,123 @@ export default function QuizScreen({ navigation, route }) {
             default:
                 return <Text style={{ color: "#999" }}>Unsupported question type</Text>;
         }
+    });
+
+    const QuestionItem = memo(({ question, answer, onChange, isMissing }) => (
+        <View
+            style={[
+                styles.questionItem,
+                { padding: 12, borderBottomWidth: 1, borderColor: "#eee" },
+                isMissing && { borderColor: "red", borderWidth: 1, backgroundColor: "#ffe6e6" },
+            ]}
+        >
+            <Text style={styles.questionText}>
+                {question.Question}
+                {question.isRequired && <Text style={{ color: "red" }}> *</Text>}
+            </Text>
+            <AnswerInput question={question} answer={answer} onChange={onChange} />
+        </View>
+    ));
+
+    // Use shuffledQuestions in gamified mode, else sections
+    const currentQuestion = gamified ? shuffledQuestions[currentQuestionIndex] : null;
+
+    // Check if required question is answered
+    function isQuestionAnswered(q) {
+        const ans = answers[q?.id];
+        if (q?.AnswerType === "checkbox") {
+            return Array.isArray(ans) && ans.length > 0;
+        }
+        return ans !== undefined && ans !== null && ans !== "";
+    }
+
+    const goNext = () => {
+        if (!currentQuestion) return;
+        if (currentQuestion.isRequired && !isQuestionAnswered(currentQuestion)) {
+            Alert.alert("Hold up", "This question is required before moving on.");
+            return;
+        }
+        if (currentQuestionIndex < shuffledQuestions.length - 1) {
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+        }
+    };
+    const goPrev = () => {
+        if (currentQuestionIndex > 0) {
+            setCurrentQuestionIndex(currentQuestionIndex - 1);
+        }
     };
 
-    const renderQuestion = ({ item }) => (
-        <View style={[styles.questionItem, { padding: 12, borderBottomWidth: 1, borderColor: "#eee" }]}>
-            <Text style={styles.questionText}>{item.Question}</Text>
-            <AnswerInput question={item} />
-        </View>
-    );
+    const GamifiedQuestion = () => {
+        if (!currentQuestion) return <Text>No questions available</Text>;
 
-    if (form?.isPublished !== 1) {
+        const isMissing = missingRequired.includes(currentQuestion.id);
+
+        const disableNext = currentQuestion.isRequired && !isQuestionAnswered(currentQuestion);
+        const disableSubmit = disableNext;
+
+        return (
+            <View
+                style={[
+                    styles.questionItem,
+                    {
+                        margin: 20,
+                        padding: 24,
+                        borderRadius: 12,
+                        shadowOpacity: 0.3,
+                        elevation: 5,
+                        backgroundColor: "#fff",
+                    },
+                ]}
+            >
+                <Text style={[styles.questionText, { fontSize: 20, marginBottom: 20 }]}>
+                    {currentQuestion.Question}
+                    {currentQuestion.isRequired && <Text style={{ color: "red" }}> *</Text>}
+                </Text>
+
+                <AnswerInput question={currentQuestion} answer={answers[currentQuestion.id]} onChange={handleAnswerChange} />
+
+                {isMissing && <Text style={{ color: "red", marginTop: 10 }}>This question is required.</Text>}
+
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 30 }}>
+                    <TouchableOpacity
+                        disabled={currentQuestionIndex === 0}
+                        onPress={goPrev}
+                        style={[styles.navButton, currentQuestionIndex === 0 && { opacity: 0.5 }]}
+                    >
+                        <Text style={styles.navButtonText}>Previous</Text>
+                    </TouchableOpacity>
+
+                    {currentQuestionIndex < shuffledQuestions.length - 1 ? (
+                        <TouchableOpacity
+                            disabled={disableNext}
+                            onPress={goNext}
+                            style={[
+                                styles.navButton,
+                                disableNext && { opacity: 0.5, backgroundColor: "#ddd" },
+                            ]}
+                        >
+                            <Text style={styles.navButtonText}>Next</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            disabled={disableSubmit}
+                            onPress={handleSubmitForm}
+                            style={[
+                                styles.navButton,
+                                disableSubmit
+                                    ? { opacity: 0.5, backgroundColor: "#ddd" }
+                                    : { backgroundColor: theme.colors.light.primary },
+                            ]}
+                        >
+                            <Text style={[styles.navButtonText, disableSubmit ? {} : { color: "#fff" }]}>Submit</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+        );
+    };
+
+    if (form?.isPublished !== 1 && form) {
         return (
             <>
                 <BackHeader />
@@ -200,42 +404,69 @@ export default function QuizScreen({ navigation, route }) {
         );
     }
 
-    if (!isStarted) {
+    if (!isStarted && form) {
+        const textColor = "#555"; // Softer than #999, easier on eyes
+
         return (
             <>
                 <BackHeader />
-                <SafeAreaView style={globalStyles.safeArea}>
+                <SafeAreaView style={[globalStyles.safeArea, { backgroundColor: "#f9f9f9" }]}>
                     <View style={[styles.emptyContainer, { margin: 20 }]}>
                         <View
                             style={{
                                 backgroundColor: "#fff",
-                                padding: 20,
-                                borderRadius: 10,
-                                marginBottom: 20,
+                                padding: 25,
+                                borderRadius: 12,
+                                marginBottom: 30,
                                 borderWidth: 1,
-                                borderColor: "#ccc",
+                                borderColor: "#e0e0e0",
+                                shadowColor: "#000",
+                                shadowOpacity: 0.05,
+                                shadowRadius: 10,
+                                shadowOffset: { width: 0, height: 4 },
+                                elevation: 3,
                             }}
                         >
-                            <CText fontSize={16} style={{ color: "#999" }}>Title</CText>
-                            <CText fontStyle={"SB"} fontSize={16} style={{ color: "#999" }}>{form.Title}</CText>
-                            <View style={{ marginTop: 10 }}>
-                                <CText fontSize={16} style={{ color: "#999" }}>Description</CText>
-                                <CText fontStyle={"SB"} fontSize={16} style={{ color: "#999" }}>{form.Description}</CText>
+                            <CText fontSize={18} style={{ color: textColor, marginBottom: 8, letterSpacing: 1 }}>
+                                Title
+                            </CText>
+                            <CText fontStyle={"SB"} fontSize={20} style={{ color: "#222" }}>
+                                {form.Title}
+                            </CText>
+
+                            <View style={{ marginTop: 20 }}>
+                                <CText fontSize={18} style={{ color: textColor, marginBottom: 8, letterSpacing: 1 }}>
+                                    Description
+                                </CText>
+                                <CText fontStyle={"SB"} fontSize={16} style={{ color: "#444", lineHeight: 22 }}>
+                                    {form.Description || "No description provided."}
+                                </CText>
                             </View>
-                            <View style={{ marginTop: 10 }}>
-                                <CText fontSize={16} style={{ color: "#999" }}>Total Questions</CText>
-                                <CText fontStyle={"SB"} fontSize={16} style={{ color: "#999" }}>{form?.questions?.length}</CText>
+
+                            <View style={styles.infoRow}>
+                                <CText fontSize={16} style={{ color: textColor }}>
+                                    Total Questions
+                                </CText>
+                                <CText fontStyle={"SB"} fontSize={16} style={{ color: "#000" }}>
+                                    {form?.questions?.length || 0}
+                                </CText>
                             </View>
-                            <View style={{ marginTop: 10 }}>
-                                <CText fontSize={16} style={{ color: "#999" }}>Duration</CText>
-                                <CText fontStyle={"SB"} fontSize={16} style={{ color: "#999" }}>{form?.Duration} minutes</CText>
+
+                            <View style={styles.infoRow}>
+                                <CText fontSize={16} style={{ color: textColor }}>
+                                    Duration
+                                </CText>
+                                <CText fontStyle={"SB"} fontSize={16} style={{ color: "#000" }}>
+                                    {form?.Duration} min
+                                </CText>
                             </View>
+
                             {response?.TimeStarted && (
-                                <View style={{ marginTop: 10 }}>
-                                    <CText fontSize={16} style={{ color: "#999" }}>Remaining Time</CText>
-                                    <CText fontStyle={"SB"} fontSize={16} style={{ color: "#999" }}>
-                                        <SurveyTimer response={response} endSurvey={endSurvey} />
+                                <View style={styles.infoRow}>
+                                    <CText fontSize={16} style={{ color: textColor }}>
+                                        Remaining Time
                                     </CText>
+                                    <SurveyTimer response={response} endSurvey={endSurvey} onTimeUpdate={handleTimeUpdate} />
                                 </View>
                             )}
                         </View>
@@ -245,10 +476,14 @@ export default function QuizScreen({ navigation, route }) {
                             icon={"play-circle"}
                             type={"success"}
                             style={{
-                                marginTop: 20,
-                                marginBottom: 20,
-                                padding: 12,
-                                paddingHorizontal: 20,
+                                paddingVertical: 14,
+                                paddingHorizontal: 30,
+                                borderRadius: 30,
+                                shadowColor: "#28a745",
+                                shadowOpacity: 0.4,
+                                shadowRadius: 8,
+                                shadowOffset: { width: 0, height: 4 },
+                                elevation: 5,
                             }}
                             onPress={handleStart}
                         />
@@ -258,58 +493,97 @@ export default function QuizScreen({ navigation, route }) {
         );
     }
 
+    // Count answered questions
+    const totalQuestions = gamified
+        ? shuffledQuestions.length
+        : sections.reduce((acc, sec) => acc + (sec.questions?.length || 0), 0);
+    const answeredCount = Object.keys(answers).filter((key) => {
+        const val = answers[key];
+        if (Array.isArray(val)) return val.length > 0;
+        return val !== undefined && val !== null && val !== "";
+    }).length;
+
     return (
         <>
             <BackHeader
-                title={<SurveyTimer response={response} endSurvey={endSurvey} />}
+                title={
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                        <SurveyTimer response={response} endSurvey={endSurvey} onTimeUpdate={handleTimeUpdate} />
+                        <Text style={{ color: "#fff", fontWeight: "600" }}>
+                            {answeredCount} / {totalQuestions} answered
+                        </Text>
+                    </View>
+                }
                 rightButton={
-                    <CButton
-                        type="success"
-                        title="Submit"
-                        icon={"save-outline"}
-                        style={{
-                            paddingHorizontal: 10,
-                            paddingVertical: 7,
-                            borderRadius: 8,
-                        }}
-                        onPress={() => navigation.navigate("AddQuestionScreen", { sectionId: null })}
-                    />
+                    !gamified && answeredCount > 0 ? (
+                        <CButton
+                            type="success"
+                            title="Submit"
+                            icon={"save-outline"}
+                            style={{
+                                paddingHorizontal: 10,
+                                paddingVertical: 7,
+                                borderRadius: 8,
+                            }}
+                            onPress={handleSubmitForm}
+                        />
+                    ) : null
                 }
             />
-            <SafeAreaView style={globalStyles.safeArea}>
-                {loading ? <ActivityIndicator size="large" color={theme.colors.light.primary} /> : null}
-                {sections.length === 0 ? (
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>No sections found.</Text>
-                    </View>
-                ) : (
-                    <FlatList
-                        data={sections}
-                        keyExtractor={(s) => s.id.toString()}
-                        renderItem={({ item }) => (
-                            <View style={styles.sectionContainer}>
-                                <Text style={styles.sectionTitle}>{item.SectionTitle}</Text>
-                                {item.questions && item.questions.length > 0 ? (
-                                    <FlatList
-                                        data={item.questions}
-                                        keyExtractor={(q) => q.id.toString()}
-                                        renderItem={renderQuestion}
-                                        scrollEnabled={false}
-                                        nestedScrollEnabled
-                                    />
-                                ) : (
-                                    <Text style={styles.noQuestionsText}>No questions yet.</Text>
-                                )}
-                            </View>
-                        )}
-                        contentContainerStyle={{
-                            padding: 14,
-                            paddingBottom: 80,
-                        }}
-                        refreshing={refreshing}
-                    />
-                )}
-            </SafeAreaView>
+
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+            >
+                <SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
+                    {loading && <ActivityIndicator size="large" color={theme.colors.light.primary} />}
+                    {!loading && (
+                        <>
+                            {gamified ? (
+                                <ScrollView
+                                    keyboardShouldPersistTaps="handled"
+                                    contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+                                    showsVerticalScrollIndicator={false}
+                                >
+                                    <GamifiedQuestion />
+                                </ScrollView>
+                            ) : (
+                                <ScrollView
+                                    keyboardShouldPersistTaps="handled"
+                                    contentContainerStyle={{ padding: 14, paddingBottom: 80 }}
+                                    showsVerticalScrollIndicator={false}
+                                >
+                                    {sections.length === 0 ? (
+                                        <View style={styles.emptyContainer}>
+                                            <Text style={styles.emptyText}>No sections found.</Text>
+                                        </View>
+                                    ) : (
+                                        sections.map((section) => (
+                                            <View key={section.id.toString()} style={styles.sectionContainer}>
+                                                <Text style={styles.sectionTitle}>{section.SectionTitle}</Text>
+                                                {section.questions && section.questions.length > 0 ? (
+                                                    section.questions.map((question) => (
+                                                        <QuestionItem
+                                                            key={question.id.toString()}
+                                                            question={question}
+                                                            answer={answers[question.id]}
+                                                            onChange={handleAnswerChange}
+                                                            isMissing={missingRequired.includes(question.id)}
+                                                        />
+                                                    ))
+                                                ) : (
+                                                    <Text style={styles.noQuestionsText}>No questions yet.</Text>
+                                                )}
+                                            </View>
+                                        ))
+                                    )}
+                                </ScrollView>
+                            )}
+                        </>
+                    )}
+                </SafeAreaView>
+            </KeyboardAvoidingView>
         </>
     );
 }
@@ -386,6 +660,16 @@ const styles = StyleSheet.create({
         color: "#444",
         fontWeight: "600",
     },
+    navButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        backgroundColor: "#eee",
+        borderRadius: 8,
+    },
+    navButtonText: {
+        fontWeight: "700",
+        fontSize: 16,
+    },
     emptyContainer: {
         flex: 1,
         justifyContent: "center",
@@ -398,5 +682,24 @@ const styles = StyleSheet.create({
     noQuestionsText: {
         fontStyle: "italic",
         color: "#999",
+    },
+    toggleButton: {
+        position: "absolute",
+        top: 10,
+        right: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        backgroundColor: "#222",
+        borderRadius: 8,
+        zIndex: 1000,
+    },
+    infoRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: 20,
+        alignItems: "center",
+    },
+    emptyContainer: {
+        flex: 1,
     },
 });

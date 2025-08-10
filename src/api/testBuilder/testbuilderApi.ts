@@ -58,9 +58,14 @@ export const startSurvey = async (ResponseID) => {
     return response.data;
 };
 
-export const endSurvey = async (ResponseID) => {
-    const response = await api.post(`/survey/end/${ResponseID}`);
+export const endSurvey = async (ResponseID, answers) => {
+    const response = await api.post(`/survey/end/${ResponseID}`, { answers });
     return response.data;
+};
+
+export const submitForm = async (ResponseID) => {
+  const response = await  api.post(`/survey/submit/${ResponseID}`);
+  return response.data;
 };
 
 export const updateSurveyTimer = async (ResponseID, RemainingTime) => {
