@@ -17,10 +17,8 @@ export default function InfoScreen({ navigation, route }) {
     const [data, setData] = useState({});
     const [settings, setSettings] = useState({
         isPublished: 0,
-        isLimited: 0,
-        isProgress: 0,
         isShuffle: 0,
-        autosave_enabled: 0,
+        isCardView: 0,  // renamed from isGamified
     });
     const [isSaving, setIsSaving] = useState(false);
 
@@ -31,10 +29,8 @@ export default function InfoScreen({ navigation, route }) {
             setData(res);
             setSettings({
                 isPublished: res.isPublished ? 1 : 0,
-                isLimited: res.isLimited ? 1 : 0,
-                isProgress: res.isProgress ? 1 : 0,
                 isShuffle: res.isShuffle ? 1 : 0,
-                autosave_enabled: res.autosave_enabled ? 1 : 0,
+                isCardView: res.isCardView ? 1 : 0,  // make sure backend supports this key!
             });
         } catch (error) {
             handleApiError(error, 'Fetching data');
@@ -72,24 +68,14 @@ export default function InfoScreen({ navigation, route }) {
             description: 'Make the form visible and accessible for participants.',
         },
         {
-            label: 'Limit to 1 Response per Account',
-            key: 'isLimited',
-            description: 'Restrict participants to submit only one response.',
-        },
-        {
-            label: 'Show Form Progress to Students',
-            key: 'isProgress',
-            description: 'Display a progress bar while the participant answers.',
-        },
-        {
             label: 'Shuffle Questions',
             key: 'isShuffle',
             description: 'Randomize the order of questions for each participant.',
         },
         {
-            label: 'Enable Autosave',
-            key: 'autosave_enabled',
-            description: 'Save responses automatically as the participant answers.',
+            label: 'Card View',
+            key: 'isCardView',
+            description: 'Show one question per card instead of a list.',
         },
     ];
 
@@ -150,7 +136,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         borderWidth: 1,
         borderColor: '#eee',
-        marginHorizontal: 20
+        marginHorizontal: 20,
     },
     descText: {
         marginTop: 4,
@@ -195,8 +181,5 @@ const styles = StyleSheet.create({
     },
     saveBtn: {
         backgroundColor: theme.colors.light.primary,
-    },
-    deleteBtn: {
-        backgroundColor: '#e74c3c',
     },
 });
