@@ -1,4 +1,4 @@
-import React, { useEffect, useState, version } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
 	View,
 	Text,
@@ -25,7 +25,7 @@ import { handleApiError } from '../../utils/errorHandler.ts';
 import * as Keychain from 'react-native-keychain';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { APP_NAME, GOOGLE_CLIENT_ID, TAGLINE } from '../../../env.ts';
-
+import DeviceInfo from 'react-native-device-info';
 const { width } = Dimensions.get('window');
 
 GoogleSignin.configure({
@@ -40,6 +40,12 @@ export default function LoginOptionsScreen() {
 	const { showLoading, hideLoading } = useLoading();
 	const [loading, setLoading] = useState(false);
 	const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
+	const [version, setVersion] = useState('');
+
+	useEffect(() => {
+		const appVersion = DeviceInfo.getVersion();
+		setVersion(appVersion);
+	}, []);
 
 	useEffect(() => {
 		(async () => {

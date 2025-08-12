@@ -153,10 +153,11 @@ const SigninForm = ({ navigation }: any) => {
 			const userInfo = await GoogleSignin.signIn();
 			const tokens = await GoogleSignin.getTokens();
 			const accessToken = tokens.accessToken;
-			showLoading('Logging in...');
 			const user = userInfo?.data?.user;
 			const idToken = userInfo?.data?.idToken;
-			await AsyncStorage.setItem('googleAccessToken', accessToken);
+
+			showLoading('Logging in...');
+			await AsyncStorage.setItem(`googleAccessToken${user?.email}`, accessToken);
 
 			const response = await loginWithGoogle({
 				token: idToken,
@@ -170,7 +171,7 @@ const SigninForm = ({ navigation }: any) => {
 				error?.response?.data?.message ||
 				error?.message ||
 				'Something went wrong during Google login.';
-			Alert.alert('Login Failed', message);
+			Alert.alert('Login Failed', 'Something went wrong during Google login.');
 			handleApiError(error, 'Google Login');
 		} finally {
 			hideLoading();

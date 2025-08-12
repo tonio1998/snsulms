@@ -8,9 +8,10 @@ import {
 	PermissionsAndroid,
 	RefreshControl,
 	Text,
-	Dimensions,
+	Dimensions, TouchableOpacity, Linking, Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { globalStyles } from '../theme/styles';
 import { CText } from '../components/common/CText';
 import { theme } from '../theme';
@@ -33,7 +34,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { getAcademicInfo } from '../utils/getAcademicInfo';
 import { loadDashboardCache, saveDashboardCache } from "../utils/cache/dashboardCache.ts";
 import Greeting from "../components/Greeting.tsx";
-
 const DASHBOARD_CACHE_KEY = 'dashboard_data';
 
 const HomeScreen = () => {
@@ -274,6 +274,37 @@ const HomeScreen = () => {
 		);
 	};
 
+	async function openApp(url: string, fallbackUrl?: string) {
+		try {
+			const supported = await Linking.canOpenURL(url);
+			if (supported) {
+				await Linking.openURL(url);
+			} else if (fallbackUrl) {
+				Alert.alert(
+					'App not found',
+					'App is not installed. Opening website instead.',
+					[
+						{ text: 'OK', onPress: () => Linking.openURL(fallbackUrl) }
+					]
+				);
+			} else {
+				Alert.alert('Cannot open link', 'No fallback URL available.');
+			}
+		} catch (error) {
+			Alert.alert('Error', 'An unexpected error occurred.');
+		}
+	}
+
+
+	const buttons = [
+		{ url: 'org.nativescript.snsu://', fallbackUrl: 'https://play.google.com/store/apps/details?id=org.nativescript.snsu', iconSet: 'Ionicons', iconName: 'link-outline', name: 'SNSU' },
+		{ url: 'https://www.snsu.edu.ph/', iconSet: 'Ionicons', iconName: 'globe-outline', name: 'Website' },
+		{ url: 'https://www.youtube.com/@snsuofficialchannel5179', fallbackUrl: 'https://www.youtube.com/@snsuofficialchannel5179',iconSet: 'FontAwesome', iconName: 'youtube', name: 'YouTube' },
+		{ url: 'https://www.facebook.com/SNSUOfficial', iconSet: 'FontAwesome', iconName: 'facebook', name: 'Facebook' },
+		{ url: 'worklinker://', fallbackUrl: 'https://worklinker.snsu.edu.ph/', iconSet: 'Ionicons', iconName: 'link-outline', name: 'Worklinker' },
+	];
+
+
 	return (
 		<>
 			<CustomHeader />
@@ -295,11 +326,32 @@ const HomeScreen = () => {
 									color={theme.colors.light.primary}
 									style={{ marginRight: 4 }}
 								/>
-								<Text style={styles.updatedText}>
-									{lastUpdated} {isCachedData && '• Cached'}
-								</Text>
+								<CText fontStyle={'SB'} style={styles.updatedText}>
+									{lastUpdated}
+								</CText>
 							</View>
 						)}
+
+						<View style={{marginTop: 20}}>
+							{/*<View>*/}
+							{/*	<CText fontStyle={'SB'} fontSize={20}>Quick Links</CText>*/}
+							{/*</View>*/}
+							<View style={styles.link_container}>
+								{buttons.map(({ url, fallbackUrl, iconSet, iconName, name }) => {
+									const IconComponent = iconSet === 'Ionicons' ? Icon : FontAwesome;
+									return (
+										<TouchableOpacity
+											key={name}
+											style={styles.link_button}
+											onPress={() => openApp(url, fallbackUrl)}
+										>
+											<IconComponent name={iconName} size={24} color="#004D1A"/>
+											<Text numberOfLines={1} style={styles.link_button_text}>{name}</Text>
+										</TouchableOpacity>
+									);
+								})}
+							</View>
+						</View>
 					</View>
 
 					{hasRole('STUD') && renderStudentDashboard()}
@@ -331,7 +383,7 @@ const ActivityItem = ({ title, date, student, isDue }: any) => (
 			</Text>
 			{date && (
 				<Text style={styles.updateDate}>
-					{isDue ? 'Due: ' : 'Created: '}
+					{isDue ? 'Due: ' : 'Submitted on '}
 					{formatDate(date, 'MMM dd, yyyy')}
 				</Text>
 			)}
@@ -340,6 +392,45 @@ const ActivityItem = ({ title, date, student, isDue }: any) => (
 );
 
 const styles = StyleSheet.create({
+	link_container: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		justifyContent: 'flex-start',
+		marginTop: 10,
+		paddingHorizontal: 10,
+		padding: 15,
+		backgroundColor: theme.colors.light.card,
+		borderRadius: 8,
+	},
+
+	link_button: {
+		alignItems: 'center',
+		width: '22%',
+		borderRadius: 8,
+		margin: '1%',
+		padding: 4,
+	},
+
+	icon_box: {
+		backgroundColor: theme.colors.light.card,
+		width: 30,
+		height: 30,
+		borderRadius: 12,
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginBottom: 6,
+
+	},
+
+	link_button_text: {
+		color: '#004D1A',
+		fontSize: 13,
+		fontWeight: '600',
+		textAlign: 'center',
+		marginTop: 4,
+	},
+
+
 	welcomeContainer: {
 		paddingHorizontal: 16,
 		marginTop: 8,
@@ -348,10 +439,10 @@ const styles = StyleSheet.create({
 	updatedBadge: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		backgroundColor: theme.colors.light.primary_soft + '33',
+		backgroundColor: theme.colors.light.primary_soft + '19',
 		paddingHorizontal: 8,
 		paddingVertical: 4,
-		borderRadius: 12,
+		borderRadius: 50,
 		alignSelf: 'flex-start',
 		marginTop: 4,
 	},
@@ -363,7 +454,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		backgroundColor: '#f9f9f9',
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 8,
 		marginTop: 16,
 	},
 	noDataIconWrapper: {
@@ -381,13 +472,13 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		backgroundColor: '#fff',
-		borderRadius: 12,
+		borderRadius: 8,
 		padding: 16,
 		marginBottom: 12,
 		shadowColor: '#000',
 		shadowOpacity: 0.05,
 		shadowRadius: 5,
-		elevation: 2,
+		// elevation: 2,
 	},
 	iconCircle: {
 		width: 40,
@@ -419,12 +510,12 @@ const styles = StyleSheet.create({
 	summaryCard: {
 		width: Dimensions.get('window').width * 1.1,
 		padding: 20,
-		borderRadius: 12,
+		borderRadius: 8,
 	},
 	summaryCardSmall: {
 		width: Dimensions.get('window').width * 0.75,
 		padding: 20,
-		borderRadius: 12,
+		borderRadius: 8,
 	},
 	section: {
 		marginTop: 30,
@@ -435,7 +526,7 @@ const styles = StyleSheet.create({
 	},
 	shimmerPlaceholder: {
 		height: 70,
-		borderRadius: 16,
+		borderRadius: 8,
 		marginBottom: 12,
 	},
 });
