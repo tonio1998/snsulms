@@ -55,6 +55,9 @@ export default function BottomSwipeTabs() {
 							case 'Test Builder':
 							iconName = focused ? 'book' : 'book-outline';
 							break;
+							case 'Calendar':
+							iconName = focused ? 'calendar' : 'calendar-outline';
+							break;
 						default:
 							break;
 					}
@@ -89,6 +92,7 @@ export default function BottomSwipeTabs() {
 					shadowRadius: 10,
 					shadowOffset: { width: 0, height: -2 },
 					borderTopColor: '#ccc',
+					borderTopWidth: 1,
 				},
 			})}
 		>
@@ -107,12 +111,15 @@ export default function BottomSwipeTabs() {
 				</>
 			)}
 
+			<Tab.Screen name="Calendar" component={CalendarScreen} />
+
 		</Tab.Navigator>
 	);
 }
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TestBuilderScreen from "../Shared/Survey/TestBuilderScreen.tsx";
+import CalendarScreen from "../Shared/CalendarScreen.tsx";
 
 const ClassesStack = createNativeStackNavigator();
 const FacClassesStack = createNativeStackNavigator();

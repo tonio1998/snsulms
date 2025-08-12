@@ -185,8 +185,8 @@ const ClassesListScreen = ({ navigation }) => {
 		const isExpanded = expanded === item.ClassID;
 
 		return (
+			<TouchableOpacity activeOpacity={0.8} onPress={() => toggleAccordion(item.ClassID)}>
 			<View style={styles.card}>
-				<TouchableOpacity activeOpacity={0.8} onPress={() => toggleAccordion(item.ClassID)}>
 					<View style={styles.cardHeader}>
 						<View>
 							<CText fontStyle="SB" fontSize={15}>
@@ -198,24 +198,17 @@ const ClassesListScreen = ({ navigation }) => {
 						</View>
 						<Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#888" />
 					</View>
-				</TouchableOpacity>
 				{isExpanded && (
 					<View style={styles.expandedContent}>
-						<View style={styles.teacherRow}>
-							<Image source={{ uri: avatarUri, cache: 'force-cache' }} style={styles.avatar} />
-							<CText fontStyle="M" fontSize={12}>
-								{teacher.name}
-							</CText>
-						</View>
 						<View style={styles.summaryRow}>
 							<View>
-								<CText fontStyle="SB" fontSize={20}>
+								<CText fontStyle="SB" fontSize={20} style={{ textAlign: 'center' }}>
 									{item.activities.length}
 								</CText>
 								<CText fontSize={11}>Activities</CText>
 							</View>
 							<View>
-								<CText fontStyle="SB" fontSize={20}>
+								<CText fontStyle="SB" fontSize={20} style={{ textAlign: 'center' }}>
 									{item.students.length}
 								</CText>
 								<CText fontSize={11}>Students</CText>
@@ -229,23 +222,37 @@ const ClassesListScreen = ({ navigation }) => {
 								</View>
 							</TouchableOpacity>
 						</View>
-						<View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-							<TouchableOpacity
-								style={styles.viewButton}
-								onPress={() =>
-									navigation.navigate('ClassDetails', {
-										ClassStudentID: item.ClassStudentID,
-										ClassID: item?.ClassID,
-									})
-								}>
-								<CText fontStyle="SB" fontSize={14} style={{ color: theme.colors.light.primary }}>
-									View
-								</CText>
-							</TouchableOpacity>
+						<View style={{
+							flexDirection: 'row', justifyContent: 'space-between',
+							alignItems: 'center', borderTopWidth: 1,
+							borderColor: '#eee', padding: 10
+						}}>
+							<View style={styles.teacherRow}>
+								<Image source={{ uri: avatarUri, cache: 'force-cache' }} style={styles.avatar} />
+								<View>
+									<CText fontStyle="SB" fontSize={15}>{teacher.name}</CText>
+									<CText fontSize={13}>{teacher.email}</CText>
+								</View>
+							</View>
+							<View style={styles.teacherRow}>
+								<TouchableOpacity
+									style={styles.viewButton}
+									onPress={() =>
+										navigation.navigate('ClassDetails', {
+											ClassStudentID: item.ClassStudentID,
+											ClassID: item?.ClassID,
+										})
+									}>
+									<CText fontStyle="SB" fontSize={14} style={{ color: theme.colors.light.primary }}>
+										View
+									</CText>
+								</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 				)}
 			</View>
+			</TouchableOpacity>
 		);
 	};
 
@@ -291,13 +298,13 @@ const ClassesListScreen = ({ navigation }) => {
 
 				<Modal transparent visible={showModal} animationType="none">
 					<TouchableOpacity
-						style={styles.modalOverlay}
+						style={globalStyles.overlay}
 						activeOpacity={1}
 						onPress={closeModal}
 					/>
 					<Animated.View
 						style={[
-							styles.modalContent,
+							globalStyles.modalContainer,
 							{ transform: [{ translateY: slideAnim }] },
 						]}>
 						<TouchableOpacity
@@ -314,13 +321,13 @@ const ClassesListScreen = ({ navigation }) => {
 								Fetch Enrollment
 							</CText>
 						</TouchableOpacity>
-						<TouchableOpacity
-							style={[styles.modalOption, { marginTop: 10 }]}
-							onPress={closeModal}>
-							<CText fontStyle="SB" fontSize={16} color={theme.colors.light.error}>
-								Cancel
-							</CText>
-						</TouchableOpacity>
+						{/*<TouchableOpacity*/}
+						{/*	style={[styles.modalOption, { marginTop: 10 }]}*/}
+						{/*	onPress={closeModal}>*/}
+						{/*	<CText fontStyle="SB" fontSize={14} style={{ color: theme.colors.light.danger }}>*/}
+						{/*		Cancel*/}
+						{/*	</CText>*/}
+						{/*</TouchableOpacity>*/}
 					</Animated.View>
 				</Modal>
 			</SafeAreaView>
@@ -376,11 +383,6 @@ const styles = StyleSheet.create({
 	expandedContent: {
 		marginTop: 10,
 	},
-	teacherRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 12,
-	},
 	avatar: {
 		width: 32,
 		height: 32,
@@ -392,12 +394,15 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-around',
 		marginBottom: 12,
 	},
+	teacherRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
 	viewButton: {
-		paddingHorizontal: 10,
-		paddingVertical: 6,
-		borderRadius: 4,
-		borderWidth: 1,
-		borderColor: theme.colors.light.primary,
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 8,
+		backgroundColor: theme.colors.light.primary + '33',
 	},
 	modalOverlay: {
 		flex: 1,

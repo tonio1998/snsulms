@@ -186,25 +186,33 @@ const ClassesScreen = ({ navigation, route }) => {
 
 				{isExpanded && (
 					<View style={styles.accordionBody}>
-						<View style={styles.teacherContainer}>
-							<Image source={{ uri: avatarUri }} style={styles.avatar} />
-							<CText fontStyle="SB" fontSize={12} numberOfLines={1} style={styles.teacherName}>
-								{teacher.name}
-							</CText>
+						<View style={{
+							flexDirection: 'row', justifyContent: 'space-between',
+							alignItems: 'center', borderTopWidth: 1,
+							borderColor: '#eee', padding: 10
+						}}>
+							<View style={styles.teacherRow}>
+								<Image source={{ uri: avatarUri, cache: 'force-cache' }} style={styles.avatar} />
+								<View>
+									<CText fontStyle="SB" fontSize={15}>{teacher.name}</CText>
+									<CText fontSize={13}>{teacher.email}</CText>
+								</View>
+							</View>
+							<View style={styles.teacherRow}>
+								<TouchableOpacity
+									style={styles.viewButton}
+									onPress={() =>
+										navigation.navigate('ClassDetails', {
+											ClassStudentID: item.ClassStudentID,
+											ClassID: item?.ClassID,
+										})
+									}>
+									<CText fontStyle="SB" fontSize={14} style={{ color: theme.colors.light.primary }}>
+										View
+									</CText>
+								</TouchableOpacity>
+							</View>
 						</View>
-						<TouchableOpacity
-							style={styles.viewBtn}
-							onPress={() =>
-								navigation.navigate('ClassDetails', {
-									ClassStudentID: item.ClassStudentID,
-									ClassID: classInfo?.ClassID,
-								})
-							}
-						>
-							<CText fontSize={14} fontStyle="SB" style={{ color: '#fff', padding: 5 }}>
-								View Class
-							</CText>
-						</TouchableOpacity>
 					</View>
 				)}
 			</View>
@@ -250,6 +258,16 @@ const ClassesScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
+	teacherRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	viewButton: {
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 8,
+		backgroundColor: theme.colors.light.primary + '33',
+	},
 	container: {
 		flex: 1,
 		paddingHorizontal: 12,

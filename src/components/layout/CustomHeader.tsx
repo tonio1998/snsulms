@@ -75,8 +75,6 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
                 translucent
                 backgroundColor="transparent"
             />
-
-            {/* Gradient Background */}
             <LinearGradient
                 colors={[theme.colors.light.primary, 'transparent']}
                 start={{ x: 0.5, y: 0 }}
@@ -102,9 +100,7 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
                 ))}
             </LinearGradient>
 
-            {/* Header Content */}
             <View style={styles.header}>
-                {/* Left: App name / Custom leftContent */}
                 <View style={styles.leftSection}>
                     <CText
                         fontSize={26}
@@ -118,7 +114,6 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
                     {leftContent}
                 </View>
 
-                {/* Right: Academic year + Avatar */}
                 <View style={styles.rightSection}>
                     <TouchableOpacity
                         onPress={handleAcad}
@@ -208,7 +203,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 6,
         borderRadius: 8,
-        backgroundColor: 'rgba(255,255,255,0.18)',
+        backgroundColor: 'rgba(255,255,255,0.2)',
         marginRight: 12,
     },
     acadText: {
