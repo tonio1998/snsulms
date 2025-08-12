@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
 	View,
 	Text,
@@ -11,6 +11,7 @@ import {
 	Pressable,
 	ScrollView,
 	Linking,
+	RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -18,6 +19,7 @@ import { useAuth } from "../context/AuthContext.tsx";
 import { format, parseISO } from 'date-fns';
 import {globalStyles} from "../theme/styles.ts";
 import CustomHeader from "../components/layout/CustomHeader.tsx";
+import {theme} from "../theme";
 
 LocaleConfig.locales['en'] = {
 	monthNames: [
@@ -53,33 +55,56 @@ const fetchGoogleCalendarEvents = async (accessToken) => {
 	}
 };
 
+const STORAGE_KEY_PREFIX = 'cachedGoogleCalendarEvents_';
+
 const CalendarScreen = () => {
 	const [events, setEvents] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [refreshing, setRefreshing] = useState(false);
 	const [selectedDate, setSelectedDate] = useState(null);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [selectedEvent, setSelectedEvent] = useState(null);
 	const { user } = useAuth();
 	const email = user?.email;
 
-	useEffect(() => {
-		const loadEvents = async () => {
-			setLoading(true);
-			try {
-				const accessToken = await AsyncStorage.getItem(`googleAccessToken${email}`);
-				if (!accessToken) throw new Error('No Google access token found');
+	const loadEvents = useCallback(async () => {
+		setLoading(true);
 
-				const calendarEvents = await fetchGoogleCalendarEvents(accessToken);
-				setEvents(calendarEvents);
-			} catch (error) {
-				console.error(error);
-			} finally {
-				setLoading(false);
+		try {
+			const cachedEventsJSON = await AsyncStorage.getItem(STORAGE_KEY_PREFIX + email);
+			if (cachedEventsJSON) {
+				const cachedEvents = JSON.parse(cachedEventsJSON);
+				setEvents(cachedEvents);
 			}
-		};
 
+			const accessToken = await AsyncStorage.getItem(`googleAccessToken${email}`);
+			if (!accessToken) throw new Error('No Google access token found');
+
+			const calendarEvents = await fetchGoogleCalendarEvents(accessToken);
+			setEvents(calendarEvents);
+
+			await AsyncStorage.setItem(STORAGE_KEY_PREFIX + email, JSON.stringify(calendarEvents));
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setLoading(false);
+		}
+	}, [email]);
+
+	useEffect(() => {
 		loadEvents();
-	}, []);
+	}, [loadEvents]);
+
+	const onRefresh = async () => {
+		setRefreshing(true);
+		try {
+			await loadEvents();
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setRefreshing(false);
+		}
+	};
 
 	const markedDates = events.reduce((acc, event) => {
 		const dateStr = event.start?.date || event.start?.dateTime?.substring(0, 10);
@@ -180,6 +205,9 @@ const CalendarScreen = () => {
 							keyExtractor={(item) => item.id}
 							renderItem={renderEventItem}
 							contentContainerStyle={{ paddingBottom: 140 }}
+							refreshControl={
+								<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#004D1A']} />
+							}
 						/>
 
 						<Modal
@@ -243,26 +271,28 @@ const styles = StyleSheet.create({
 	},
 	calendar: {
 		marginTop: 10,
-		borderRadius: 12,
 		marginHorizontal: 10,
-		elevation: 3,
-		backgroundColor: '#fff',
+		borderRadius: 8,
+		overflow: 'hidden',
 	},
 	noEventsText: {
-		marginTop: 24,
 		textAlign: 'center',
-		fontStyle: 'italic',
-		color: '#666',
 		fontSize: 16,
+		color: '#444',
+		padding: 10,
 	},
 	eventItem: {
-		backgroundColor: '#F9F9F9',
-		marginHorizontal: 16,
+		padding: 14,
+		borderBottomWidth: 1,
+		borderBottomColor: '#eee',
+		backgroundColor: '#fff',
+		marginHorizontal: 10,
 		marginVertical: 6,
-		paddingVertical: 14,
-		paddingHorizontal: 20,
-		borderRadius: 10,
-		elevation: 1,
+		borderRadius: 6,
+		shadowColor: '#000',
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 2,
 	},
 	eventTitleWrapper: {
 		flexDirection: 'row',
@@ -270,89 +300,63 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	eventTitle: {
+		fontWeight: 'bold',
 		fontSize: 16,
-		fontWeight: '600',
 		color: '#004D1A',
-		flexShrink: 1,
+		maxWidth: '80%',
 	},
 	timeBadge: {
 		backgroundColor: '#FFD04C',
-		paddingHorizontal: 10,
-		paddingVertical: 4,
-		borderRadius: 16,
-		minWidth: 70,
-		alignItems: 'center',
+		borderRadius: 12,
+		paddingVertical: 2,
+		paddingHorizontal: 8,
 	},
 	timeBadgeText: {
 		color: '#004D1A',
 		fontWeight: '700',
-		fontSize: 13,
-	},
-	modalOverlay: {
-		flex: 1,
-		backgroundColor: 'rgba(0,0,0,0.38)',
-		justifyContent: 'center',
-		paddingHorizontal: 24,
-	},
-	modalContent: {
-		backgroundColor: '#fff',
-		borderRadius: 16,
-		maxHeight: '75%',
-		paddingVertical: 24,
-		paddingHorizontal: 24,
-		elevation: 10,
+		fontSize: 12,
 	},
 	modalTitle: {
-		fontSize: 22,
-		fontWeight: '700',
-		marginBottom: 12,
+		fontWeight: 'bold',
+		fontSize: 20,
 		color: '#004D1A',
+		marginBottom: 12,
 	},
 	modalTime: {
-		fontSize: 15,
-		marginBottom: 16,
-		color: '#444',
+		fontSize: 14,
+		color: '#333',
+		marginBottom: 6,
 	},
 	modalLocation: {
 		fontSize: 14,
-		marginBottom: 14,
-		fontStyle: 'italic',
-		color: '#666',
+		color: '#333',
+		marginBottom: 6,
 	},
 	modalDescription: {
 		fontSize: 14,
-		lineHeight: 20,
 		color: '#555',
+		marginBottom: 12,
 	},
 	joinButton: {
-		marginTop: 26,
-		backgroundColor: '#004D1A',
-		paddingVertical: 14,
-		borderRadius: 28,
+		backgroundColor: '#FFD04C',
+		paddingVertical: 12,
+		borderRadius: 8,
 		alignItems: 'center',
-		elevation: 4,
-		shadowColor: '#000',
-		shadowOpacity: 0.2,
-		shadowRadius: 6,
-		shadowOffset: { width: 0, height: 3 },
+		marginVertical: 10,
 	},
 	joinButtonText: {
-		color: '#FFD04C',
-		fontWeight: '800',
-		fontSize: 18,
-		letterSpacing: 0.5,
+		color: '#004D1A',
+		fontWeight: 'bold',
+		fontSize: 16,
 	},
 	closeButton: {
-		marginTop: 20,
-		backgroundColor: '#f0f0f0',
-		borderRadius: 16,
-		paddingVertical: 14,
+		paddingVertical: 12,
 		alignItems: 'center',
 	},
 	closeButtonText: {
+		color: '#004D1A',
 		fontSize: 16,
 		fontWeight: '700',
-		color: '#444',
 	},
 });
 
