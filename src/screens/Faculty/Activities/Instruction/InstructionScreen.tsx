@@ -30,6 +30,7 @@ import { getFileSize, formatNumber } from '../../../../utils/format.ts';
 import { viewFile } from '../../../../utils/viewFile.ts';
 import { useAlert } from '../../../../components/CAlert.tsx';
 import { useFacActivity } from '../../../../context/FacSharedActivityContext.tsx';
+import CButton from "../../../../components/buttons/CButton.tsx";
 
 const InstructionScreen = ({ navigation, route }) => {
 	const { activity } = useFacActivity();
@@ -160,6 +161,7 @@ const InstructionScreen = ({ navigation, route }) => {
 			</View>
 
 			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Attachments</CText>
+
 		</>
 	);
 

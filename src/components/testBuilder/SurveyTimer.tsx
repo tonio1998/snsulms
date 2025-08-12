@@ -1,77 +1,112 @@
-import React, { useEffect, useState, useRef } from "react";
-import { View } from "react-native";
+import { useEffect, useState, useRef, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CText } from "../common/CText.tsx";
 import { updateSurveyTimer } from "../../api/testBuilder/testbuilderApi.ts";
 
-export default function SurveyTimer({ response, endSurvey, onTimeUpdate }) {
+export function useSurveyTimer(response, endSurvey) {
     const [secondsLeft, setSecondsLeft] = useState(0);
-    const lastSentRef = useRef(null);
+    const secondsRef = useRef(secondsLeft);
+    secondsRef.current = secondsLeft; // keep ref synced with state
+
     const storageKey = `surveyTimer_${response?.id}`;
+    const debounceTimeout = useRef(null);
 
+    // Format seconds into H:MM:SS or MM:SS
     const formatTime = (totalSeconds) => {
-        const minutes = Math.floor(totalSeconds / 60);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
-        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
+                .toString()
+                .padStart(2, "0")}`;
+        } else {
+            return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+        }
     };
 
-    const formatMinutesDecimal = (seconds) => {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return parseFloat(`${m}.${s.toString().padStart(2, "0")}`);
+    // Debounced API call to update backend timer
+    const debouncedUpdateTimer = (id, seconds) => {
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+
+        debounceTimeout.current = setTimeout(() => {
+            updateSurveyTimer(id, seconds);
+        }, 2000);
     };
 
-    useEffect(() => {
-        AsyncStorage.removeItem(storageKey)
-    }, []);
-
+    // Load initial timer from AsyncStorage or response.RemainingTime
     useEffect(() => {
         let mounted = true;
+
         (async () => {
-            const saved = await AsyncStorage.getItem(storageKey);
-            if (mounted) {
-                const initialSeconds = saved !== null ? parseInt(saved, 10) : (response?.RemainingTime || 0) * 60;
-                setSecondsLeft(initialSeconds);
-                if (onTimeUpdate) onTimeUpdate(initialSeconds);  // report initial time
+            try {
+                const saved = await AsyncStorage.getItem(storageKey);
+                const savedSeconds = saved ? parseInt(saved, 10) : NaN;
+
+                let initialSeconds = response?.RemainingTime
+                    ? parseInt(response.RemainingTime, 10)
+                    : 0;
+
+                if (
+                    !isNaN(savedSeconds) &&
+                    savedSeconds > 0 &&
+                    savedSeconds < initialSeconds
+                ) {
+                    initialSeconds = savedSeconds;
+                }
+
+                if (mounted) {
+                    setSecondsLeft(initialSeconds);
+                }
+            } catch (err) {
+                console.error("Error loading timer:", err);
             }
         })();
+
         return () => {
             mounted = false;
         };
-    }, [storageKey, onTimeUpdate, response]);
+    }, [storageKey, response?.id, response?.RemainingTime]);
 
+    // Countdown interval — runs once, uses ref to get latest secondsLeft
     useEffect(() => {
-        if (secondsLeft > 0 && !response?.TimeEnded) {
-            const interval = setInterval(() => {
-                setSecondsLeft((prev) => {
-                    const newTime = prev - 1;
-                    AsyncStorage.setItem(storageKey, String(newTime));
+        if (secondsLeft <= 0) return;
 
-                    const decimalTime = formatMinutesDecimal(newTime);
-                    if (onTimeUpdate) onTimeUpdate(decimalTime); // send updated timeR
-                    if (decimalTime !== lastSentRef.current) {
-                        lastSentRef.current = decimalTime;
-                        updateSurveyTimer(response?.id, decimalTime);
-                    }
+        const intervalId = setInterval(() => {
+            if (secondsRef.current <= 1) {
+                clearInterval(intervalId);
+                if (endSurvey) endSurvey(response?.id);
+                setSecondsLeft(0);
+            } else {
+                setSecondsLeft((prev) => prev - 1);
+            }
+        }, 1000);
 
-                    if (newTime <= 0) {
-                        clearInterval(interval);
-                        // endSurvey(response?.id);
-                        return 0;
-                    }
-                    return newTime;
-                });
-            }, 1000);
+        return () => clearInterval(intervalId);
+    }, [secondsLeft, endSurvey, response?.id]);
 
-            return () => clearInterval(interval);
+    // Save current secondsLeft to AsyncStorage
+    useEffect(() => {
+        AsyncStorage.setItem(storageKey, String(secondsLeft)).catch((err) =>
+            console.error("Error saving timer:", err)
+        );
+    }, [secondsLeft, storageKey]);
+
+    // Call debounced API update whenever secondsLeft changes
+    useEffect(() => {
+        if (secondsLeft > 0 && response?.id) {
+            debouncedUpdateTimer(response.id, secondsLeft);
         }
-    }, [secondsLeft, storageKey, onTimeUpdate, response, endSurvey]);
+    }, [secondsLeft, response?.id]);
 
-    return (
-        <View>
-            <CText fontStyle="SB" fontSize={18}>
-                {formatTime(secondsLeft)}
-            </CText>
-        </View>
+    const formattedTime = useMemo(() => formatTime(secondsLeft), [secondsLeft]);
+
+    // Memoize returned object to prevent unnecessary re-renders
+    return useMemo(
+        () => ({
+            formattedTime,
+            seconds: secondsLeft,
+        }),
+        [formattedTime, secondsLeft]
     );
 }

@@ -76,11 +76,18 @@ export const getAddressFromCoords = async (latitude, longitude) => {
   }
 };
 
-export const formatTime = (minutes) => {
-  const totalSeconds = Math.max(minutes * 60, 0);
-  const mm = Math.floor(totalSeconds / 60);
-  const ss = totalSeconds % 60;
-  return `${mm}:${ss.toString().padStart(2, "0")}`;
+export const formatTime = (totalSeconds) => {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
+        .toString()
+        .padStart(2, "0")}`;
+  } else {
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  }
 };
 
 export const formatMMSS = (seconds) => {
