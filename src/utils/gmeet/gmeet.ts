@@ -19,7 +19,8 @@ export const createGoogleMeet = async ({
                                            title = 'SNSU Class Meeting',
                                            ClassID,
                                            isScheduled = false,
-                                           dateTime = null
+                                           dateTime = null,
+                                           attendees = [],
                                        }) => {
     try {
         const accessToken = await getFreshAccessToken();
@@ -38,6 +39,7 @@ export const createGoogleMeet = async ({
                 dateTime: endTime.toISOString(),
                 timeZone: 'Asia/Manila',
             },
+            attendees: attendees.map(email => ({ email })),
             conferenceData: {
                 createRequest: {
                     requestId: 'snsu-meet-' + new Date().getTime(),

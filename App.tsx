@@ -185,7 +185,9 @@ const AppNavigator = () => {
             <SafeAreaProvider>
                 <AccessProvider>
                     <NavigationContainer ref={navigationRef} onReady={tryFlushPendingNavigation}>
-                        <Stack.Navigator screenOptions={{ headerShown: false }}>
+                        <Stack.Navigator screenOptions={{
+                            headerShown: false,
+                        }}>
                             <Stack.Screen name="MainTabs" component={BottomTabNav} />
                             <Stack.Screen name="SurveyTest" component={SurveyBottomTabNav} />
                             <Stack.Screen name="AddQuestionScreen" component={AddQuestionScreen} />

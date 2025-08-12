@@ -28,7 +28,6 @@ const StatusIndicator = () => {
 	}
 
 	if (connectionType === 'cellular') {
-		// You can optionally warn if cellular, maybe consider this as "slow"
 		return (
 			<View style={styles.statusContainer}>
 				<Text style={[styles.statusText, styles.slowText]}>

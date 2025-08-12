@@ -34,6 +34,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { getAcademicInfo } from '../utils/getAcademicInfo';
 import { loadDashboardCache, saveDashboardCache } from "../utils/cache/dashboardCache.ts";
 import Greeting from "../components/Greeting.tsx";
+import CustomHomeHeader from '../components/layout/CustomHomeHeader.tsx';
+import LinkScroll from "../components/LinkScroll.tsx";
 const DASHBOARD_CACHE_KEY = 'dashboard_data';
 
 const HomeScreen = () => {
@@ -274,27 +276,6 @@ const HomeScreen = () => {
 		);
 	};
 
-	async function openApp(url: string, fallbackUrl?: string) {
-		try {
-			const supported = await Linking.canOpenURL(url);
-			if (supported) {
-				await Linking.openURL(url);
-			} else if (fallbackUrl) {
-				Alert.alert(
-					'App not found',
-					'App is not installed. Opening website instead.',
-					[
-						{ text: 'OK', onPress: () => Linking.openURL(fallbackUrl) }
-					]
-				);
-			} else {
-				Alert.alert('Cannot open link', 'No fallback URL available.');
-			}
-		} catch (error) {
-			Alert.alert('Error', 'An unexpected error occurred.');
-		}
-	}
-
 
 	const buttons = [
 		{ url: 'org.nativescript.snsu://', fallbackUrl: 'https://play.google.com/store/apps/details?id=org.nativescript.snsu', iconSet: 'Ionicons', iconName: 'link-outline', name: 'SNSU' },
@@ -307,8 +288,8 @@ const HomeScreen = () => {
 
 	return (
 		<>
-			<CustomHeader />
-			<SafeAreaView style={globalStyles.safeArea}>
+			<CustomHomeHeader />
+			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 0}]}>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					contentContainerStyle={{ paddingBottom: 100 }}
@@ -316,41 +297,24 @@ const HomeScreen = () => {
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}
 				>
+					<Text>{'\n\n\n\n\n'}</Text>
 					<View style={styles.welcomeContainer}>
-						<Greeting user={user} />
 						{lastUpdated && (
 							<View style={styles.updatedBadge}>
 								<Icon
 									name="time-outline"
 									size={14}
-									color={theme.colors.light.primary}
+									color={theme.colors.light.card}
 									style={{ marginRight: 4 }}
 								/>
 								<CText fontStyle={'SB'} style={styles.updatedText}>
-									{lastUpdated}
+									Last Update: {lastUpdated}
 								</CText>
 							</View>
 						)}
 
-						<View style={{marginTop: 20}}>
-							{/*<View>*/}
-							{/*	<CText fontStyle={'SB'} fontSize={20}>Quick Links</CText>*/}
-							{/*</View>*/}
-							<View style={styles.link_container}>
-								{buttons.map(({ url, fallbackUrl, iconSet, iconName, name }) => {
-									const IconComponent = iconSet === 'Ionicons' ? Icon : FontAwesome;
-									return (
-										<TouchableOpacity
-											key={name}
-											style={styles.link_button}
-											onPress={() => openApp(url, fallbackUrl)}
-										>
-											<IconComponent name={iconName} size={24} color="#004D1A"/>
-											<Text numberOfLines={1} style={styles.link_button_text}>{name}</Text>
-										</TouchableOpacity>
-									);
-								})}
-							</View>
+						<View style={{ flex: 1, paddingTop: 10 }}>
+							<LinkScroll buttons={buttons} />
 						</View>
 					</View>
 
@@ -392,54 +356,15 @@ const ActivityItem = ({ title, date, student, isDue }: any) => (
 );
 
 const styles = StyleSheet.create({
-	link_container: {
-		flexDirection: 'row',
-		flexWrap: 'wrap',
-		justifyContent: 'flex-start',
-		marginTop: 10,
-		paddingHorizontal: 10,
-		padding: 15,
-		backgroundColor: theme.colors.light.card,
-		borderRadius: 8,
-	},
-
-	link_button: {
-		alignItems: 'center',
-		width: '22%',
-		borderRadius: 8,
-		margin: '1%',
-		padding: 4,
-	},
-
-	icon_box: {
-		backgroundColor: theme.colors.light.card,
-		width: 30,
-		height: 30,
-		borderRadius: 12,
-		alignItems: 'center',
-		justifyContent: 'center',
-		marginBottom: 6,
-
-	},
-
-	link_button_text: {
-		color: '#004D1A',
-		fontSize: 13,
-		fontWeight: '600',
-		textAlign: 'center',
-		marginTop: 4,
-	},
-
-
 	welcomeContainer: {
 		paddingHorizontal: 16,
-		marginTop: 8,
-		marginBottom: 12,
+		marginTop: 15,
+		marginBottom: 10,
 	},
 	updatedBadge: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		backgroundColor: theme.colors.light.primary_soft + '19',
+		backgroundColor: theme.colors.light.card + '19',
 		paddingHorizontal: 8,
 		paddingVertical: 4,
 		borderRadius: 50,
@@ -448,7 +373,7 @@ const styles = StyleSheet.create({
 	},
 	updatedText: {
 		fontSize: 12,
-		color: theme.colors.light.primary,
+		color: theme.colors.light.card,
 	},
 	noDataContainer: {
 		alignItems: 'center',

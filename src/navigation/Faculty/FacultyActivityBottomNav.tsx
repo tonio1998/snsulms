@@ -35,6 +35,7 @@ export default function FacultyActivitySwipeTabs({ route }) {
 		<FacActivityProvider ActivityID={ActivityID}>
 			<Tab.Navigator
 				tabBarPosition="bottom"
+				swipeEnabled={true}
 				screenOptions={({ route }) => ({
 					tabBarIcon: ({ focused, color }) => {
 						let iconName = 'ellipse-outline';
@@ -66,7 +67,10 @@ export default function FacultyActivitySwipeTabs({ route }) {
 					tabBarActiveTintColor: theme.colors.light.primary,
 					tabBarInactiveTintColor: '#9F9F9F',
 					tabBarIndicatorStyle: {
-						backgroundColor: theme.colors.light.primary,
+						backgroundColor: theme.colors.light.primary + '55',
+						top: 5,
+						padding: 2,
+						borderRadius: 10,
 					},
 					tabBarStyle: {
 						backgroundColor: theme.colors.light.card,

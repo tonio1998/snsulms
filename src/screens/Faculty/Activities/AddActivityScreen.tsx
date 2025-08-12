@@ -7,7 +7,7 @@ import {
     Alert,
     StyleSheet,
     Switch,
-    Platform,
+    Platform, ScrollView,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLoading } from '../../../context/LoadingContext.tsx';
@@ -155,119 +155,155 @@ const AddActivityScreen = ({ navigation, route }) => {
         <>
             <BackHeader title="Add Activity" />
             <SafeAreaView style={globalStyles.safeArea}>
-                <View style={styles.container}>
-                    <CText fontStyle="SB" style={styles.label}>Title</CText>
-                    <TextInput
-                        style={styles.input}
-                        value={form.Title}
-                        onChangeText={(text) => handleChange('Title', text)}
-                    />
+                <ScrollView>
+                    <View style={styles.container}>
+                        <CText fontStyle="SB" style={styles.label}>Title</CText>
+                        <TextInput
+                            style={styles.input}
+                            value={form.Title}
+                            onChangeText={(text) => handleChange('Title', text)}
+                        />
 
-                    <CText fontStyle="SB" style={styles.label}>Instruction (Optional)</CText>
-                    <TextInput
-                        style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
-                        multiline
-                        value={form.Instruction}
-                        onChangeText={(text) => handleChange('Instruction', text)}
-                    />
+                        <CText fontStyle="SB" style={styles.label}>Instruction (Optional)</CText>
+                        <TextInput
+                            style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                            multiline
+                            value={form.Instruction}
+                            onChangeText={(text) => handleChange('Instruction', text)}
+                        />
 
-                    <CText fontStyle="SB" style={styles.label}>Points</CText>
-                    <TextInput
-                        style={styles.input}
-                        value={form.Points?.toString() || ''}
-                        onChangeText={(text) => handleChange('Points', text)}
-                        keyboardType="numeric"
-                    />
+                        <CText fontStyle="SB" style={styles.label}>Points</CText>
+                        <TextInput
+                            style={styles.input}
+                            value={form.Points?.toString() || ''}
+                            onChangeText={(text) => handleChange('Points', text)}
+                            keyboardType="numeric"
+                        />
 
-                    {FormID && (
-                        <>
-                            <CText fontStyle="SB" style={styles.label}>Duration (in minutes)</CText>
-                            <TextInput
-                                style={styles.input}
-                                value={form.Duration?.toString() || ''}
-                                onChangeText={(text) => handleChange('Duration', text)}
-                                keyboardType="numeric"
-                            />
-                        </>
-                    )}
+                        {FormID && (
+                            <>
+                                <CText fontStyle="SB" style={styles.label}>Duration (in minutes)</CText>
+                                <TextInput
+                                    style={styles.input}
+                                    value={form.Duration?.toString() || ''}
+                                    onChangeText={(text) => handleChange('Duration', text)}
+                                    keyboardType="numeric"
+                                />
+                            </>
+                        )}
 
-                    <CText fontStyle="SB" style={styles.label}>Due Date & Time (Optional)</CText>
+                        <CText fontStyle="SB" style={styles.label}>Due Date & Time (Optional)</CText>
 
-                    {form.DueDate ? (
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {form.DueDate ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <TouchableOpacity
+                                    style={[styles.input, { flex: 1 }]}
+                                    onPress={() => setShowDatePicker(true)}
+                                >
+                                    <CText fontSize={16}>{form.DueDate.toLocaleString()}</CText>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => handleChange('DueDate', null)}
+                                    style={{
+                                        marginLeft: 10,
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 12,
+                                        backgroundColor: '#ccc',
+                                        borderRadius: 6,
+                                    }}
+                                >
+                                    <CText fontSize={14} fontStyle="SB" style={{ color: '#555' }}>Clear</CText>
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
                             <TouchableOpacity
-                                style={[styles.input, { flex: 1 }]}
+                                style={styles.input}
                                 onPress={() => setShowDatePicker(true)}
                             >
-                                <CText fontSize={16}>{form.DueDate.toLocaleString()}</CText>
+                                <CText fontSize={16} style={{ color: '#aaa' }}>Set Due Date</CText>
                             </TouchableOpacity>
+                        )}
 
-                            <TouchableOpacity
-                                onPress={() => handleChange('DueDate', null)}
-                                style={{
-                                    marginLeft: 10,
-                                    paddingVertical: 10,
-                                    paddingHorizontal: 12,
-                                    backgroundColor: '#ccc',
-                                    borderRadius: 6,
-                                }}
-                            >
-                                <CText fontSize={14} fontStyle="SB" style={{ color: '#555' }}>Clear</CText>
-                            </TouchableOpacity>
+                        {showDatePicker && (
+                            <DateTimePicker
+                                value={form.DueDate || new Date()}
+                                mode="date"
+                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                onChange={handleDateChange}
+                                minimumDate={new Date()}
+                            />
+                        )}
+
+                        {showTimePicker && (
+                            <DateTimePicker
+                                value={form.DueDate || new Date()}
+                                mode="time"
+                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                onChange={handleTimeChange}
+                            />
+                        )}
+
+                        <CText fontStyle="SB" style={styles.label}>Strict Late</CText>
+                        <View style={styles.switchRow}>
+                            <Switch
+                                value={form.StrictLate === 1}
+                                onValueChange={(val) => handleChange('StrictLate', val ? 1 : 0)}
+                                trackColor={{ false: '#ccc', true: theme.colors.light.primary }}
+                                thumbColor={form.StrictLate === 1 ? theme.colors.light.primary : '#f4f3f4'}
+                            />
+                            <CText fontStyle="SB" fontSize={16} style={styles.switchLabel}>
+                                {form.StrictLate === 1 ? 'Enabled' : 'Disabled'}
+                            </CText>
                         </View>
-                    ) : (
-                        <TouchableOpacity
-                            style={styles.input}
-                            onPress={() => setShowDatePicker(true)}
-                        >
-                            <CText fontSize={16} style={{ color: '#aaa' }}>Set Due Date</CText>
-                        </TouchableOpacity>
-                    )}
-
-                    {showDatePicker && (
-                        <DateTimePicker
-                            value={form.DueDate || new Date()}
-                            mode="date"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                            onChange={handleDateChange}
-                            minimumDate={new Date()}
-                        />
-                    )}
-
-                    {showTimePicker && (
-                        <DateTimePicker
-                            value={form.DueDate || new Date()}
-                            mode="time"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                            onChange={handleTimeChange}
-                        />
-                    )}
-
-                    <CText fontStyle="SB" style={styles.label}>Strict Late</CText>
-                    <View style={styles.switchRow}>
-                        <Switch
-                            value={form.StrictLate === 1}
-                            onValueChange={(val) => handleChange('StrictLate', val ? 1 : 0)}
-                            trackColor={{ false: '#ccc', true: theme.colors.light.primary }}
-                            thumbColor={form.StrictLate === 1 ? theme.colors.light.primary : '#f4f3f4'}
-                        />
-                        <CText fontStyle="SB" fontSize={16} style={styles.switchLabel}>
-                            {form.StrictLate === 1 ? 'Enabled' : 'Disabled'}
-                        </CText>
                     </View>
+                </ScrollView>
+                <View style={styles.bottomControl}>
+                    <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
+                        <CText fontStyle="SB" fontSize={16} style={styles.cancelText}>
+                            Cancel
+                        </CText>
+                    </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                        <CText fontStyle="SB" fontSize={16} style={{ color: '#fff' }}>
-                            Add Activity
+                    <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+                        <CText fontStyle="SB" fontSize={16} style={styles.submitText}>
+                            Submit
                         </CText>
                     </TouchableOpacity>
                 </View>
+
             </SafeAreaView>
         </>
     );
 };
 
 const styles = StyleSheet.create({
+    bottomControl: {
+        flexDirection: 'row',
+        padding: 20,
+        gap: 10,
+    },
+    cancelBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        backgroundColor: '#aaa',
+        alignItems: 'center',
+    },
+    cancelText: {
+        color: '#fff',
+    },
+    submitBtn: {
+        flex: 2,
+        paddingVertical: 12,
+        borderRadius: 8,
+        backgroundColor: theme.colors.light.primary,
+        alignItems: 'center',
+    },
+    submitText: {
+        color: '#fff',
+    },
+
     container: {
         flex: 1,
         paddingHorizontal: 20,

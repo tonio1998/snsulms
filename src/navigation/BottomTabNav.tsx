@@ -18,21 +18,24 @@ import { CText } from '../components/common/CText.tsx';
 const Tab = createMaterialTopTabNavigator();
 
 const currentColors = theme.colors.light;
-
+const numberOfTabs = 4;
 export default function BottomSwipeTabs() {
 	const { hasRole } = useAccess();
 	const { user } = useAuth();
-
+	const tabWidth = Dimensions.get('window').width / numberOfTabs;
 	return (
 		<Tab.Navigator
 			initialRouteName="Home"
 			tabBarPosition="bottom"
 			screenOptions={({ route }) => ({
-				swipeEnabled: false,
+				swipeEnabled: true,
 				tabBarShowIcon: true,
 				tabBarPressColor: currentColors.primary,
 				tabBarIndicatorStyle: {
-					backgroundColor: theme.colors.light.primary,
+					backgroundColor: theme.colors.light.primary + '55',
+					top: 5,
+					padding: 2,
+					borderRadius: 10,
 				},
 				tabBarIcon: ({ focused, color }) => {
 					let iconName = 'ellipse-outline';

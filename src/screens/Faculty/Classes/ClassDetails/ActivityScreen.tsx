@@ -230,16 +230,13 @@ const ActivityScreen = ({ navigation }) => {
 				</TouchableOpacity>
 				{showModal && (
 					<Modal transparent visible={showModal} animationType="none">
-						<TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeModal} />
-						<Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
-							<TouchableOpacity style={styles.option} onPress={() => handleOption('2')}>
-								<CText fontStyle="SB" fontSize={16}>Assignment</CText>
+						<TouchableOpacity style={globalStyles.overlay} activeOpacity={1} onPress={closeModal} />
+						<Animated.View style={[globalStyles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
+							<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('2')}>
+								<CText fontStyle="SB" fontSize={15}>Assignment</CText>
 							</TouchableOpacity>
-							<TouchableOpacity style={styles.option} onPress={() => handleOption('3')}>
-								<CText fontStyle="SB" fontSize={16}>Quiz/Exam</CText>
-							</TouchableOpacity>
-							<TouchableOpacity style={styles.cancel} onPress={closeModal}>
-								<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>
+							<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('3')}>
+								<CText fontStyle="SB" fontSize={15}>Quiz/Exam</CText>
 							</TouchableOpacity>
 						</Animated.View>
 					</Modal>

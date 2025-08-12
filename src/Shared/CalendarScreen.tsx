@@ -17,9 +17,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useAuth } from "../context/AuthContext.tsx";
 import { format, parseISO } from 'date-fns';
-import {globalStyles} from "../theme/styles.ts";
+import { globalStyles } from "../theme/styles.ts";
 import CustomHeader from "../components/layout/CustomHeader.tsx";
-import {theme} from "../theme";
+import { theme } from "../theme";
+import CustomHeader2 from "../components/layout/CustomHeader2.tsx";
 
 LocaleConfig.locales['en'] = {
 	monthNames: [
@@ -32,30 +33,47 @@ LocaleConfig.locales['en'] = {
 };
 LocaleConfig.defaultLocale = 'en';
 
+const STORAGE_KEY_PREFIX = 'cachedGoogleCalendarEvents_';
+
+// Combined fetch for primary calendar + Philippine holidays
 const fetchGoogleCalendarEvents = async (accessToken) => {
-	try {
+	const fetchCalendarEvents = async (calendarId) => {
 		const response = await fetch(
-			'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+			`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
 			{
-				headers: {
-					Authorization: `Bearer ${accessToken}`,
-				},
+				headers: { Authorization: `Bearer ${accessToken}` },
 			}
 		);
+		if (!response.ok) throw new Error(`Failed to fetch events from ${calendarId}`);
+		const data = await response.json();
+		return data.items || [];
+	};
 
-		if (!response.ok) {
-			throw new Error('Failed to fetch calendar events');
+	try {
+		const primaryEvents = await fetchCalendarEvents('primary');
+
+		const holidayCalendarId = 'en.ph#holiday@group.v.calendar.google.com';
+		let holidayEvents = [];
+
+		try {
+			holidayEvents = await fetchCalendarEvents(holidayCalendarId);
+		} catch (err) {
+			console.warn('Could not fetch holiday events:', err.message);
 		}
 
-		const data = await response.json();
-		return data.items;
+		const allEvents = [...primaryEvents, ...holidayEvents];
+		allEvents.sort((a, b) => {
+			const aDate = a.start?.dateTime || a.start?.date || '';
+			const bDate = b.start?.dateTime || b.start?.date || '';
+			return aDate.localeCompare(bDate);
+		});
+
+		return allEvents;
 	} catch (error) {
 		console.error('Error fetching Google Calendar events:', error);
 		return [];
 	}
 };
-
-const STORAGE_KEY_PREFIX = 'cachedGoogleCalendarEvents_';
 
 const CalendarScreen = () => {
 	const [events, setEvents] = useState([]);
@@ -153,25 +171,58 @@ const CalendarScreen = () => {
 
 	const meetingLink = getMeetingLink(selectedEvent);
 
-	const renderEventItem = ({ item }) => (
-		<TouchableOpacity style={styles.eventItem} onPress={() => openEventModal(item)} activeOpacity={0.7}>
-			<View style={styles.eventTitleWrapper}>
-				<Text style={styles.eventTitle}>{item.summary || '(No Title)'}</Text>
-				<View style={styles.timeBadge}>
-					<Text style={styles.timeBadgeText}>
-						{item.start?.dateTime
-							? format(parseISO(item.start.dateTime), 'hh:mm a')
-							: 'All day'}
+	const renderEventItem = ({ item }) => {
+		const isCancelled = item.status === 'cancelled';
+		const organizerName = item.organizer?.displayName || item.organizer?.email || 'Unknown organizer';
+		const creatorName = item.creator && item.creator !== item.organizer
+			? (item.creator.displayName || item.creator.email)
+			: null;
+		const attendeesCount = item.attendees?.length || 0;
+
+		return (
+			<TouchableOpacity
+				style={[styles.eventItem, isCancelled && styles.cancelledEvent]}
+				onPress={() => openEventModal(item)}
+				activeOpacity={0.7}
+			>
+				<View style={styles.eventTitleWrapper}>
+					<Text style={[styles.eventTitle, isCancelled && styles.cancelledText]}>
+						{item.summary || '(No Title)'}
 					</Text>
+					<View style={styles.timeBadge}>
+						<Text style={styles.timeBadgeText}>
+							{item.start?.dateTime
+								? format(parseISO(item.start.dateTime), 'hh:mm a')
+								: 'All day'}
+						</Text>
+					</View>
 				</View>
-			</View>
-		</TouchableOpacity>
-	);
+
+				<Text style={styles.eventOrganizer}>👤 Organizer: {organizerName}</Text>
+
+				{creatorName && (
+					<Text style={styles.eventCreator}>✏️ Created by: {creatorName}</Text>
+				)}
+
+				{item.location && (
+					<Text style={styles.eventLocation}>📍 {item.location}</Text>
+				)}
+
+				{attendeesCount > 0 && (
+					<Text style={styles.eventAttendees}>👥 Attendees: {attendeesCount}</Text>
+				)}
+
+				{isCancelled && (
+					<Text style={styles.eventCancelled}>⚠️ This event was cancelled</Text>
+				)}
+			</TouchableOpacity>
+		);
+	};
 
 	return (
 		<>
-			<CustomHeader />
-			<SafeAreaView style={globalStyles.safeArea}>
+			<CustomHeader2 />
+			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 120}]}>
 				{loading ? (
 					<ActivityIndicator size="large" color="#004D1A" style={{ marginTop: 40 }} />
 				) : (
@@ -316,6 +367,40 @@ const styles = StyleSheet.create({
 		fontWeight: '700',
 		fontSize: 12,
 	},
+	eventOrganizer: {
+		fontSize: 13,
+		color: '#666',
+		marginTop: 4,
+	},
+	eventCreator: {
+		fontSize: 13,
+		color: '#666',
+		marginTop: 2,
+		fontStyle: 'italic',
+	},
+	eventLocation: {
+		fontSize: 13,
+		color: '#444',
+		marginTop: 4,
+	},
+	eventAttendees: {
+		fontSize: 13,
+		color: '#444',
+		marginTop: 4,
+	},
+	eventCancelled: {
+		marginTop: 6,
+		fontSize: 13,
+		color: 'red',
+		fontWeight: 'bold',
+	},
+	cancelledEvent: {
+		backgroundColor: '#f8d7da',
+	},
+	cancelledText: {
+		color: 'red',
+		textDecorationLine: 'line-through',
+	},
 	modalTitle: {
 		fontWeight: 'bold',
 		fontSize: 20,
@@ -338,14 +423,14 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 	},
 	joinButton: {
-		backgroundColor: '#FFD04C',
+		backgroundColor: theme.colors.light.primary,
 		paddingVertical: 12,
 		borderRadius: 8,
 		alignItems: 'center',
 		marginVertical: 10,
 	},
 	joinButtonText: {
-		color: '#004D1A',
+		color: theme.colors.light.card,
 		fontWeight: 'bold',
 		fontSize: 16,
 	},

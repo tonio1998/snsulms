@@ -35,6 +35,8 @@ import {
 	saveFacClassesToLocal,
 } from '../../../utils/cache/Faculty/localClasses';
 import { formatDate } from '../../../utils/dateFormatter';
+import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
+import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -258,7 +260,7 @@ const ClassesListScreen = ({ navigation }) => {
 
 	return (
 		<>
-			<CustomHeader />
+			<CustomHeader2 />
 			<SafeAreaView style={globalStyles.safeArea}>
 				<View style={styles.container}>
 					<View style={styles.searchBox}>
@@ -276,11 +278,12 @@ const ClassesListScreen = ({ navigation }) => {
 							</TouchableOpacity>
 						)}
 					</View>
-					{lastFetched ? (
-						<Text style={{ marginBottom: 8, fontSize: 12, color: 'gray' }}>
-							Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}
-						</Text>
-					) : null}
+
+					<LastUpdatedBadge
+						date={lastFetched}
+						onReload={loadClassesOnline}
+					/>
+
 					<ShimmerList
 						data={filteredClasses}
 						loading={loading}

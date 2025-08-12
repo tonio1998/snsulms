@@ -275,6 +275,21 @@ const WallScreen = ({ route, navigation }) => {
 		<>
 			<BackHeader title="Wall" />
 			<SafeAreaView style={[globalStyles.safeArea]}>
+				{lastFetched && (
+					<View style={{
+						paddingHorizontal: 16,
+						paddingBottom: 8,
+						paddingTop: 4,
+						backgroundColor: '#fff',
+						borderBottomWidth: StyleSheet.hairlineWidth,
+						borderBottomColor: '#ddd'
+					}}>
+						<CText fontSize={12} color="#777">
+							Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}
+						</CText>
+					</View>
+				)}
+
 				<FlatList
 					data={wall}
 					keyExtractor={(item) => String(item.id)}
@@ -288,8 +303,11 @@ const WallScreen = ({ route, navigation }) => {
 					}
 					onEndReached={handleEndReached}
 					onEndReachedThreshold={0.5}
-					ListHeaderComponent={renderHeader}
-					ListFooterComponent={loading ? <ActivityIndicator size="large" color={theme.colors.light.primary} /> : null}
+					ListFooterComponent={
+						loading ? (
+							<ActivityIndicator size="large" color={theme.colors.light.primary} />
+						) : null
+					}
 				/>
 
 				<TouchableOpacity
@@ -300,21 +318,21 @@ const WallScreen = ({ route, navigation }) => {
 				</TouchableOpacity>
 
 				<Modal transparent visible={showModal} animationType="none">
-					<TouchableOpacity style={styles.modalBackdrop} onPress={closeModal} />
-					<Animated.View style={[styles.modalContent, { transform: [{ translateY: slideAnim }] }]}>
+					<TouchableOpacity style={globalStyles.overlay} onPress={closeModal} />
+					<Animated.View style={[globalStyles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
 						<TouchableOpacity
-							style={styles.modalItem}
+							style={globalStyles.option}
 							onPress={() => handleWallOption('post')}
 						>
 							<Icon name="document-text-outline" size={20} color="#333" />
-							<CText style={{ marginLeft: 10 }}>Post</CText>
+							<CText fontStyle={'SB'} fontSize={15} style={{ marginLeft: 10 }}>Post</CText>
 						</TouchableOpacity>
 						<TouchableOpacity
-							style={styles.modalItem}
+							style={globalStyles.option}
 							onPress={() => handleWallOption('meet')}
 						>
 							<Icon name="people-outline" size={20} color="#333" />
-							<CText style={{ marginLeft: 10 }}>Meet</CText>
+							<CText fontStyle={'SB'} fontSize={15} style={{ marginLeft: 10 }}>Meet</CText>
 						</TouchableOpacity>
 					</Animated.View>
 				</Modal>
