@@ -23,7 +23,7 @@ export default function SurveyBottomTabNav({ route }) {
 			initialRouteName="Info"
 			tabBarPosition="bottom"
 			screenOptions={({ route }) => ({
-				swipeEnabled: false,
+				swipeEnabled: true,
 				tabBarShowIcon: true,
 				tabBarPressColor: currentColors.primary,
 				tabBarIndicatorStyle: {

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
 	View,
 	TextInput,
@@ -13,16 +13,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { handleApiError } from '../../../utils/errorHandler.ts';
 import { globalStyles } from '../../../theme/styles.ts';
 import { CText } from '../../../components/common/CText.tsx';
-import { theme } from '../../../theme';
-import { NetworkContext } from '../../../context/NetworkContext.tsx';
-import { getMyClassmates } from '../../../api/modules/classmatesApi.ts';
-import { useLoading } from '../../../context/LoadingContext.tsx';
 import Icon from 'react-native-vector-icons/Ionicons';
 import BackHeader from '../../../components/layout/BackHeader.tsx';
-import {useLoading2} from "../../../context/Loading2Context.tsx";
+import { getMyClassmates } from '../../../api/modules/classmatesApi.ts';
+import { useLoading2 } from "../../../context/Loading2Context.tsx";
 
 const PeopleScreen = ({ navigation, route }) => {
-	const ClassID = route.params.ClassID;
+	const ClassID = route.params?.ClassID;
 	const [classmates, setClassmates] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
@@ -33,6 +30,7 @@ const PeopleScreen = ({ navigation, route }) => {
 	const [hasMore, setHasMore] = useState(true);
 
 	const fetchClassmates = async (pageNumber = 1, filters = {}) => {
+		if (!ClassID) return;
 		try {
 			if (pageNumber === 1) setClassmates([]);
 			setLoading(true);
@@ -74,13 +72,21 @@ const PeopleScreen = ({ navigation, route }) => {
 		}
 	};
 
+	useEffect(() => {
+		if (ClassID) {
+			fetchClassmates(1);
+		}
+	}, [ClassID]);
+
 	useFocusEffect(
 		useCallback(() => {
-			fetchClassmates();
+			if (ClassID) {
+				fetchClassmates(1);
+			}
 			return () => {
 				if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 			};
-		}, [])
+		}, [ClassID])
 	);
 
 	const handleSearchTextChange = (text) => {
@@ -135,6 +141,7 @@ const PeopleScreen = ({ navigation, route }) => {
 			<BackHeader title="People" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
 			<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
 				<View style={{ flex: 1, paddingHorizontal: 16 }}>
+					{/* Search Bar */}
 					<View style={styles.searchWrapper}>
 						<TextInput
 							placeholder="Search ..."
@@ -144,22 +151,28 @@ const PeopleScreen = ({ navigation, route }) => {
 							style={styles.searchInput}
 						/>
 						{searchQuery !== '' && (
-							<TouchableOpacity style={styles.clearBtn} onPress={() => {
-								setSearchQuery('');
-								if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-								fetchClassmates(1, { search: '' });
-							}}>
+							<TouchableOpacity
+								style={styles.clearBtn}
+								onPress={() => {
+									setSearchQuery('');
+									if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+									fetchClassmates(1, { search: '' });
+								}}
+							>
 								<Icon name={'close'} size={25} color={'#000'} />
 							</TouchableOpacity>
 						)}
 					</View>
 
+					{/* List */}
 					<FlatList
 						data={classmates}
 						keyExtractor={(item, index) => index.toString()}
 						renderItem={renderItem}
-						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-						ListEmptyComponent={!loading && <CText style={styles.emptyText}>No data found 😶</CText>}
+						refreshControl={
+							<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+						}
+						ListEmptyComponent={<CText style={styles.emptyText}>No data found 😶</CText>}
 						contentContainerStyle={{
 							paddingBottom: 0,
 							flexGrow: classmates.length === 0 ? 1 : 0,

@@ -18,8 +18,10 @@ import { navigate } from '../../utils/navigation';
 import { CText } from '../common/CText';
 import { getAcademicInfo } from '../../utils/getAcademicInfo';
 import { formatAcad } from '../../utils/format';
+import Icon from "react-native-vector-icons/Ionicons";
+import {BlurView} from "@react-native-community/blur";
 
-const generateCircles = (count = 4) => {
+const generateCircles = (count = 2) => {
     const fixedPositions = [
         { top: 20, left: 20 },
         { top: 20, left: 100 },
@@ -34,7 +36,7 @@ const generateCircles = (count = 4) => {
     });
 };
 
-const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) => {
+const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null }) => {
     const navigation = useNavigation();
     const { user } = useAuth();
     const [acad, setAcad] = useState(null);
@@ -75,7 +77,7 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
                 translucent
                 backgroundColor="transparent"
             />
-            <LinearGradient
+            <View
                 colors={[theme.colors.light.primary, 'transparent']}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
@@ -98,74 +100,87 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
                         ]}
                     />
                 ))}
-            </LinearGradient>
+            </View>
 
-            <View style={styles.header}>
-                <View style={styles.leftSection}>
-                    <CText
-                        fontSize={26}
-                        fontStyle="SB"
-                        style={[styles.appName, globalStyles.shadowText]}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                    >
-                        {APP_NAME}
-                    </CText>
-                    {leftContent}
-                </View>
-
-                <View style={styles.rightSection}>
-                    <TouchableOpacity
-                        onPress={handleAcad}
-                        style={styles.acadBtn}
-                        activeOpacity={0.85}
-                    >
-                        <CText
-                            fontSize={13}
-                            fontStyle="SB"
-                            numberOfLines={1}
-                            style={styles.acadText}
+            <View style={styles.headerWrapper}>
+                <BlurView
+                    style={StyleSheet.absoluteFill}
+                    blurType="light"
+                    blurAmount={15}
+                    reducedTransparencyFallbackColor={theme.colors.light.card}
+                />
+                <View style={styles.headerContent}>
+                    <View style={styles.leftSection}>
+                        <TouchableOpacity
+                            onPress={handleProfile}
+                            activeOpacity={0.8}
+                            style={styles.avatarWrapper}
                         >
-                            {formatAcad(acad?.semester, acad?.from, acad?.to)}
-                        </CText>
-                    </TouchableOpacity>
+                            <Image
+                                source={
+                                    user?.profile_pic
+                                        ? { uri: `${FILE_BASE_URL}/${user.profile_pic}` }
+                                        : user?.avatar
+                                            ? { uri: user.avatar }
+                                            : {
+                                                uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                                    user?.name || 'User'
+                                                )}&background=random`,
+                                            }
+                                }
+                                style={styles.avatar}
+                            />
+                        </TouchableOpacity>
+                        <View style={{ marginLeft: 10 }}>
+                            <CText fontSize={14} style={{ color: '#fff'}} fontStyle="SB">Hello 👋</CText>
+                            <CText fontSize={15} style={{ color: '#fff'}} fontStyle="SB">{user?.name}</CText>
+                        </View>
+                    </View>
 
-                    <TouchableOpacity
-                        onPress={handleProfile}
-                        activeOpacity={0.8}
-                        style={styles.avatarWrapper}
-                    >
-                        <Image
-                            source={
-                                user?.profile_pic
-                                    ? { uri: `${FILE_BASE_URL}/${user.profile_pic}` }
-                                    : user?.avatar
-                                        ? { uri: user.avatar }
-                                        : {
-                                            uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                                user?.name || 'User'
-                                            )}&background=random`,
-                                        }
-                            }
-                            style={styles.avatar}
-                        />
-                    </TouchableOpacity>
-
-                    {rightContent}
+                    <View style={styles.rightSection}>
+                        <TouchableOpacity
+                            onPress={handleAcad}
+                            style={styles.acadBtn}
+                            activeOpacity={0.85}
+                        >
+                            <Icon name={'school'} size={25} color={theme.colors.light.card} />
+                        </TouchableOpacity>
+                        {rightContent}
+                    </View>
                 </View>
             </View>
+
         </>
     );
 };
 
 const styles = StyleSheet.create({
+    headerWrapper: {
+        position: 'absolute',
+        top: Platform.OS === 'android' ? ((StatusBar.currentHeight + 5) || 24) : 44,
+        left: '3%',
+        right: '3%',
+        borderRadius: 100,
+        overflow: 'hidden',
+        zIndex: 1,
+    },
+    headerContent: {
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
     gradientBg: {
-        height: 120,
+        height: 150,
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 1,
+        zIndex: -9,
+        backgroundColor: theme.colors.light.primary,
+        borderBottomLeftRadius: 10,
+        borderBottomRightRadius: 10
     },
     circle: {
         position: 'absolute',
@@ -173,15 +188,17 @@ const styles = StyleSheet.create({
     },
     header: {
         position: 'absolute',
-        top: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 44,
-        left: 0,
-        right: 0,
-        paddingHorizontal: 16,
+        top: Platform.OS === 'android' ? ((StatusBar.currentHeight + 5) || 24) : 44,
+        left: '3%',
+        right: '3%',
+        paddingHorizontal: 10,
         paddingVertical: 8,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         zIndex: 2,
+        borderRadius: 100,
+        backgroundColor: theme.colors.light.card,
     },
     leftSection: {
         flexDirection: 'row',
@@ -200,11 +217,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     acadBtn: {
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 8,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        marginRight: 12,
+        paddingHorizontal: 11,
+        paddingVertical: 10,
+        borderRadius: 100,
+        backgroundColor: theme.colors.light.primary,
+        // marginRight: 12,
     },
     acadText: {
         color: theme.colors.light.text,
@@ -223,4 +240,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CustomHeader;
+export default CustomHeader2;

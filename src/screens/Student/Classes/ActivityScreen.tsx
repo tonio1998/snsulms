@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
 	View, FlatList, RefreshControl, SafeAreaView,
-	ScrollView, TouchableOpacity, StyleSheet,
+	ScrollView, TouchableOpacity, StyleSheet, Text,
 } from 'react-native';
 import { globalStyles } from '../../../theme/styles.ts';
 import { theme } from '../../../theme';
@@ -11,9 +11,15 @@ import { getStudentActivities } from '../../../api/modules/activitiesApi.ts';
 import { formatDate } from '../../../utils/dateFormatter';
 import BackHeader from '../../../components/layout/BackHeader.tsx';
 import Icon from "react-native-vector-icons/Ionicons";
+import {
+	loadStudentClassActivitiesCache,
+	saveStudentClassActivitiesCache
+} from "../../../utils/cache/Student/localstudentActivitiesCache.ts";
+import {useAuth} from "../../../context/AuthContext.tsx";
 
 const ActivityScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
+	const { user } = useAuth();
 	const [allActivities, setAllActivities] = useState([]);
 	const [activities, setActivities] = useState([]);
 	const [actType, setActType] = useState('');
@@ -21,13 +27,20 @@ const ActivityScreen = ({ navigation, route }) => {
 	const [refreshing, setRefreshing] = useState(false);
 	const [expandedId, setExpandedId] = useState(null);
 	const { showLoading, hideLoading } = useLoading();
+	const [lastFetched, setLastFetched] = useState(null);
 
 	const types = [
 		{ label: 'All', value: '' },
 		{ label: 'Assignment', value: 2 },
-		{ label: 'Quiz', value: 3 },
-		{ label: 'Exam', value: 4 },
+		{ label: 'Quiz/Exam', value: 3 },
 	];
+
+	const filterActivities = (type, list = allActivities) => {
+		setActType(type);
+		const filtered = list.filter(i => i.activity?.ActivityTypeID !== 1);
+		setActivities(type ? filtered.filter(i => i.activity?.ActivityTypeID == type) : filtered);
+		setExpandedId(null);
+	};
 
 	const fetchActivities = async () => {
 		if (loading || !ClassID) return;
@@ -38,6 +51,8 @@ const ActivityScreen = ({ navigation, route }) => {
 			const list = res?.data ?? [];
 			setAllActivities(list);
 			filterActivities(actType, list);
+			const date = await saveStudentClassActivitiesCache(ClassID, user?.id, list);
+			if (date) setLastFetched(date);
 		} catch (err) {
 			console.error('❌ Error loading activities:', err);
 		} finally {
@@ -46,18 +61,30 @@ const ActivityScreen = ({ navigation, route }) => {
 		}
 	};
 
-	useEffect(() => { fetchActivities(); }, [ClassID]);
+	const loadCachedActivities = async () => {
+		if (!ClassID) return;
+		try {
+			const { data, date } = await loadStudentClassActivitiesCache(ClassID, user?.id);
+			if (data && data.length > 0) {
+				setAllActivities(data);
+				filterActivities(actType, data);
+			}
+
+			if (date) setLastFetched(date);
+		} catch (err) {
+			console.error('Error loading cached activities:', err);
+			fetchActivities();
+		}
+	};
+
+	useEffect(() => {
+		loadCachedActivities();
+	}, [ClassID]);
+
 	const handleRefresh = async () => {
 		setRefreshing(true);
 		await fetchActivities();
 		setRefreshing(false);
-	};
-
-	const filterActivities = (type, list = allActivities) => {
-		setActType(type);
-		const filtered = list.filter(i => i.activity?.ActivityTypeID !== 1);
-		setActivities(type ? filtered.filter(i => i.activity?.ActivityTypeID == type) : filtered);
-		setExpandedId(null); // Collapse when switching filters
 	};
 
 	const toggleExpand = (id) => {
@@ -103,8 +130,8 @@ const ActivityScreen = ({ navigation, route }) => {
 								</CText>
 							</View>
 							<View style={styles.dateRow}>
-								<CText fontSize={12} style={styles.date}>Due: {formatDate(act?.DueDate)}</CText>
-								<CText fontSize={12} style={styles.date}>Created: {formatDate(act?.created_at, 'relative')}</CText>
+								{act?.DueDate && <CText fontSize={12} style={styles.date}>Due: {formatDate(act?.DueDate)}</CText>}
+								{act?.created_at && <CText fontSize={12} style={styles.date}>Created: {formatDate(act?.created_at, 'relative')}</CText>}
 							</View>
 							<TouchableOpacity
 								style={styles.viewBtn}
@@ -120,19 +147,28 @@ const ActivityScreen = ({ navigation, route }) => {
 	};
 
 	const renderFilterHeader = () => (
-		<ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-			<View style={styles.filterRow}>
-				{types.map(({ label, value }) => (
-					<TouchableOpacity
-						key={value.toString()}
-						onPress={() => filterActivities(value)}
-						style={[styles.filterBtn, actType === value && styles.activeBtn]}
-					>
-						<CText fontStyle="SB" style={{ color: actType === value ? '#fff' : '#000' }}>{label}</CText>
-					</TouchableOpacity>
-				))}
+		<View>
+			<ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+				<View style={styles.filterRow}>
+					{types.map(({ label, value }) => (
+						<TouchableOpacity
+							key={value.toString()}
+							onPress={() => filterActivities(value)}
+							style={[styles.filterBtn, actType === value && styles.activeBtn]}
+						>
+							<CText fontStyle="SB" style={{ color: actType === value ? '#fff' : '#000' }}>{label}</CText>
+						</TouchableOpacity>
+					))}
+				</View>
+			</ScrollView>
+			<View>
+				{lastFetched ? (
+					<Text style={{ marginBottom: 8, fontSize: 12, color: 'gray' }}>
+						Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}
+					</Text>
+				) : null}
 			</View>
-		</ScrollView>
+		</View>
 	);
 
 	return (

@@ -223,19 +223,20 @@ export default function SubmissionScreen({ navigation, route }) {
 		<>
 			<BackHeader title="Submission" />
 			<SafeAreaView style={globalStyles.safeArea}>
-				{loadingSubmissions ? (
+				{loadingSubmissions && (
 					<ActivityIndicator size="large" color={theme.colors.light.primary} />
-				) : (
-					<FlatList
-						data={submissions}
-						keyExtractor={(item, index) => `${item.id}-${index}`}
-						contentContainerStyle={{ padding: 12 }}
-						refreshControl={
-							<RefreshControl refreshing={loadingSubmissions} onRefresh={loadSubmissions} />
-						}
-						renderItem={renderItem}
-					/>
 				)}
+
+				<FlatList
+					data={submissions}
+					keyExtractor={(item, index) => `${item.id}-${index}`}
+					contentContainerStyle={{ padding: 12 }}
+					refreshControl={
+						<RefreshControl refreshing={loadingSubmissions} onRefresh={loadSubmissions} />
+					}
+					ListEmptyComponent={<CText fontSize={15} style={{ textAlign: 'center' }}>No submissions yet.</CText>}
+					renderItem={renderItem}
+				/>
 
 				{activity?.SubmissionType !== 'Submitted' && (
 					<TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>

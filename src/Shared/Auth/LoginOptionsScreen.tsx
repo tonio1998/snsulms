@@ -1,4 +1,4 @@
-import React, { useEffect, useState, version } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
 	View,
 	Text,
@@ -25,8 +25,7 @@ import { handleApiError } from '../../utils/errorHandler.ts';
 import * as Keychain from 'react-native-keychain';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { APP_NAME, GOOGLE_CLIENT_ID, TAGLINE } from '../../../env.ts';
-import {useAlert} from "../../components/CAlert.tsx";
-
+import DeviceInfo from 'react-native-device-info';
 const { width } = Dimensions.get('window');
 
 GoogleSignin.configure({
@@ -39,9 +38,14 @@ export default function LoginOptionsScreen() {
 	const navigation = useNavigation();
 	const { loginAuth } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
-	const {showAlert} = useAlert();
 	const [loading, setLoading] = useState(false);
 	const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
+	const [version, setVersion] = useState('');
+
+	useEffect(() => {
+		const appVersion = DeviceInfo.getVersion();
+		setVersion(appVersion);
+	}, []);
 
 	useEffect(() => {
 		(async () => {
@@ -70,7 +74,6 @@ export default function LoginOptionsScreen() {
 	};
 
 	const handleGoogleLogin = async () => {
-		showLoading('Please wait...');
 		try {
 			await GoogleSignin.hasPlayServices();
 			await GoogleSignin.signOut();
@@ -79,8 +82,10 @@ export default function LoginOptionsScreen() {
 			const accessToken = tokens.accessToken;
 			const user = userInfo?.data?.user;
 			const idToken = userInfo?.data?.idToken;
-			await AsyncStorage.setItem(`googleAccessToken${user?.email}`, accessToken);
+
 			showLoading('Logging in...');
+			await AsyncStorage.setItem(`googleAccessToken${user?.email}`, accessToken);
+
 			const response = await loginWithGoogle({
 				token: idToken,
 				name: user?.name,
@@ -93,7 +98,7 @@ export default function LoginOptionsScreen() {
 				error?.response?.data?.message ||
 				error?.message ||
 				'Something went wrong during Google login.';
-			showAlert('error','Login Failed', 'Something went wrong during Google login.');
+			Alert.alert('Login Failed', 'Something went wrong during Google login.');
 			handleApiError(error, 'Google Login');
 		} finally {
 			hideLoading();
@@ -115,35 +120,25 @@ export default function LoginOptionsScreen() {
 					</View>
 
 					<View style={styles.authSection}>
-						{loading ? (
-							<View style={styles.loadingContainer}>
-								<ActivityIndicator size="large" color="#fff" />
-								<CText style={styles.loadingText}>Logging in...</CText>
-							</View>
-						) : (
-							<>
-								<CText style={styles.loginLabel}>Sign in to continue</CText>
-								<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
-									<Icon name="logo-google" size={22} color="#DB4437" />
-									<CText style={styles.authText}>Continue with Google</CText>
-								</TouchableOpacity>
+						<CText style={styles.loginLabel}>Sign in to continue</CText>
+						<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
+							<Icon name="logo-google" size={22} color="#DB4437" />
+							<CText style={styles.authText}>Continue with Google</CText>
+						</TouchableOpacity>
 
-								<TouchableOpacity style={styles.authButtonOutline} onPress={() => navigation.navigate('Login')}>
-									<Icon name="key-outline" size={22} color="#fff" />
-									<CText style={styles.authTextWhite}>Login with Password</CText>
-								</TouchableOpacity>
+						<TouchableOpacity style={styles.authButtonOutline} onPress={() => navigation.navigate('Login')}>
+							<Icon name="key-outline" size={22} color="#fff" />
+							<CText style={styles.authTextWhite}>Login with Password</CText>
+						</TouchableOpacity>
 
-								{isBiometricEnabled && (
-									<TouchableOpacity onPress={handleBiometricLogin} style={styles.fingerprint}>
-										<Icon name="finger-print-outline" size={40} color="#fff" />
-										<CText style={styles.bioText}>Use Biometrics</CText>
-									</TouchableOpacity>
-								)}
-							</>
+						{isBiometricEnabled && (
+							<TouchableOpacity onPress={handleBiometricLogin} style={styles.fingerprint}>
+								<Icon name="finger-print-outline" size={40} color="#fff" />
+								<CText style={styles.bioText}>Use Biometrics</CText>
+							</TouchableOpacity>
 						)}
 					</View>
 
-					{/* Footer */}
 					<View style={styles.footer}>
 						<CText fontSize={11} style={styles.footerText}>Developed by SNSU - ICT fgWorkz</CText>
 						<CText fontSize={11} style={styles.footerText}>Version {version} • © 2025 All rights reserved</CText>
@@ -249,7 +244,7 @@ const styles = StyleSheet.create({
 	},
 	footer: {
 		alignItems: 'center',
-		marginTop: 30,
+		marginTop: -50,
 	},
 	footerText: {
 		color: '#ccc',

@@ -34,11 +34,13 @@ const ActivityScreen = ({ navigation }) => {
 	const { showLoading2, hideLoading2 } = useLoading2();
 
 	const [activities, setActivities] = useState([]);
+	const [activity, setActivity] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 	const [actType, setActType] = useState('');
 	const [showModal, setShowModal] = useState(false);
 	const slideAnim = useRef(new Animated.Value(height)).current;
+	const [lastFetched, setLastFetched] = useState(null);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -70,15 +72,15 @@ const ActivityScreen = ({ navigation }) => {
 		if (type === '2') {
 			navigation.navigate('AddActivity', { ClassID, ActivityTypeID });
 		} else if (type === '3') {
-			navigation.navigate('FetchEnrollment', { ClassID, ActivityTypeID });
+			navigation.navigate('QuizBuilder', { ClassID, ActivityTypeID });
 		}
 	};
 
 	const activityTypes = [
 		{ label: 'All', value: '' },
 		{ label: 'Assignment', value: 2 },
-		{ label: 'Quiz', value: 3 },
-		{ label: 'Exam', value: 4 },
+		{ label: 'Quiz/Exam', value: 3 },
+		// { label: 'Exam', value: 4 },
 	];
 
 	const fetchActivities = async () => {
@@ -101,6 +103,7 @@ const ActivityScreen = ({ navigation }) => {
 			});
 
 			handleActTypeFilter(actType, enriched);
+			setActivity(enriched);
 		} catch (err) {
 			handleApiError(err, 'Failed to fetch activities');
 		} finally {
@@ -121,9 +124,14 @@ const ActivityScreen = ({ navigation }) => {
 
 	const handleActTypeFilter = (type, list = activities) => {
 		setActType(type);
-		const filtered = list.filter(item => item?.ActivityTypeID !== 1);
-		const filteredByType = type ? filtered.filter(item => item?.ActivityTypeID == type) : filtered;
-		setActivities(filteredByType);
+		if(type > 0){
+			const filtered = list.filter(item => item?.ActivityTypeID !== 1);
+			const filteredByType = type ? filtered.filter(item => item?.ActivityTypeID == type) : filtered;
+			setActivities(filteredByType);
+		}else{
+			setActivities(activity);
+			console.log("No filter", activity);
+		}
 	};
 
 	const handleViewAct = (Title, ActivityID) => {
@@ -222,19 +230,13 @@ const ActivityScreen = ({ navigation }) => {
 				</TouchableOpacity>
 				{showModal && (
 					<Modal transparent visible={showModal} animationType="none">
-						<TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeModal} />
-						<Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
-							<TouchableOpacity style={styles.option} onPress={() => handleOption('2')}>
-								<CText fontStyle="SB" fontSize={16}>Assignment</CText>
+						<TouchableOpacity style={globalStyles.overlay} activeOpacity={1} onPress={closeModal} />
+						<Animated.View style={[globalStyles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
+							<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('2')}>
+								<CText fontStyle="SB" fontSize={15}>Assignment</CText>
 							</TouchableOpacity>
-							<TouchableOpacity style={styles.option} onPress={() => handleOption('3')}>
-								<CText fontStyle="SB" fontSize={16}>Quiz</CText>
-							</TouchableOpacity>
-							<TouchableOpacity style={styles.option} onPress={() => handleOption('4')}>
-								<CText fontStyle="SB" fontSize={16}>Exam</CText>
-							</TouchableOpacity>
-							<TouchableOpacity style={styles.cancel} onPress={closeModal}>
-								<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>
+							<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('3')}>
+								<CText fontStyle="SB" fontSize={15}>Quiz/Exam</CText>
 							</TouchableOpacity>
 						</Animated.View>
 					</Modal>

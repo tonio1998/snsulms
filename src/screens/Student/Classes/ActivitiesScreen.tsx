@@ -1,10 +1,9 @@
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
 	View,
 	TextInput,
 	FlatList,
 	Text,
-	ActivityIndicator,
 	TouchableOpacity,
 	SafeAreaView,
 	StyleSheet,
@@ -16,14 +15,21 @@ import { theme } from '../../../theme';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLoading } from '../../../context/LoadingContext.tsx';
+import { useAuth } from '../../../context/AuthContext.tsx';
 import { getAcademicInfo } from '../../../utils/getAcademicInfo.ts';
 import { getMyActivities } from '../../../api/modules/activitiesApi.ts';
 import { CText } from '../../../components/common/CText.tsx';
 import { formatDate } from '../../../utils/dateFormatter';
+import {
+	loadAllStudentActivitiesToLocal,
+	saveAllStudentActivitiesToLocal
+} from "../../../utils/cache/Student/localStudentActivitiesGroup";
 
 const ActivitiesScreen = ({ navigation }) => {
 	const { showLoading, hideLoading } = useLoading();
+	const { user } = useAuth();
 
+	const [allActivities, setAllActivities] = useState([]);
 	const [data, setData] = useState([]);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [loading, setLoading] = useState(false);
@@ -31,6 +37,7 @@ const ActivitiesScreen = ({ navigation }) => {
 	const [acad, setAcad] = useState(null);
 	const [acadRaw, setAcadRaw] = useState(null);
 	const [selectedTab, setSelectedTab] = useState('All');
+	const [lastUpdated, setLastUpdated] = useState(null);
 	const debounceTimeout = useRef(null);
 
 	useFocusEffect(
@@ -42,27 +49,61 @@ const ActivitiesScreen = ({ navigation }) => {
 				if (isActive) {
 					setAcad(acadStr);
 					setAcadRaw(acadInfo);
-					await fetchActivities(acadStr, acadInfo);
+
+					const local = await loadAllStudentActivitiesToLocal(user?.id);
+					if (local?.data) {
+						setAllActivities(local.data);
+						setData(local.data);
+						setLastUpdated(local.date);
+					}
+
+					if (!local?.data) {
+						await fetchActivities(acadStr, acadInfo);
+					}
 				}
 			})();
 			return () => {
 				isActive = false;
 			};
-		}, [])
+		}, [user?.id])
 	);
 
-	const fetchActivities = async (currentAcad = acad, currentAcadRaw = acadRaw, query = '') => {
+	const fetchActivities = async (
+		currentAcad = acad,
+		currentAcadRaw = acadRaw,
+		query = '',
+		forceOnline = false
+	) => {
 		if (!currentAcad || !currentAcadRaw || loading) return;
 		try {
 			setLoading(true);
 			showLoading('Loading activities...');
+
+			if (!forceOnline && !query) {
+				const local = await loadAllStudentActivitiesToLocal(user?.id);
+				if (local?.data) {
+					setAllActivities(local.data);
+					setData(local.data);
+					setLastUpdated(local.date);
+					setLoading(false);
+					hideLoading();
+					return;
+				}
+			}
+
 			const params = {
 				search: query,
 				AcademicYear: currentAcad,
 			};
 
 			const res = await getMyActivities(params);
+			setAllActivities(res ?? []);
 			setData(res ?? []);
+
+			if (!query) {
+				const now = await saveAllStudentActivitiesToLocal(user?.id, res ?? []);
+				setLastUpdated(now);
+			}
 		} catch (err) {
 			handleApiError(err, 'Failed to load activities');
 		} finally {
@@ -73,20 +114,33 @@ const ActivitiesScreen = ({ navigation }) => {
 
 	const handleSearchTextChange = (text) => {
 		setSearchQuery(text);
-		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-		debounceTimeout.current = setTimeout(() => {
-			fetchActivities(acad, acadRaw, text);
-		}, 500);
+		if (!text) {
+			setData(allActivities);
+			return;
+		}
+
+		const lower = text.toLowerCase();
+		const filtered = allActivities
+			.map(classItem => ({
+				...classItem,
+				activities: (classItem.activities || []).filter(act =>
+					act.Title?.toLowerCase().includes(lower) ||
+					act.Description?.toLowerCase().includes(lower)
+				)
+			}))
+			.filter(classItem => classItem.activities.length > 0);
+
+		setData(filtered);
 	};
 
 	const handleClearSearch = () => {
 		setSearchQuery('');
-		fetchActivities(acad, acadRaw, '');
+		setData(allActivities);
 	};
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
-		await fetchActivities();
+		await fetchActivities(acad, acadRaw, '', true);
 		setRefreshing(false);
 	};
 
@@ -101,7 +155,11 @@ const ActivitiesScreen = ({ navigation }) => {
 		>
 			<CText fontStyle="B" fontSize={16} style={{ marginBottom: 6 }}>{item.Title}</CText>
 			{item.Description && <CText fontSize={14} color="#666">{item.Description}</CText>}
-			<CText fontSize={15} style={{ marginBottom: 4 }}>Deadline: {formatDate(item.Deadline)}</CText>
+			{item.Deadline && (
+				<CText fontSize={15} style={{ marginBottom: 4 }}>
+					Deadline: {formatDate(item.Deadline)}
+				</CText>
+			)}
 			<CText
 				fontSize={16}
 				fontStyle="SB"
@@ -165,7 +223,6 @@ const ActivitiesScreen = ({ navigation }) => {
 							placeholderTextColor="#666"
 							value={searchQuery}
 							onChangeText={handleSearchTextChange}
-							onSubmitEditing={() => fetchActivities(acad, acadRaw, searchQuery)}
 							returnKeyType="search"
 							style={styles.searchInput}
 						/>
@@ -175,6 +232,13 @@ const ActivitiesScreen = ({ navigation }) => {
 							</TouchableOpacity>
 						) : null}
 					</View>
+
+					{/* Last updated indicator */}
+					{lastUpdated && !searchQuery && (
+						<Text style={{ fontSize: 12, color: '#777', marginBottom: 8 }}>
+							Last updated: {formatDate(lastUpdated)}
+						</Text>
+					)}
 
 					{!searchQuery && (
 						<View style={styles.tabWrapper}>
@@ -218,6 +282,7 @@ const ActivitiesScreen = ({ navigation }) => {
 		</>
 	);
 };
+
 const styles = StyleSheet.create({
 	activityItem: {
 		backgroundColor: '#fff',

@@ -11,7 +11,12 @@ import {
 	Platform,
 	UIManager,
 	Clipboard,
-	Alert, Modal, Animated, Easing,
+	Alert,
+	Modal,
+	Animated,
+	Easing,
+	Text,
+	FlatList,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -25,6 +30,13 @@ import { useAuth } from '../../../context/AuthContext.tsx';
 import { useLoading2 } from '../../../context/Loading2Context.tsx';
 import { getAcademicInfo } from '../../../utils/getAcademicInfo.ts';
 import { getFacClasses } from '../../../api/modules/classesApi.ts';
+import {
+	loadFacClassesFromLocal,
+	saveFacClassesToLocal,
+} from '../../../utils/cache/Faculty/localClasses';
+import { formatDate } from '../../../utils/dateFormatter';
+import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
+import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -35,14 +47,16 @@ if (Platform.OS === 'android') {
 const ClassesListScreen = ({ navigation }) => {
 	const { showLoading2, hideLoading2 } = useLoading2();
 	const { user } = useAuth();
+
 	const [searchQuery, setSearchQuery] = useState('');
 	const [acad, setAcad] = useState(null);
-	const debounceTimeout = useRef(null);
-	const [classes, setClasses] = useState([]);
+	const [allClasses, setAllClasses] = useState([]);
+	const [filteredClasses, setFilteredClasses] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [expanded, setExpanded] = useState(null);
 	const [showModal, setShowModal] = useState(false);
 	const slideAnim = useRef(new Animated.Value(height)).current;
+	const [lastFetched, setLastFetched] = useState(null);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -64,34 +78,65 @@ const ClassesListScreen = ({ navigation }) => {
 				page: 1,
 				AcademicYear: acad,
 			};
-			if (searchQuery && searchQuery.trim() !== '') {
-				filter.search = searchQuery;
-			}
 			const res = await getFacClasses(filter);
-			setClasses(res?.data ?? []);
+			const data = res?.data ?? [];
+			setAllClasses(data);
+			setFilteredClasses(data);
+
+			const now = await saveFacClassesToLocal(user?.id, data);
+			setLastFetched(now);
 		} catch (err) {
-			// handleApiError(err, 'Load Classes');
+			handleApiError(err);
 		} finally {
 			setLoading(false);
 			hideLoading2();
 		}
-	}, [searchQuery, acad]);
+	}, [acad]);
+
+	const loadFromCache = async () => {
+		try {
+			setLoading(true);
+			showLoading2('Loading classes...');
+			const { data, date } = await loadFacClassesFromLocal(user?.id);
+			if (data) {
+				setAllClasses(data);
+				setFilteredClasses(data);
+				setLastFetched(date);
+			} else {
+				await loadClassesOnline();
+			}
+		} catch (err) {
+			console.error('Error loading from cache:', err);
+			await loadClassesOnline();
+		} finally {
+			setLoading(false);
+			hideLoading2();
+		}
+	};
 
 	useEffect(() => {
-		if (acad) loadClassesOnline();
-	}, [acad, searchQuery]);
+		if (acad) loadFromCache();
+	}, [acad]);
 
 	const handleSearchTextChange = (text) => {
 		setSearchQuery(text);
-		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-		debounceTimeout.current = setTimeout(() => {
-			loadClassesOnline();
-		}, 400);
+		if (!text.trim()) {
+			// Show full list if search empty
+			setFilteredClasses(allClasses);
+		} else {
+			const lower = text.toLowerCase();
+			const filtered = allClasses.filter(
+				(item) =>
+					item?.CourseName?.toLowerCase().includes(lower) ||
+					item.teacher?.name?.toLowerCase().includes(lower)
+			);
+			setFilteredClasses(filtered);
+		}
 	};
 
-	const handleClearSearch = async () => {
+	const handleClearSearch = () => {
 		setSearchQuery('');
-		await loadClassesOnline();
+		setFilteredClasses(allClasses);
 	};
 
 	const toggleAccordion = (id) => {
@@ -126,7 +171,6 @@ const ClassesListScreen = ({ navigation }) => {
 		}
 	};
 
-
 	const handleCopy = (text) => {
 		Clipboard.setString(text);
 	};
@@ -143,61 +187,80 @@ const ClassesListScreen = ({ navigation }) => {
 		const isExpanded = expanded === item.ClassID;
 
 		return (
+			<TouchableOpacity activeOpacity={0.8} onPress={() => toggleAccordion(item.ClassID)}>
 			<View style={styles.card}>
-				<TouchableOpacity activeOpacity={0.8} onPress={() => toggleAccordion(item.ClassID)}>
 					<View style={styles.cardHeader}>
 						<View>
-							<CText fontStyle="SB" fontSize={15}>{item?.CourseCode}</CText>
-							<CText fontStyle="M" fontSize={13} color="#666">{item?.CourseName}</CText>
+							<CText fontStyle="SB" fontSize={15}>
+								{item?.CourseCode}
+							</CText>
+							<CText fontStyle="M" fontSize={13} color="#666">
+								{item?.CourseName}
+							</CText>
 						</View>
 						<Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#888" />
 					</View>
-				</TouchableOpacity>
 				{isExpanded && (
 					<View style={styles.expandedContent}>
-						<View style={styles.teacherRow}>
-							<Image source={{ uri: avatarUri }} style={styles.avatar} />
-							<CText fontStyle="M" fontSize={12}>{teacher.name}</CText>
-						</View>
 						<View style={styles.summaryRow}>
 							<View>
-								<CText fontStyle='SB' fontSize={20}>{item.activities.length}</CText>
+								<CText fontStyle="SB" fontSize={20} style={{ textAlign: 'center' }}>
+									{item.activities.length}
+								</CText>
 								<CText fontSize={11}>Activities</CText>
 							</View>
 							<View>
-								<CText fontStyle='SB' fontSize={20}>{item.students.length}</CText>
+								<CText fontStyle="SB" fontSize={20} style={{ textAlign: 'center' }}>
+									{item.students.length}
+								</CText>
 								<CText fontSize={11}>Students</CText>
 							</View>
 							<TouchableOpacity onPress={() => handleCopy(item.ClassCode)}>
 								<View style={{ alignItems: 'center' }}>
-									<CText fontStyle='SB' fontSize={20}>{item.ClassCode}</CText>
+									<CText fontStyle="SB" fontSize={20}>
+										{item.ClassCode}
+									</CText>
 									<CText fontSize={11}>Class Code</CText>
 								</View>
 							</TouchableOpacity>
 						</View>
-						<View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-							<TouchableOpacity
-								style={styles.viewButton}
-								onPress={() =>
-									navigation.navigate('ClassDetails', {
-										ClassStudentID: item.ClassStudentID,
-										ClassID: item?.ClassID,
-									})
-								}>
-								<CText fontStyle='SB' fontSize={14} style={{ color: theme.colors.light.primary }}>
-									View
-								</CText>
-							</TouchableOpacity>
+						<View style={{
+							flexDirection: 'row', justifyContent: 'space-between',
+							alignItems: 'center', borderTopWidth: 1,
+							borderColor: '#eee', padding: 10
+						}}>
+							<View style={styles.teacherRow}>
+								<Image source={{ uri: avatarUri, cache: 'force-cache' }} style={styles.avatar} />
+								<View>
+									<CText fontStyle="SB" fontSize={15}>{teacher.name}</CText>
+									<CText fontSize={13}>{teacher.email}</CText>
+								</View>
+							</View>
+							<View style={styles.teacherRow}>
+								<TouchableOpacity
+									style={styles.viewButton}
+									onPress={() =>
+										navigation.navigate('ClassDetails', {
+											ClassStudentID: item.ClassStudentID,
+											ClassID: item?.ClassID,
+										})
+									}>
+									<CText fontStyle="SB" fontSize={14} style={{ color: theme.colors.light.primary }}>
+										View
+									</CText>
+								</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 				)}
 			</View>
+			</TouchableOpacity>
 		);
 	};
 
 	return (
 		<>
-			<CustomHeader />
+			<CustomHeader2 />
 			<SafeAreaView style={globalStyles.safeArea}>
 				<View style={styles.container}>
 					<View style={styles.searchBox}>
@@ -215,8 +278,14 @@ const ClassesListScreen = ({ navigation }) => {
 							</TouchableOpacity>
 						)}
 					</View>
+
+					<LastUpdatedBadge
+						date={lastFetched}
+						onReload={loadClassesOnline}
+					/>
+
 					<ShimmerList
-						data={classes}
+						data={filteredClasses}
 						loading={loading}
 						renderItem={renderClassItem}
 						keyExtractor={(item) =>
@@ -227,54 +296,87 @@ const ClassesListScreen = ({ navigation }) => {
 				</View>
 
 				<TouchableOpacity style={globalStyles.fab} activeOpacity={0.7} onPress={openModal}>
-					<Icon name="add" size={28} color="#fff" />
+					<Icon name="add" size={24} color="white" />
 				</TouchableOpacity>
 
-				{showModal && (
-					<Modal transparent visible={showModal} animationType="fade">
-						<TouchableOpacity style={globalStyles.overlay} activeOpacity={1} onPress={closeModal} />
-						<Animated.View style={[globalStyles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
-							<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('manual')}>
-								<CText fontStyle="SB" fontSize={16}>Add Class</CText>
-							</TouchableOpacity>
-							{/*<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('fetch')}>*/}
-							{/*	<CText fontStyle="SB" fontSize={16}>Import</CText>*/}
-							{/*</TouchableOpacity>*/}
-							<TouchableOpacity style={globalStyles.cancel} onPress={closeModal}>
-								<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>
-							</TouchableOpacity>
-						</Animated.View>
-					</Modal>
-				)}
+				<Modal transparent visible={showModal} animationType="none">
+					<TouchableOpacity
+						style={globalStyles.overlay}
+						activeOpacity={1}
+						onPress={closeModal}
+					/>
+					<Animated.View
+						style={[
+							globalStyles.modalContainer,
+							{ transform: [{ translateY: slideAnim }] },
+						]}>
+						<TouchableOpacity
+							style={styles.modalOption}
+							onPress={() => handleOption('manual')}>
+							<CText fontStyle="SB" fontSize={16}>
+								Add Class Manually
+							</CText>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.modalOption}
+							onPress={() => handleOption('fetch')}>
+							<CText fontStyle="SB" fontSize={16}>
+								Fetch Enrollment
+							</CText>
+						</TouchableOpacity>
+						{/*<TouchableOpacity*/}
+						{/*	style={[styles.modalOption, { marginTop: 10 }]}*/}
+						{/*	onPress={closeModal}>*/}
+						{/*	<CText fontStyle="SB" fontSize={14} style={{ color: theme.colors.light.danger }}>*/}
+						{/*		Cancel*/}
+						{/*	</CText>*/}
+						{/*</TouchableOpacity>*/}
+					</Animated.View>
+				</Modal>
 			</SafeAreaView>
 		</>
 	);
 };
 
+export default ClassesListScreen;
+
 const styles = StyleSheet.create({
-	container: { flex: 1, padding: 16 },
+	container: {
+		flex: 1,
+		paddingHorizontal: 16,
+		paddingTop: 12,
+	},
 	searchBox: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginBottom: 12,
-		borderWidth: 1,
-		borderColor: '#ccc',
-		borderRadius: theme.radius.sm,
-		paddingHorizontal: 15,
-		height: 45,
-		backgroundColor: '#f9f9f9',
-	},
-	searchInput: { flex: 1, height: 40, fontSize: 15, color: '#000' },
-	searchIcon: { marginRight: 6 },
-	clearIcon: { marginLeft: 6 },
-	card: {
 		backgroundColor: '#fff',
 		borderRadius: 8,
-		padding: 12,
+		paddingHorizontal: 10,
 		marginBottom: 10,
+		borderWidth: 1,
+		borderColor: '#ccc',
+	},
+	searchIcon: {
+		marginRight: 8,
+	},
+	searchInput: {
+		flex: 1,
+		height: 42,
+		color: '#000',
+	},
+	clearIcon: {
+		marginLeft: 8,
+	},
+	card: {
+		backgroundColor: 'white',
+		borderRadius: 5,
+		padding: 12,
+		marginBottom: 12,
 		shadowColor: '#000',
-		shadowOpacity: 0.05,
-		shadowOffset: { width: 0, height: 2 },
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		// elevation: 2,
 	},
 	cardHeader: {
 		flexDirection: 'row',
@@ -282,35 +384,45 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	expandedContent: {
-		marginTop: 12,
-		borderTopWidth: 1,
-		borderTopColor: '#eee',
-		paddingTop: 12,
+		marginTop: 10,
+	},
+	avatar: {
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		marginRight: 10,
+	},
+	summaryRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-around',
+		marginBottom: 12,
 	},
 	teacherRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginBottom: 10,
-	},
-	avatar: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
-		marginRight: 8,
-	},
-	summaryRow: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		marginBottom: 10,
 	},
 	viewButton: {
-		alignSelf: 'flex-start',
-		paddingVertical: 6,
-		paddingHorizontal: 12,
-		borderWidth: 1,
-		borderColor: theme.colors.light.primary,
+		paddingHorizontal: 14,
+		paddingVertical: 8,
 		borderRadius: 8,
+		backgroundColor: theme.colors.light.primary + '33',
+	},
+	modalOverlay: {
+		flex: 1,
+		backgroundColor: 'rgba(0,0,0,0.3)',
+	},
+	modalContent: {
+		position: 'absolute',
+		bottom: 0,
+		left: 0,
+		right: 0,
+		backgroundColor: 'white',
+		padding: 16,
+		borderTopLeftRadius: 16,
+		borderTopRightRadius: 16,
+	},
+	modalOption: {
+		paddingVertical: 12,
+		alignItems: 'center',
 	},
 });
-
-export default ClassesListScreen;

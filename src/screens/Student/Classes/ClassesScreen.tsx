@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
 	View,
 	TextInput,
-	FlatList,
 	TouchableOpacity,
 	SafeAreaView,
 	Image,
@@ -25,21 +24,27 @@ import { getAcademicInfo } from '../../../utils/getAcademicInfo.ts';
 import { getMyClasses } from '../../../api/modules/classesApi.ts';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import { useAuth } from '../../../context/AuthContext.tsx';
+import { loadClassesFromLocal, saveClassesToLocal } from "../../../utils/cache/Student/localStudentClassesService";
+import { formatDate } from "../../../utils/dateFormatter";
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
 	UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const ClassesScreen = ({ navigation }) => {
+const ClassesScreen = ({ navigation, route }) => {
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
+
 	const [searchQuery, setSearchQuery] = useState('');
 	const [acad, setAcad] = useState(null);
 	const [acadRaw, setAcadRaw] = useState(null);
 	const debounceTimeout = useRef(null);
+
+	const [allClasses, setAllClasses] = useState([]);
 	const [classes, setClasses] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [expandedClass, setExpandedClass] = useState(null);
+	const [lastFetched, setLastFetched] = useState(null);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -58,7 +63,17 @@ const ClassesScreen = ({ navigation }) => {
 		}, [])
 	);
 
-	const fetchClasses = useCallback(async () => {
+	const loadFromCache = useCallback(async () => {
+		if (!user?.id) return;
+		const { data, date } = await loadClassesFromLocal(user.id);
+		if (data) {
+			setAllClasses(data);
+			setClasses(data);
+		}
+		if (date) setLastFetched(date);
+	}, [user?.id]);
+
+	const fetchFromApi = useCallback(async () => {
 		if (!acad || !user?.id) return;
 		setLoading(true);
 		try {
@@ -66,8 +81,10 @@ const ClassesScreen = ({ navigation }) => {
 				page: 1,
 				...(searchQuery ? { search: searchQuery } : {}),
 				AcademicYear: acad,
+				StudentID: user?.conn_id,
 			};
 			const res = await getMyClasses(filter);
+
 			const sortedClasses = (res?.data || []).sort((a, b) => {
 				const aAssigned = a.student_activity?.filter(act => act.SubmissionType === 'Assigned').length || 0;
 				const bAssigned = b.student_activity?.filter(act => act.SubmissionType === 'Assigned').length || 0;
@@ -75,29 +92,49 @@ const ClassesScreen = ({ navigation }) => {
 				if (aAssigned !== 0 && bAssigned === 0) return -1;
 				return 0;
 			});
+
+			setAllClasses(sortedClasses);
 			setClasses(sortedClasses);
+			const savedTime = await saveClassesToLocal(user.id, sortedClasses);
+			if (savedTime) setLastFetched(savedTime);
 		} catch (err) {
 			handleApiError(err);
 		} finally {
 			setLoading(false);
 		}
-	}, [acad, user?.id, searchQuery]);
+	}, [acad, user?.id, user?.conn_id, searchQuery]);
+
+	const handleSearch = (text) => {
+		setSearchQuery(text);
+		if (!text.trim()) {
+			setClasses(allClasses);
+		} else {
+			const lower = text.toLowerCase();
+			const filtered = allClasses.filter(item =>
+				item?.class_info?.CourseName?.toLowerCase().includes(lower) ||
+				item.teacher?.name?.toLowerCase().includes(lower)
+			);
+			setClasses(filtered);
+		}
+	};
 
 	useEffect(() => {
-		fetchClasses();
+		const loadData = async () => {
+			await loadFromCache();
+			const { data } = await loadClassesFromLocal(user?.id);
+			if (!data) {
+				fetchFromApi();
+			}
+		};
+		loadData();
 	}, [acad, user?.id]);
 
-	useFocusEffect(
-		useCallback(() => {
-			if (acad && acadRaw) fetchClasses();
-		}, [acad, acadRaw])
-	);
 
 	const handleSearchTextChange = (text) => {
 		setSearchQuery(text);
 		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 		debounceTimeout.current = setTimeout(() => {
-			fetchClasses();
+			loadFromCache();
 		}, 500);
 	};
 
@@ -149,25 +186,33 @@ const ClassesScreen = ({ navigation }) => {
 
 				{isExpanded && (
 					<View style={styles.accordionBody}>
-						<View style={styles.teacherContainer}>
-							<Image source={{ uri: avatarUri }} style={styles.avatar} />
-							<CText fontStyle="SB" fontSize={12} numberOfLines={1} style={styles.teacherName}>
-								{teacher.name}
-							</CText>
+						<View style={{
+							flexDirection: 'row', justifyContent: 'space-between',
+							alignItems: 'center', borderTopWidth: 1,
+							borderColor: '#eee', padding: 10
+						}}>
+							<View style={styles.teacherRow}>
+								<Image source={{ uri: avatarUri, cache: 'force-cache' }} style={styles.avatar} />
+								<View>
+									<CText fontStyle="SB" fontSize={15}>{teacher.name}</CText>
+									<CText fontSize={13}>{teacher.email}</CText>
+								</View>
+							</View>
+							<View style={styles.teacherRow}>
+								<TouchableOpacity
+									style={styles.viewButton}
+									onPress={() =>
+										navigation.navigate('ClassDetails', {
+											ClassStudentID: item.ClassStudentID,
+											ClassID: item?.ClassID,
+										})
+									}>
+									<CText fontStyle="SB" fontSize={14} style={{ color: theme.colors.light.primary }}>
+										View
+									</CText>
+								</TouchableOpacity>
+							</View>
 						</View>
-						<TouchableOpacity
-							style={styles.viewBtn}
-							onPress={() =>
-								navigation.navigate('ClassDetails', {
-									ClassStudentID: item.ClassStudentID,
-									ClassID: classInfo?.ClassID,
-								})
-							}
-						>
-							<CText fontSize={14} fontStyle="SB" style={{ color: '#fff', padding: 5 }}>
-								View Class
-							</CText>
-						</TouchableOpacity>
 					</View>
 				)}
 			</View>
@@ -179,13 +224,18 @@ const ClassesScreen = ({ navigation }) => {
 			<CustomHeader />
 			<SafeAreaView style={globalStyles.safeArea}>
 				<View style={styles.container}>
+					{lastFetched ? (
+						<Text style={{ marginBottom: 8, fontSize: 12, color: 'gray' }}>
+							Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}
+						</Text>
+					) : null}
 					<View style={styles.searchWrapper}>
 						<TextInput
 							style={styles.searchInput}
 							placeholder="Search classes..."
 							placeholderTextColor="#666"
 							value={searchQuery}
-							onChangeText={handleSearchTextChange}
+							onChangeText={handleSearch}
 							returnKeyType="search"
 							clearButtonMode="while-editing"
 						/>
@@ -194,7 +244,7 @@ const ClassesScreen = ({ navigation }) => {
 						data={classes}
 						loading={loading}
 						renderItem={renderClassItem}
-						onRefresh={fetchClasses}
+						onRefresh={fetchFromApi}
 						keyExtractor={(item) => item.ClassStudentID?.toString() ?? `${item.ClassID}-${Math.random()}`}
 						ListEmptyComponent={!loading && <Text style={styles.emptyText}>No classes found.</Text>}
 					/>
@@ -208,6 +258,16 @@ const ClassesScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+	teacherRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	viewButton: {
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 8,
+		backgroundColor: theme.colors.light.primary + '33',
+	},
 	container: {
 		flex: 1,
 		paddingHorizontal: 12,
@@ -329,6 +389,5 @@ const styles = StyleSheet.create({
 		borderRadius: 8,
 	},
 });
-
 
 export default ClassesScreen;

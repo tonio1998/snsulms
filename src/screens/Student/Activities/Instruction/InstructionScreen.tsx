@@ -1,8 +1,8 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
 	View,
 	Text,
-	FlatList,
+	ScrollView,
 	TouchableOpacity,
 	RefreshControl,
 	SafeAreaView,
@@ -10,12 +10,9 @@ import {
 	StyleSheet,
 	ActivityIndicator,
 	Linking,
-	Alert,
+	Alert, StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import LinearGradient from 'react-native-linear-gradient';
-import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
-import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../../../context/AuthContext.tsx';
 import { NetworkContext } from '../../../../context/NetworkContext.tsx';
 import { useLoading } from '../../../../context/LoadingContext.tsx';
@@ -28,14 +25,14 @@ import { handleApiError } from '../../../../utils/errorHandler.ts';
 import { fetchClassAttachments } from '../../../../api/modules/activitiesApi.ts';
 import { getFileSize, formatNumber } from '../../../../utils/format.ts';
 import { viewFile } from '../../../../utils/viewFile.ts';
-import { turninSubmission } from "../../../../api/modules/submissionApi.ts";
+import { turninSubmission } from '../../../../api/modules/submissionApi.ts';
 import { useAlert } from '../../../../components/CAlert.tsx';
-import { useActivity } from "../../../../context/SharedActivityContext.tsx";
+import { useActivity } from '../../../../context/SharedActivityContext.tsx';
+import CButton from '../../../../components/buttons/CButton.tsx';
 
 const InstructionScreen = ({ navigation }) => {
-	const { activity } = useActivity();
+	const { activity, refreshFromOnline } = useActivity();
 	const [ActivityID, setActivityID] = useState(0);
-	const [StudentActivityID, setStudentActivityID] = useState(0);
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
@@ -46,7 +43,6 @@ const InstructionScreen = ({ navigation }) => {
 
 	const loadSubmissions = async () => {
 		if (!ActivityID || !network?.isOnline) return;
-
 		setLoading(true);
 		try {
 			const res = await fetchClassAttachments(ActivityID);
@@ -61,7 +57,6 @@ const InstructionScreen = ({ navigation }) => {
 	useEffect(() => {
 		if (activity?.ActivityID) {
 			setActivityID(activity.ActivityID);
-			setStudentActivityID(activity.StudentActivityID);
 		}
 	}, [activity]);
 
@@ -73,9 +68,13 @@ const InstructionScreen = ({ navigation }) => {
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
-		await loadSubmissions();
+		await refreshFromOnline();
+		if (ActivityID) {
+			await loadSubmissions();
+		}
 		setRefreshing(false);
 	};
+
 
 	const handleAction = async () => {
 		try {
@@ -102,7 +101,6 @@ const InstructionScreen = ({ navigation }) => {
 
 	const handleConfirmAction = () => {
 		const isSubmitted = activity?.SubmissionType === 'Submitted';
-
 		Alert.alert(
 			isSubmitted ? 'Withdraw Submission?' : 'Submit?',
 			isSubmitted
@@ -115,149 +113,188 @@ const InstructionScreen = ({ navigation }) => {
 		);
 	};
 
-	const renderItem = ({ item }) => {
+	const openAttachment = (item) => {
 		const isWebLink = item.Link.startsWith('http');
-		return (
-			<TouchableOpacity
-				style={styles.submissionCard}
-				onPress={() => {
-					if (isWebLink) Linking.openURL(item.Link).catch(() => Alert.alert('Error', 'Failed to open link'));
-					else viewFile(item.Link, item.Title);
-				}}
-			>
-				<Icon name="document-outline" size={22} color={theme.colors.light.primary} />
-				<View style={{ marginLeft: 12, flex: 1 }}>
-					<CText fontSize={16} fontStyle="SB" numberOfLines={1} style={{ color: '#000' }}>{item.Title}</CText>
-					{item.FileSize && <Text style={styles.subText}>Size: {getFileSize(item.FileSize)}</Text>}
-				</View>
-			</TouchableOpacity>
-		);
+		if (isWebLink) {
+			Linking.openURL(item.Link).catch(() => Alert.alert('Error', 'Failed to open link'));
+		} else {
+			viewFile(item.Link, item.Title);
+		}
 	};
-
-	const renderHeader = () => (
-		<>
-			<View style={styles.card}>
-				{activity?.activity?.topic?.Title && (
-					<CText fontSize={12} style={styles.label}>Topic: {activity?.activity?.topic?.Title}</CText>
-				)}
-				<CText fontSize={16} fontStyle="SB" style={styles.title}>{activity?.activity?.Title}</CText>
-				<CText fontSize={12} style={styles.label}>Instruction:</CText>
-				<CText style={styles.text}>{activity?.activity?.Description}</CText>
-				{activity?.activity?.DueDate && (
-					<>
-						<CText fontSize={12} style={styles.label}>Due Date:</CText>
-						<CText style={styles.text}>{formatDate(activity?.activity?.DueDate)}</CText>
-					</>
-				)}
-				<View style={[globalStyles.cardRow, { flexDirection: 'row', justifyContent: 'flex-start' }]}>
-					{activity?.activity?.Points > 0 && (
-						<View style={[styles.pointsRow, { marginRight: 45 }]}>
-							<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary }}>{formatNumber(activity?.activity?.Points)}</CText>
-							<CText fontSize={12} style={styles.pointsLabel}>Points</CText>
-						</View>
-					)}
-					{activity?.Grade > 0 && (
-						<View style={styles.pointsRow}>
-							<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary }}>{formatNumber(activity?.Grade)}</CText>
-							<CText fontSize={12} style={styles.pointsLabel}>Points Earned</CText>
-						</View>
-					)}
-				</View>
-				{activity?.DateSubmitted && (
-					<View style={styles.pointsRow}>
-						<CText fontSize={18} fontStyle="SB" style={{ color: theme.colors.light.primary }}>{formatDate(activity?.DateSubmitted)}</CText>
-						<CText fontSize={12} style={styles.pointsLabel}>Date Submitted</CText>
-					</View>
-				)}
-			</View>
-
-			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Instructor</CText>
-			<View style={styles.card}>
-				{!activity?.activity?.teacher?.users?.name ? (
-					<View style={styles.profileRow}>
-						<ShimmerPlaceHolder style={styles.avatar} />
-						<View style={styles.profileInfo}>
-							<ShimmerPlaceHolder style={{ width: 150, marginBottom: 10, borderRadius: 6 }} />
-							<ShimmerPlaceHolder style={{ width: 100, borderRadius: 6 }} />
-						</View>
-					</View>
-				) : (
-					<View style={styles.profileRow}>
-						<Image
-							source={{ uri: activity?.activity?.teacher?.users?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity?.activity?.teacher?.users?.name || 'User')}` }}
-							style={styles.avatar}
-						/>
-						<View style={styles.profileInfo}>
-							<CText fontSize={17} fontStyle="SB">{activity?.activity?.teacher?.users?.name}</CText>
-							<CText fontSize={12} style={{ color: '#777' }}>{activity?.activity?.teacher?.users?.email}</CText>
-						</View>
-					</View>
-				)}
-			</View>
-
-			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Attachments</CText>
-		</>
-	);
-
-	const renderShimmer = () =>
-		[1, 2].map((_, index) => (
-			<View style={{ padding: 16 }} key={index}>
-				<ShimmerPlaceHolder
-					loading={true}
-					LinearGradient={LinearGradient}
-					style={{ width: '100%', height: 100, borderRadius: 6 }}
-					autoRun
-				/>
-			</View>
-		));
 
 	return (
 		<>
-			<BackHeader
-				title="Instruction"
-				rightButton={
-					activity?.Grade == 0 || activity?.Grade == null && activity?.created_by !== user?.id && (
-						<TouchableOpacity
-							style={[
-								styles.submitBtn,
-								{
-									backgroundColor:
-										activity?.SubmissionType === 'Submitted'
-											? theme.colors.light.danger
-											: theme.colors.light.primary,
-								},
-							]}
-							onPress={handleConfirmAction}
-						>
-							<Icon
-								name={
-									activity?.SubmissionType === 'Submitted'
-										? 'close-outline'
-										: 'checkmark-circle'
-								}
-								size={18}
-								color="#fff"
-							/>
-							<CText fontStyle={'SB'} fontSize={14} style={{ color: '#fff', marginLeft: 4 }}>
-								{activity?.SubmissionType === 'Submitted' ? 'Withdraw' : 'Turn in'}
-							</CText>
-						</TouchableOpacity>
-					)
-				}
-			/>
+			<SafeAreaView style={[globalStyles.safeArea]}>
+				<BackHeader
+					title="Instruction"
+					rightButton={
+						activity?.SubmissionType !== 'Submitted' && activity?.created_by !== user?.id && (
+							<TouchableOpacity
+								style={[
+									styles.submitBtn,
+									{
+										backgroundColor:
+											activity?.SubmissionType === 'Submitted'
+												? theme.colors.light.danger
+												: theme.colors.light.primary,
+									},
+								]}
+								onPress={handleConfirmAction}
+								activeOpacity={0.7}
+							>
+								<Icon
+									name={activity?.SubmissionType === 'Submitted' ? 'close-outline' : 'checkmark-circle'}
+									size={18}
+									color="#fff"
+								/>
+								<CText fontStyle="SB" fontSize={14} style={{ color: '#fff', marginLeft: 6 }}>
+									{activity?.SubmissionType === 'Submitted' ? 'Withdraw' : 'Turn In'}
+								</CText>
+							</TouchableOpacity>
+						)
+					}
+				/>
 
-			<SafeAreaView style={globalStyles.safeArea}>
-				{loading ? renderShimmer() : (
-					<FlatList
-						data={submissions}
-						keyExtractor={(item, i) => `${item.id}-${i}`}
-						ListHeaderComponent={renderHeader}
-						renderItem={renderItem}
-						contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-						ListEmptyComponent={<Text style={styles.emptyText}>No attachments. 💤</Text>}
-					/>
-				)}
+				<ScrollView
+					contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+				>
+					<View style={styles.card}>
+						{activity?.activity?.topic?.Title && (
+							<CText fontSize={13} style={styles.topicLabel}>
+								Topic: {activity.activity.topic.Title}
+							</CText>
+						)}
+						<CText fontSize={20} fontStyle="SB" style={styles.title}>
+							{activity?.activity?.Title}
+						</CText>
+						{activity?.activity?.Description ? (
+							<>
+								<CText fontSize={13} style={styles.sectionLabel}>
+									Instruction:
+								</CText>
+								<CText style={styles.description}>{activity.activity.Description}</CText>
+							</>
+						) : null}
+						{activity?.activity?.DueDate && (
+							<>
+								<CText fontSize={13} style={styles.sectionLabel}>
+									Due Date:
+								</CText>
+								<CText style={styles.description}>{formatDate(activity.activity.DueDate)}</CText>
+							</>
+						)}
+
+						<View style={styles.pointsContainer}>
+							{activity?.activity?.Points > 0 && (
+								<View style={styles.pointsBox}>
+									<CText fontSize={22} fontStyle="SB" style={{ color: theme.colors.light.primary }}>
+										{formatNumber(activity.activity.Points)}
+									</CText>
+									<CText fontSize={13} style={styles.pointsLabel}>
+										Points
+									</CText>
+								</View>
+							)}
+							{activity?.Grade > 0 && (
+								<View style={styles.pointsBox}>
+									<CText fontSize={22} fontStyle="SB" style={{ color: theme.colors.light.primary }}>
+										{formatNumber(activity.Grade)}
+									</CText>
+									<CText fontSize={13} style={styles.pointsLabel}>
+										Points Earned
+									</CText>
+								</View>
+							)}
+						</View>
+						{activity?.DateSubmitted && (
+							<View style={[styles.pointsBox, {marginTop: 10}]}>
+								<CText fontSize={18} fontStyle="SB" style={{ color: theme.colors.light.primary }}>
+									{formatDate(activity.DateSubmitted)}
+								</CText>
+								<CText fontSize={13} style={styles.pointsLabel}>
+									Date Submitted
+								</CText>
+							</View>
+						)}
+					</View>
+
+					<CText fontSize={18} fontStyle="SB" style={{ marginBottom: 12 }}>
+						Instructor
+					</CText>
+					<View style={[styles.card, styles.instructorCard]}>
+						{!activity?.activity?.teacher?.users?.name ? (
+							<View style={styles.profileRow}>
+								<View style={[styles.avatar, styles.avatarPlaceholder]} />
+								<View style={{ marginLeft: 14, flex: 1 }}>
+									<View style={[styles.shimmerPlaceholder, { width: 160, height: 18, marginBottom: 8 }]} />
+									<View style={[styles.shimmerPlaceholder, { width: 120, height: 14 }]} />
+								</View>
+							</View>
+						) : (
+							<View style={styles.profileRow}>
+								<Image
+									source={{
+										uri:
+											activity.activity.teacher.users.avatar ||
+											`https://ui-avatars.com/api/?name=${encodeURIComponent(
+												activity.activity.teacher.users.name || 'User'
+											)}`,
+									}}
+									style={styles.avatar}
+								/>
+								<View style={{ marginLeft: 14, flex: 1 }}>
+									<CText fontSize={17} fontStyle="SB" style={{ color: '#222' }}>
+										{activity.activity.teacher.users.name}
+									</CText>
+									<CText fontSize={14} style={{ color: '#555', marginTop: 2 }}>
+										{activity.activity.teacher.users.email}
+									</CText>
+								</View>
+							</View>
+						)}
+					</View>
+
+					<CText fontSize={18} fontStyle="SB" style={{ marginBottom: 12, marginTop: 8 }}>
+						Attachments
+					</CText>
+
+					{activity?.activity?.QuizID > 0 && (
+						<View style={{ marginBottom: 16 }}>
+							<CButton
+								variant="primary"
+								label="Go to Quiz"
+								onPress={() => navigation.navigate('QuizScreen', { QuizID: activity.activity.QuizID })}
+							/>
+						</View>
+					)}
+
+					{loading ? (
+						<ActivityIndicator size="large" color={theme.colors.light.primary} style={{ marginTop: 20 }} />
+					) : submissions.length === 0 ? (
+						<CText style={{ color: '#888', fontStyle: 'italic' }}>No attachments found.</CText>
+					) : (
+						submissions.map((item) => (
+							<TouchableOpacity
+								key={item.ID || item.AttachmentID || item.id}
+								style={styles.attachmentRow}
+								activeOpacity={0.7}
+								onPress={() => openAttachment(item)}
+							>
+								<Icon name="document-outline" size={22} color={theme.colors.light.primary} />
+								<View style={styles.attachmentInfo}>
+									<CText numberOfLines={1} style={styles.attachmentTitle}>
+										{item.Title}
+									</CText>
+									<CText style={styles.attachmentDetails}>
+										{item.Extension.toUpperCase()} • {getFileSize(item.Size)}
+									</CText>
+								</View>
+								<Icon name="chevron-forward" size={20} color="#bbb" />
+							</TouchableOpacity>
+						))
+					)}
+				</ScrollView>
 			</SafeAreaView>
 		</>
 	);
@@ -267,43 +304,98 @@ const styles = StyleSheet.create({
 	submitBtn: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		paddingHorizontal: 10,
-		paddingVertical: 10,
-		borderRadius: 6,
-		backgroundColor: theme.colors.light.primary,
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 8,
 	},
-	submissionCard: {
+	card: {
+		backgroundColor: '#fff',
+		padding: 20,
+		borderRadius: 8,
+		marginBottom: 20,
+		shadowColor: '#000',
+		shadowOpacity: 0.07,
+		shadowRadius: 8,
+		shadowOffset: { width: 0, height: 4 },
+		elevation: 2,
+	},
+	topicLabel: {
+		color: '#666',
+		marginBottom: 6,
+	},
+	title: {
+		color: '#222',
+		marginBottom: 10,
+	},
+	sectionLabel: {
+		color: '#444',
+		marginTop: 12,
+		marginBottom: 6,
+		fontWeight: '600',
+	},
+	description: {
+		color: '#444',
+		lineHeight: 20,
+	},
+	pointsContainer: {
+		flexDirection: 'row',
+		justifyContent: 'space-around',
+		marginTop: 20,
+	},
+	pointsBox: {
+		alignItems: 'center',
+	},
+	pointsLabel: {
+		color: '#666',
+	},
+	instructorCard: {
+		paddingVertical: 16,
+	},
+	profileRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		padding: 14,
-		marginBottom: 10,
-		backgroundColor: '#fff',
-		borderRadius: 6,
-		elevation: 2,
-		shadowColor: '#000',
-		shadowOpacity: 0.05,
-		shadowOffset: { width: 0, height: 1 },
 	},
-	subText: { fontSize: 12, color: '#777' },
-	card: {
-		backgroundColor: 'rgba(255,255,255,0.95)',
-		borderRadius: 6,
-		padding: 16,
-		marginBottom: 16,
-		elevation: 2,
-		shadowColor: '#000',
-		shadowOpacity: 0.08,
-		shadowOffset: { width: 0, height: 1 },
+	avatar: {
+		width: 56,
+		height: 56,
+		borderRadius: 28,
+		backgroundColor: '#ddd',
 	},
-	title: { color: theme.colors.light.primary, marginBottom: 8 },
-	label: { color: '#888', marginTop: 12, marginBottom: 4, letterSpacing: 0.5 },
-	text: { fontSize: 14, color: '#000', lineHeight: 20 },
-	pointsRow: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderColor: '#eee' },
-	pointsLabel: { color: '#666', marginTop: 4 },
-	emptyText: { textAlign: 'center', paddingVertical: 20, color: '#aaa', fontSize: 13 },
-	profileRow: { flexDirection: 'row', alignItems: 'center' },
-	profileInfo: { marginLeft: 10, flex: 1 },
-	avatar: { width: 40, height: 40, borderRadius: 6, backgroundColor: '#ccc' },
+	avatarPlaceholder: {
+		backgroundColor: '#ccc',
+	},
+	shimmerPlaceholder: {
+		backgroundColor: '#eee',
+		borderRadius: 8,
+	},
+	attachmentRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		paddingVertical: 14,
+		paddingHorizontal: 16,
+		backgroundColor: '#fafafa',
+		borderRadius: 12,
+		marginBottom: 12,
+		shadowColor: '#000',
+		shadowOpacity: 0.03,
+		shadowRadius: 4,
+		shadowOffset: { width: 0, height: 1 },
+		elevation: 2,
+	},
+	attachmentInfo: {
+		flex: 1,
+		marginLeft: 12,
+	},
+	attachmentTitle: {
+		color: '#222',
+		fontWeight: '600',
+		fontSize: 15,
+	},
+	attachmentDetails: {
+		color: '#777',
+		marginTop: 2,
+		fontSize: 13,
+	},
 });
 
 export default InstructionScreen;

@@ -20,6 +20,7 @@ import {useAlert} from "../../components/CAlert.tsx";
 import {getTestBuilderData} from "../../api/testBuilder/testbuilderApi.ts";
 import {ShimmerList} from "../../components/loaders/ShimmerList.tsx";
 import {formatDate} from "../../utils/dateFormatter";
+import CustomHeader2 from "../../components/layout/CustomHeader2.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -111,7 +112,7 @@ const TestBuilderScreen = ({ navigation }) => {
 
 	return (
 		<>
-			<CustomHeader title="Test Builder" />
+			<CustomHeader2 />
 			<SafeAreaView style={globalStyles.safeArea}>
 				<View style={styles.container}>
 					{/* Search Box */}

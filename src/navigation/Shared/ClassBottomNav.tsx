@@ -54,6 +54,8 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 	return (
 		<Tab.Navigator
 			tabBarPosition="bottom"
+			shifting={false}
+			sceneAnimationEnabled={false}
 			swipeEnabled={true}
 			screenOptions={({ route }) => ({
 				tabBarIcon: ({ focused, color }) => {
@@ -101,6 +103,7 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 						{route.name}
 					</CText>
 				),
+				lazy: true,
 				tabBarLabelPosition: isLandscape ? 'beside-icon' : 'below-icon',
 				tabBarActiveTintColor: theme.colors.light.primary,
 				tabBarInactiveTintColor: '#9F9F9F',
@@ -115,9 +118,13 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 					shadowRadius: 10,
 					borderColor: '#ccc',
 					flexDirection: isLandscape ? 'row' : 'column',
+					borderTopWidth: 1
 				},
 				tabBarIndicatorStyle: {
-					backgroundColor: theme.colors.light.primary,
+					backgroundColor: theme.colors.light.primary + '55',
+					top: 5,
+					padding: 2,
+					borderRadius: 10,
 				},
 				headerShown: false,
 			})}

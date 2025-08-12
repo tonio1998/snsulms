@@ -18,11 +18,11 @@ import { CText } from '../components/common/CText.tsx';
 const Tab = createMaterialTopTabNavigator();
 
 const currentColors = theme.colors.light;
-
+const numberOfTabs = 4;
 export default function BottomSwipeTabs() {
 	const { hasRole } = useAccess();
 	const { user } = useAuth();
-
+	const tabWidth = Dimensions.get('window').width / numberOfTabs;
 	return (
 		<Tab.Navigator
 			initialRouteName="Home"
@@ -32,7 +32,10 @@ export default function BottomSwipeTabs() {
 				tabBarShowIcon: true,
 				tabBarPressColor: currentColors.primary,
 				tabBarIndicatorStyle: {
-					backgroundColor: theme.colors.light.primary,
+					backgroundColor: theme.colors.light.primary + '55',
+					top: 5,
+					padding: 2,
+					borderRadius: 10,
 				},
 				tabBarIcon: ({ focused, color }) => {
 					let iconName = 'ellipse-outline';
@@ -54,6 +57,9 @@ export default function BottomSwipeTabs() {
 							break;
 							case 'Test Builder':
 							iconName = focused ? 'book' : 'book-outline';
+							break;
+							case 'Calendar':
+							iconName = focused ? 'calendar' : 'calendar-outline';
 							break;
 						default:
 							break;
@@ -89,6 +95,7 @@ export default function BottomSwipeTabs() {
 					shadowRadius: 10,
 					shadowOffset: { width: 0, height: -2 },
 					borderTopColor: '#ccc',
+					borderTopWidth: 1,
 				},
 			})}
 		>
@@ -103,15 +110,19 @@ export default function BottomSwipeTabs() {
 			{hasRole('ACAD') && (
 				<>
 					<Tab.Screen name="Classes" component={FacClassesStackScreen} />
+					<Tab.Screen name="Test Builder" component={TestBuilderScreen} />
 				</>
 			)}
-			 <Tab.Screen name="Test Builder" component={TestBuilderScreen} />
+
+			<Tab.Screen name="Calendar" component={CalendarScreen} />
+
 		</Tab.Navigator>
 	);
 }
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TestBuilderScreen from "../Shared/Survey/TestBuilderScreen.tsx";
+import CalendarScreen from "../Shared/CalendarScreen.tsx";
 
 const ClassesStack = createNativeStackNavigator();
 const FacClassesStack = createNativeStackNavigator();

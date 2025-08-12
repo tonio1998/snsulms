@@ -8,20 +8,23 @@ let PrimaryColorHex = theme.colors.light.primary;
 export const globalStyles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0)',
+        backgroundColor: 'rgba(0,0,0,.5)',
     },
     modalContainer: {
         position: 'absolute',
-        bottom: 10,
-        left: 10,
-        right: 10,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        margin: 15,
         backgroundColor: '#fff',
-        borderRadius: 20,
-        paddingBottom: 30,
-        paddingTop: 12,
+        borderRadius: 15,
+        // paddingBottom: 30,
+        padding: 15,
         paddingHorizontal: 24,
         elevation: 20,
-        shadowColor: theme.colors.light.primary,
+        // shadowColor: theme.colors.light.primary,
+        maxHeight: '75%',
+        flexGrow: 1,
     },
     modalTitle: {
         fontSize: 20,
@@ -34,6 +37,8 @@ export const globalStyles = StyleSheet.create({
         borderBottomWidth: 1,
         borderColor: '#eee',
         alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center'
     },
     cancel: {
         marginTop: 20,
@@ -290,7 +295,8 @@ export const globalStyles = StyleSheet.create({
         // position: 'relative',
         // marginTop: 90,
         // backgroundColor: theme.colors.light.background,
-        paddingTop: 100,
+        paddingTop: 110,
+        // zIndex: -1
     },
     picker: {
         height: 50,

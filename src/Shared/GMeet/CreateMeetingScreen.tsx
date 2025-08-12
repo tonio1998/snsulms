@@ -30,11 +30,16 @@ const CreateMeetingScreen = ({ navigation, route }) => {
     const [showPicker, setShowPicker] = useState(null); // 'date' | 'time' | null
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState();
+    const [attendees, setAttendees] = useState([]);
 
     useEffect(() => {
         const fetchClass = async () => {
             try {
                 const res = await getClassInfo({ClassID});
+                console.log("creating meeting: ", res)
+                const studentAttendees = res?.students?.map(student => student.details?.user?.email).filter(Boolean);
+                // console.log("Student emails: ", studentAttendees);
+                setAttendees(studentAttendees)
                 setData(res)
                 setTitle(res?.CourseCode)
             } catch (e) {
@@ -54,6 +59,7 @@ const CreateMeetingScreen = ({ navigation, route }) => {
                 ClassID,
                 isScheduled: type === "scheduled",
                 dateTime: date,
+                attendees: attendees
             });
 
             const body = `**Meeting Created**  

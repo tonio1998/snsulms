@@ -45,6 +45,7 @@ const BackHeader = ({
 						title,
 						goTo = null,
 						rightButton = null,
+	style
 					}) => {
 	const navigation = useNavigation();
 	const circles = useMemo(() => generateCircles(), []);
@@ -78,20 +79,20 @@ const BackHeader = ({
 				end={{ x: 0.5, y: 1 }}
 				style={styles.gradientBackground}
 			>
-				{circles.map(({ key, size, top, left }) => (
-					<View
-						key={key}
-						style={{
-							position: 'absolute',
-							width: size,
-							height: size,
-							borderRadius: size / 2,
-							top,
-							left,
-							backgroundColor: 'rgba(255,255,255,0.1)',
-						}}
-					/>
-				))}
+				{/*{circles.map(({ key, size, top, left }) => (*/}
+				{/*	<View*/}
+				{/*		key={key}*/}
+				{/*		style={{*/}
+				{/*			position: 'absolute',*/}
+				{/*			width: size,*/}
+				{/*			height: size,*/}
+				{/*			borderRadius: size / 2,*/}
+				{/*			top,*/}
+				{/*			left,*/}
+				{/*			backgroundColor: 'rgba(255,255,255,0.1)',*/}
+				{/*		}}*/}
+				{/*	/>*/}
+				{/*))}*/}
 			</LinearGradient>
 
 			{/* GestureDetector intercepts swipe gestures here */}
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
 		top: 0,
 		left: 0,
 		right: 0,
-		zIndex: -1,
+		// zIndex: -1,
 	},
 
 	headerWrapper: {
