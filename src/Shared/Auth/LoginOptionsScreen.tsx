@@ -25,6 +25,7 @@ import { handleApiError } from '../../utils/errorHandler.ts';
 import * as Keychain from 'react-native-keychain';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { APP_NAME, GOOGLE_CLIENT_ID, TAGLINE } from '../../../env.ts';
+import {useAlert} from "../../components/CAlert.tsx";
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +39,7 @@ export default function LoginOptionsScreen() {
 	const navigation = useNavigation();
 	const { loginAuth } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
+	const {showAlert} = useAlert();
 	const [loading, setLoading] = useState(false);
 	const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 
@@ -68,6 +70,7 @@ export default function LoginOptionsScreen() {
 	};
 
 	const handleGoogleLogin = async () => {
+		showLoading('Please wait...');
 		try {
 			await GoogleSignin.hasPlayServices();
 			await GoogleSignin.signOut();
@@ -76,10 +79,8 @@ export default function LoginOptionsScreen() {
 			const accessToken = tokens.accessToken;
 			const user = userInfo?.data?.user;
 			const idToken = userInfo?.data?.idToken;
-
-			showLoading('Logging in...');
 			await AsyncStorage.setItem(`googleAccessToken${user?.email}`, accessToken);
-
+			showLoading('Logging in...');
 			const response = await loginWithGoogle({
 				token: idToken,
 				name: user?.name,
@@ -92,7 +93,7 @@ export default function LoginOptionsScreen() {
 				error?.response?.data?.message ||
 				error?.message ||
 				'Something went wrong during Google login.';
-			Alert.alert('Login Failed', 'Something went wrong during Google login.');
+			showAlert('error','Login Failed', 'Something went wrong during Google login.');
 			handleApiError(error, 'Google Login');
 		} finally {
 			hideLoading();
