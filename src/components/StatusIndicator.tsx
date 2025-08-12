@@ -1,50 +1,23 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
-const PING_URL = 'https://www.google.com/';
-
 const StatusIndicator = () => {
 	const [isOnline, setIsOnline] = useState(true);
-	const [isSlow, setIsSlow] = useState(false);
-	const intervalRef = useRef(null);
-
-	const testLatency = async () => {
-		const start = Date.now();
-		try {
-			await fetch(PING_URL, { method: 'HEAD' });
-			const latency = Date.now() - start;
-			return latency;
-		} catch {
-			return Infinity;
-		}
-	};
+	const [connectionType, setConnectionType] = useState(null);
+	const [isInternetReachable, setIsInternetReachable] = useState(true);
 
 	useEffect(() => {
-		const unsubscribe = NetInfo.addEventListener((state) => {
+		const unsubscribe = NetInfo.addEventListener(state => {
 			setIsOnline(state.isConnected);
-			if (!state.isConnected) {
-				setIsSlow(false); // no internet = no slow warning
-				clearInterval(intervalRef.current);
-				intervalRef.current = null;
-			} else {
-				if (!intervalRef.current) {
-					// start latency check loop
-					intervalRef.current = setInterval(async () => {
-						const latency = await testLatency();
-						setIsSlow(latency > 1000); // flag slow if ping > 1000 ms
-					}, 10000); // every 10 seconds
-				}
-			}
+			setConnectionType(state.type);
+			setIsInternetReachable(state.isInternetReachable ?? true);
 		});
 
-		return () => {
-			unsubscribe();
-			clearInterval(intervalRef.current);
-		};
+		return () => unsubscribe();
 	}, []);
 
-	if (!isOnline) {
+	if (!isOnline || !isInternetReachable) {
 		return (
 			<View style={styles.statusContainer}>
 				<Text style={[styles.statusText, styles.offlineText]}>
@@ -54,17 +27,18 @@ const StatusIndicator = () => {
 		);
 	}
 
-	if (isSlow) {
+	if (connectionType === 'cellular') {
+		// You can optionally warn if cellular, maybe consider this as "slow"
 		return (
 			<View style={styles.statusContainer}>
 				<Text style={[styles.statusText, styles.slowText]}>
-					Internet is too slow... reconnecting
+					Cellular connection detected, speed may vary...
 				</Text>
 			</View>
 		);
 	}
 
-	return null;
+	return null; // no warning when online and on wifi
 };
 
 const styles = StyleSheet.create({
@@ -73,14 +47,14 @@ const styles = StyleSheet.create({
 		top: '5%',
 		left: 0,
 		right: 0,
-		padding: 3,
+		padding: 5,
 		justifyContent: 'center',
 		alignItems: 'center',
 		backgroundColor: '#fff',
 		zIndex: 999,
 	},
 	statusText: {
-		fontSize: 11,
+		fontSize: 12,
 		textAlign: 'center',
 		fontWeight: 'bold',
 	},

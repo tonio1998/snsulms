@@ -30,7 +30,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 	UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const ClassesScreen = ({ navigation }) => {
+const ClassesScreen = ({ navigation, route }) => {
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
 	const [searchQuery, setSearchQuery] = useState('');
@@ -40,6 +40,7 @@ const ClassesScreen = ({ navigation }) => {
 	const [classes, setClasses] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [expandedClass, setExpandedClass] = useState(null);
+	console.log(route.params);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -66,6 +67,7 @@ const ClassesScreen = ({ navigation }) => {
 				page: 1,
 				...(searchQuery ? { search: searchQuery } : {}),
 				AcademicYear: acad,
+				StudentID: user?.conn_id,
 			};
 			const res = await getMyClasses(filter);
 			const sortedClasses = (res?.data || []).sort((a, b) => {
@@ -75,6 +77,8 @@ const ClassesScreen = ({ navigation }) => {
 				if (aAssigned !== 0 && bAssigned === 0) return -1;
 				return 0;
 			});
+
+			console.log(sortedClasses);
 			setClasses(sortedClasses);
 		} catch (err) {
 			handleApiError(err);

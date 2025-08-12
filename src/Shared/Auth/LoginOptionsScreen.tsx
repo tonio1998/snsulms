@@ -114,35 +114,25 @@ export default function LoginOptionsScreen() {
 					</View>
 
 					<View style={styles.authSection}>
-						{loading ? (
-							<View style={styles.loadingContainer}>
-								<ActivityIndicator size="large" color="#fff" />
-								<CText style={styles.loadingText}>Logging in...</CText>
-							</View>
-						) : (
-							<>
-								<CText style={styles.loginLabel}>Sign in to continue</CText>
-								<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
-									<Icon name="logo-google" size={22} color="#DB4437" />
-									<CText style={styles.authText}>Continue with Google</CText>
-								</TouchableOpacity>
+						<CText style={styles.loginLabel}>Sign in to continue</CText>
+						<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
+							<Icon name="logo-google" size={22} color="#DB4437" />
+							<CText style={styles.authText}>Continue with Google</CText>
+						</TouchableOpacity>
 
-								<TouchableOpacity style={styles.authButtonOutline} onPress={() => navigation.navigate('Login')}>
-									<Icon name="key-outline" size={22} color="#fff" />
-									<CText style={styles.authTextWhite}>Login with Password</CText>
-								</TouchableOpacity>
+						<TouchableOpacity style={styles.authButtonOutline} onPress={() => navigation.navigate('Login')}>
+							<Icon name="key-outline" size={22} color="#fff" />
+							<CText style={styles.authTextWhite}>Login with Password</CText>
+						</TouchableOpacity>
 
-								{isBiometricEnabled && (
-									<TouchableOpacity onPress={handleBiometricLogin} style={styles.fingerprint}>
-										<Icon name="finger-print-outline" size={40} color="#fff" />
-										<CText style={styles.bioText}>Use Biometrics</CText>
-									</TouchableOpacity>
-								)}
-							</>
+						{isBiometricEnabled && (
+							<TouchableOpacity onPress={handleBiometricLogin} style={styles.fingerprint}>
+								<Icon name="finger-print-outline" size={40} color="#fff" />
+								<CText style={styles.bioText}>Use Biometrics</CText>
+							</TouchableOpacity>
 						)}
 					</View>
 
-					{/* Footer */}
 					<View style={styles.footer}>
 						<CText fontSize={11} style={styles.footerText}>Developed by SNSU - ICT fgWorkz</CText>
 						<CText fontSize={11} style={styles.footerText}>Version {version} • © 2025 All rights reserved</CText>
@@ -248,7 +238,7 @@ const styles = StyleSheet.create({
 	},
 	footer: {
 		alignItems: 'center',
-		marginTop: 30,
+		marginTop: -50,
 	},
 	footerText: {
 		color: '#ccc',

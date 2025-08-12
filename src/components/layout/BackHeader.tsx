@@ -45,6 +45,7 @@ const BackHeader = ({
 						title,
 						goTo = null,
 						rightButton = null,
+	style
 					}) => {
 	const navigation = useNavigation();
 	const circles = useMemo(() => generateCircles(), []);

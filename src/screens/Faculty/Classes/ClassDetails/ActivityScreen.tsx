@@ -70,15 +70,15 @@ const ActivityScreen = ({ navigation }) => {
 		if (type === '2') {
 			navigation.navigate('AddActivity', { ClassID, ActivityTypeID });
 		} else if (type === '3') {
-			navigation.navigate('FetchEnrollment', { ClassID, ActivityTypeID });
+			navigation.navigate('QuizBuilder', { ClassID, ActivityTypeID });
 		}
 	};
 
 	const activityTypes = [
 		{ label: 'All', value: '' },
 		{ label: 'Assignment', value: 2 },
-		{ label: 'Quiz', value: 3 },
-		{ label: 'Exam', value: 4 },
+		{ label: 'Quiz/Exam', value: 3 },
+		// { label: 'Exam', value: 4 },
 	];
 
 	const fetchActivities = async () => {
@@ -228,10 +228,7 @@ const ActivityScreen = ({ navigation }) => {
 								<CText fontStyle="SB" fontSize={16}>Assignment</CText>
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.option} onPress={() => handleOption('3')}>
-								<CText fontStyle="SB" fontSize={16}>Quiz</CText>
-							</TouchableOpacity>
-							<TouchableOpacity style={styles.option} onPress={() => handleOption('4')}>
-								<CText fontStyle="SB" fontSize={16}>Exam</CText>
+								<CText fontStyle="SB" fontSize={16}>Quiz/Exam</CText>
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.cancel} onPress={closeModal}>
 								<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>

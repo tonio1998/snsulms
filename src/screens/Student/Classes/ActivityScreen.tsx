@@ -25,8 +25,8 @@ const ActivityScreen = ({ navigation, route }) => {
 	const types = [
 		{ label: 'All', value: '' },
 		{ label: 'Assignment', value: 2 },
-		{ label: 'Quiz', value: 3 },
-		{ label: 'Exam', value: 4 },
+		{ label: 'Quiz/Exam', value: 3 },
+		// { label: 'Exam', value: 4 },
 	];
 
 	const fetchActivities = async () => {

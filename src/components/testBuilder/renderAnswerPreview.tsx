@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { theme } from "../../theme";
-import {LinearRating} from "./LinearRating.tsx";
+import LinearRating from "./LinearRating.tsx";
 
-const renderAnswerPreview = ({ type, choices, items }) => {
+export const renderAnswerPreview = ({ type, choices, items }) => {
     let parsedChoices = [];
     try {
         parsedChoices = typeof choices === "string" ? JSON.parse(choices) : choices;
@@ -42,8 +42,10 @@ const renderAnswerPreview = ({ type, choices, items }) => {
                 </TouchableOpacity>
             );
         case "linear":
-            return <LinearRating scaleMin={items.ScaleMin} scaleMax={items.ScaleMax} />;
-
+            return <LinearRating
+                scaleMin={items.ScaleMin}
+                scaleMax={items.ScaleMax}
+            />
         default:
             return (
                 <Text style={{ fontStyle: "italic", color: theme.colors.light.disabled || "#999", textAlign: "center", paddingVertical: 20, fontSize: 16 }}>
@@ -74,7 +76,7 @@ const SelectableChoices = ({ choices = [], isRadio }) => {
                             flexDirection: "row",
                             alignItems: "center",
                             marginVertical: 2,
-                            padding: 2,
+                            padding: 8,
                             borderRadius: 8,
                             borderWidth: checked ? 1 : 0,
                             borderColor: "#ccc",
@@ -110,5 +112,3 @@ const SelectableChoices = ({ choices = [], isRadio }) => {
         </View>
     );
 };
-
-export default renderAnswerPreview;

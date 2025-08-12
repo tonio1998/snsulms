@@ -24,9 +24,9 @@ import {
     updateQuestionRequired /*, updateQuestionRequired*/
 } from "../../api/testBuilder/testbuilderApi.ts";
 import { theme } from "../../theme";
-import RenderAnswerPreview from "../../components/testBuilder/renderAnswerPreview.tsx";
 import CButton from "../../components/buttons/CButton.tsx";
 import QuizScreen from "./QuizScreen.tsx";
+import {RenderAnswerPreview} from "../../components/testBuilder/renderAnswerPreview.tsx";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -200,12 +200,12 @@ export default function QuestionsScreen({ navigation, route }) {
                         title="Preview"
                         icon={"eye-outline"}
                         style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 }}
-                        onPress={() => navigation.navigate("QuizScreen", { SurveyID: SurveyID })}
+                        onPress={() => navigation.navigate("QuizStartScreen", { SurveyID: SurveyID })}
                     />
                 }
             />
             <SafeAreaView style={globalStyles.safeArea}>
-                {loading ? <ActivityIndicator size="large" color="#007AFF" /> : null}
+                {loading ? <ActivityIndicator size="large" color={theme.colors.light.primary} /> : null}
                 {sections.length === 0 ? (
                     <View style={styles.emptyContainer}>
                         <Text style={styles.emptyText}>No sections found.</Text>

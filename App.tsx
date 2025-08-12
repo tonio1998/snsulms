@@ -55,6 +55,9 @@ import {GestureHandlerRootView} from "react-native-gesture-handler";
 import SurveyBottomTabNav from "./src/navigation/Survey/SurveyBottomTabNav.tsx";
 import AddQuestionScreen from "./src/Shared/Survey/AddQuestionScreen.tsx";
 import QuizScreen from "./src/Shared/Survey/QuizScreen.tsx";
+import QuizStartScreen from "./src/Shared/Survey/QuizStartScreen.tsx";
+import ResponsePreviewScreen from "./src/Shared/Survey/ResponsePreviewScreen.tsx";
+import QuizBuilderScreen from "./src/Shared/Survey/QuizBuilderScreen.tsx";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -186,6 +189,9 @@ const AppNavigator = () => {
                             <Stack.Screen name="MainTabs" component={BottomTabNav} />
                             <Stack.Screen name="SurveyTest" component={SurveyBottomTabNav} />
                             <Stack.Screen name="AddQuestionScreen" component={AddQuestionScreen} />
+                            <Stack.Screen name="QuizStartScreen" component={QuizStartScreen} options={{ headerShown: false }} />
+                            <Stack.Screen name="ResponsePreview" component={ResponsePreviewScreen} />
+                            <Stack.Screen name="QuizBuilder" component={QuizBuilderScreen} />
                             <Stack.Screen name="QuizScreen" component={QuizScreen} />
                             <Stack.Screen name="JoinClass" component={JoinClassScreen} />
                             <Stack.Screen name="AddClass" component={AddClassScreen} />

@@ -48,8 +48,8 @@ export const updateQuestionRequired = async (questionId, isRequired) => {
     return response.data;
 };
 
-export const initSurvey = async (SurveyID) => {
-    const response = await api.post(`/survey/init/${SurveyID}`);
+export const initSurvey = async (SurveyID, Duration, ActivityID) => {
+    const response = await api.post(`/survey/init/${SurveyID}`, { Duration, ActivityID });
     return response.data;
 };
 

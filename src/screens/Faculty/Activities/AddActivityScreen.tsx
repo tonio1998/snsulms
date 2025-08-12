@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, {useState, useContext, useCallback, useEffect} from 'react';
 import {
     View,
     TextInput,
@@ -20,18 +20,13 @@ import BackHeader from '../../../components/layout/BackHeader.tsx';
 import { globalStyles } from '../../../theme/styles.ts';
 import { CText } from '../../../components/common/CText.tsx';
 import { theme } from '../../../theme';
-import { addActivity } from '../../../api/modules/activitiesApi.ts'; // <-- your real API path
+import { addActivity } from '../../../api/modules/activitiesApi.ts';
+import {getSurveyData} from "../../../api/testBuilder/testbuilderApi.ts"; // <-- your real API path
 
 const AddActivityScreen = ({ navigation, route }) => {
     const ClassID = route.params.ClassID;
+    const FormID = route.params?.FormID;
     const ActivityTypeID = route.params.ActivityTypeID;
-    const [form, setForm] = useState({
-        Title: '',
-        Instruction: '',
-        Points: '',
-        DueDate: new Date(),
-        StrictLate: 0,
-    });
 
     const { showLoading, hideLoading } = useLoading();
     const { showAlert } = useAlert();
@@ -40,6 +35,37 @@ const AddActivityScreen = ({ navigation, route }) => {
     const [acad, setAcad] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
+    const [formData, setFormData] = useState({});
+    const [form, setForm] = useState({
+        Title: '',
+        Instruction: '',
+        Points: '',
+        DueDate: new Date(),
+        StrictLate: 0,
+        Duration: 0,
+    });
+
+    const getForm = async () => {
+        if(!FormID) return;
+        try {
+            const SurveyID = FormID;
+            const res = await getSurveyData({SurveyID});
+            if(res){
+                const totalPoints = res?.questions?.reduce((sum, question) => sum + Number(question.Points || 0), 0);
+                console.log('totalPoints', totalPoints);
+                setForm(prev => ({ ...prev, Points: totalPoints }));
+            }
+            console.log('res', res);
+            setFormData(res);
+        } catch (error) {
+            handleApiError(error, 'Fetching data');
+        }
+    };
+
+    useEffect(() => {
+        getForm();
+    }, [FormID]);
+
 
     useFocusEffect(
         useCallback(() => {
@@ -106,8 +132,12 @@ const AddActivityScreen = ({ navigation, route }) => {
                 ActivityTypeID
             };
 
+            if(FormID){
+                payload.FormID = FormID;
+            }
+
             const res = await addActivity(payload);
-            if (res.success) {
+            if (res) {
                 showAlert('success', 'Activity Added', 'The activity was successfully added.');
                 navigation.goBack();
             } else {
@@ -144,10 +174,22 @@ const AddActivityScreen = ({ navigation, route }) => {
                     <CText fontStyle="SB" style={styles.label}>Points</CText>
                     <TextInput
                         style={styles.input}
-                        value={form.Points}
+                        value={form.Points?.toString() || ''}
                         onChangeText={(text) => handleChange('Points', text)}
                         keyboardType="numeric"
                     />
+
+                    {FormID && (
+                        <>
+                            <CText fontStyle="SB" style={styles.label}>Duration (in minutes)</CText>
+                            <TextInput
+                                style={styles.input}
+                                value={form.Duration?.toString() || ''}
+                                onChangeText={(text) => handleChange('Duration', text)}
+                                keyboardType="numeric"
+                            />
+                        </>
+                    )}
 
                     <CText fontStyle="SB" style={styles.label}>Due Date & Time (Optional)</CText>
 
@@ -200,7 +242,6 @@ const AddActivityScreen = ({ navigation, route }) => {
                             onChange={handleTimeChange}
                         />
                     )}
-
 
                     <CText fontStyle="SB" style={styles.label}>Strict Late</CText>
                     <View style={styles.switchRow}>

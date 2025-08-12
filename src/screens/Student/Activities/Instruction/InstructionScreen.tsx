@@ -31,6 +31,7 @@ import { viewFile } from '../../../../utils/viewFile.ts';
 import { turninSubmission } from "../../../../api/modules/submissionApi.ts";
 import { useAlert } from '../../../../components/CAlert.tsx';
 import { useActivity } from "../../../../context/SharedActivityContext.tsx";
+import CButton from "../../../../components/buttons/CButton.tsx";
 
 const InstructionScreen = ({ navigation }) => {
 	const { activity } = useActivity();
@@ -196,6 +197,16 @@ const InstructionScreen = ({ navigation }) => {
 			</View>
 
 			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Attachments</CText>
+			{activity?.activity?.QuizID > 0 && (
+				<View>
+					<CButton
+						title="Take Quiz"
+						type={'success'}
+						style={{ padding: 12, borderRadius: 5, width: '100%' }}
+						onPress={() => navigation.navigate("QuizStartScreen", { SurveyID: activity?.activity?.QuizID, Duration: activity?.activity?.Duration, ActivityID: activity?.activity?.ActivityID })}
+					/>
+				</View>
+			)}
 		</>
 	);
 
@@ -216,7 +227,7 @@ const InstructionScreen = ({ navigation }) => {
 			<BackHeader
 				title="Instruction"
 				rightButton={
-					activity?.Grade == 0 || activity?.Grade == null && activity?.created_by !== user?.id && (
+					activity?.SubmissionType !== 'Submitted' && activity?.created_by !== user?.id && (
 						<TouchableOpacity
 							style={[
 								styles.submitBtn,

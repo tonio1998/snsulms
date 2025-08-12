@@ -28,7 +28,7 @@ export default function BottomSwipeTabs() {
 			initialRouteName="Home"
 			tabBarPosition="bottom"
 			screenOptions={({ route }) => ({
-				swipeEnabled: true,
+				swipeEnabled: false,
 				tabBarShowIcon: true,
 				tabBarPressColor: currentColors.primary,
 				tabBarIndicatorStyle: {
@@ -103,9 +103,10 @@ export default function BottomSwipeTabs() {
 			{hasRole('ACAD') && (
 				<>
 					<Tab.Screen name="Classes" component={FacClassesStackScreen} />
+					<Tab.Screen name="Test Builder" component={TestBuilderScreen} />
 				</>
 			)}
-			 <Tab.Screen name="Test Builder" component={TestBuilderScreen} />
+
 		</Tab.Navigator>
 	);
 }
