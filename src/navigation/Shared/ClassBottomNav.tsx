@@ -54,7 +54,7 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 	return (
 		<Tab.Navigator
 			tabBarPosition="bottom"
-			swipeEnabled={true}
+			// swipeEnabled={false}
 			screenOptions={({ route }) => ({
 				tabBarIcon: ({ focused, color }) => {
 					let iconName = 'ellipse-outline';

@@ -34,8 +34,7 @@ export default function FacultyActivitySwipeTabs({ route }) {
 	return (
 		<FacActivityProvider ActivityID={ActivityID}>
 			<Tab.Navigator
-				tabBarPosition="bottom" // put tabs at bottom
-				swipeEnabled={true} // enable swipe gestures
+				tabBarPosition="bottom"
 				screenOptions={({ route }) => ({
 					tabBarIcon: ({ focused, color }) => {
 						let iconName = 'ellipse-outline';

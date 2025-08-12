@@ -8,120 +8,47 @@ import {
 	PermissionsAndroid,
 	RefreshControl,
 	Text,
-	ActivityIndicator,
-	TouchableOpacity,
-	Dimensions, StatusBar
+	Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { globalStyles } from '../theme/styles.ts';
-import { CText } from '../components/common/CText.tsx';
+import { globalStyles } from '../theme/styles';
+import { CText } from '../components/common/CText';
 import { theme } from '../theme';
-import messaging, {
-	FirebaseMessagingTypes,
-	getMessaging,
-	getToken,
-} from '@react-native-firebase/messaging';
+import { getMessaging, getToken } from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveFcmToken } from '../api/modules/userApi.ts';
-import { handleApiError } from '../utils/errorHandler.ts';
-import CustomHeader from '../components/layout/CustomHeader.tsx';
-import BackgroundWrapper from '../utils/BackgroundWrapper';
+import { saveFcmToken } from '../api/modules/userApi';
+import { handleApiError } from '../utils/errorHandler';
+import CustomHeader from '../components/layout/CustomHeader';
 import { getApp } from '@react-native-firebase/app';
-import { useAuth } from '../context/AuthContext.tsx';
-import { getDashData } from '../api/modules/dashboardApi.ts';
+import { useAuth } from '../context/AuthContext';
+import { getDashData } from '../api/modules/dashboardApi';
 import { formatDate } from '../utils/dateFormatter';
-import { useAccess } from '../hooks/useAccess.ts';
-import { formatNumber } from '../utils/format.ts';
-import { SummaryCard } from '../components/SummaryCard.tsx';
+import { useAccess } from '../hooks/useAccess';
+import { formatNumber } from '../utils/format';
+import { SummaryCard } from '../components/SummaryCard';
 import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
-import { NetworkContext } from '../context/NetworkContext.tsx';
-import { getOfflineDashboard, saveDashboardData } from '../utils/sqlite/offlinedashboard';
-import {useFocusEffect} from "@react-navigation/native";
-import {getAcademicInfo} from "../utils/getAcademicInfo.ts";
-const HomeScreen = ({navigation}) => {
+import { NetworkContext } from '../context/NetworkContext';
+import { useFocusEffect } from '@react-navigation/native';
+import { getAcademicInfo } from '../utils/getAcademicInfo';
+import { loadDashboardCache, saveDashboardCache } from "../utils/cache/dashboardCache.ts";
+import Greeting from "../components/Greeting.tsx";
+
+const DASHBOARD_CACHE_KEY = 'dashboard_data';
+
+const HomeScreen = () => {
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
-	const [dash_data, setData] = useState([]);
+	const { hasRole } = useAccess();
+
+	const [dashData, setDashData] = useState<any>({});
 	const [refreshing, setRefreshing] = useState(false);
 	const [loading, setLoading] = useState(false);
-	const { can, hasRole } = useAccess();
+	const [acad, setAcad] = useState<string | null>(null);
+	const [acadRaw, setAcadRaw] = useState<any>(null);
 	const window = Dimensions.get('window');
-	const [acad, setAcad] = useState(null);
-	const [acadRaw, setAcadRaw] = useState(null);
-
-	const getFCMToken = async () => {
-		try {
-			const app = getApp();
-			const messaging = getMessaging(app);
-			const token = await getToken(messaging);
-
-			const isGenerated = await AsyncStorage.getItem('FCM_TOKEN_KEY');
-			// console.log('isGenerated ', isGenerated);
-			if (token && !isGenerated) {
-				console.log('FCM Token already generated');
-				await saveFcmToken(token);
-				await AsyncStorage.setItem('FCM_TOKEN_KEY', token);
-			}
-		} catch (error) {
-			handleApiError(error, 'Get FCM Token');
-		}
-	};
-
-	const getDashboardData = async (acadStr: string) => {
-		try {
-			setLoading(true);
-			if (network?.isOnline) {
-				const filter = {
-					AcademicYear: acadStr,
-				};
-				const res = await getDashData(filter);
-				setData(res);
-			} else {
-			}
-		} catch (error) {
-			handleApiError(error, 'Fetch Dashboard Data');
-		} finally {
-			setLoading(false);
-		}
-	};
-
-
-
-	useFocusEffect(
-		useCallback(() => {
-			let isActive = true;
-			const init = async () => {
-				const acadInfo = await getAcademicInfo();
-				const acadStr = `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
-				if (isActive) {
-					setAcad(acadStr);
-					setAcadRaw(acadInfo);
-					await getDashboardData(acadStr);
-				}
-			};
-			init();
-
-			return () => {
-				isActive = false;
-			};
-		}, [])
-	);
-
-	const onRefresh = useCallback(async () => {
-		setRefreshing(true);
-		if (!acad) {
-			const acadInfo = await getAcademicInfo();
-			const acadStr = `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
-			setAcad(acadStr);
-			setAcadRaw(acadInfo);
-			await getDashboardData(acadStr);
-		} else {
-			await getDashboardData(acad);
-		}
-		setRefreshing(false);
-	}, [acad]);
-
+	const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+	const [isCachedData, setIsCachedData] = useState(false);
 
 	useEffect(() => {
 		const requestNotificationPermission = async () => {
@@ -139,111 +66,141 @@ const HomeScreen = ({navigation}) => {
 		requestNotificationPermission();
 	}, []);
 
+	const getFCMToken = async () => {
+		try {
+			const app = getApp();
+			const messaging = getMessaging(app);
+			const token = await getToken(messaging);
+			const isGenerated = await AsyncStorage.getItem('FCM_TOKEN_KEY');
+			if (token && !isGenerated) {
+				await saveFcmToken(token);
+				await AsyncStorage.setItem('FCM_TOKEN_KEY', token);
+			}
+		} catch (error) {
+			handleApiError(error, 'Get FCM Token');
+		}
+	};
+
+	const getDashboardData = async (acadStr: string, forceRefresh = false) => {
+		try {
+			setLoading(true);
+
+			if (!forceRefresh) {
+				const cached = await loadDashboardCache(acadStr, user?.id);
+				if (cached) {
+					setDashData(cached.data);
+					setLastUpdated(cached.updatedAt);
+					setIsCachedData(true);
+					setLoading(false);
+					return;
+				}
+			}
+
+			if (network?.isOnline) {
+				const filter = { AcademicYear: acadStr };
+				const res = await getDashData(filter);
+				setDashData(res);
+				const updatedAt = new Date().toLocaleString();
+				setLastUpdated(updatedAt);
+				setIsCachedData(false);
+				await saveDashboardCache(acadStr, user?.id, res);
+			}
+		} catch (error) {
+			handleApiError(error, 'Fetch Dashboard Data');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useFocusEffect(
+		useCallback(() => {
+			let isActive = true;
+			const init = async () => {
+				const acadInfo = await getAcademicInfo();
+				const acadStr = `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
+				if (isActive) {
+					setAcad(acadStr);
+					setAcadRaw(acadInfo);
+					await getDashboardData(acadStr, false);
+				}
+			};
+			init();
+			return () => { isActive = false; };
+		}, [])
+	);
+
+	const onRefresh = useCallback(async () => {
+		setRefreshing(true);
+		const acadInfo = acad ? acadRaw : await getAcademicInfo();
+		const acadStr = acad ? acad : `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
+		await getDashboardData(acadStr, true);
+		setRefreshing(false);
+	}, [acad, acadRaw]);
 
 	const renderStudentDashboard = () => {
 		const stats = {
-			totalSubjects: dash_data?.total_classes || 0,
-			totalActivities: dash_data?.total_activities || 0,
-			dueToday: dash_data?.due_today || 0,
-			incoming: dash_data?.incoming_activities || 0,
-			completed: dash_data?.completed_activities || 0,
-			due: dash_data?.due_activities || 0,
+			incoming: dashData?.incoming_activities || 0,
+			dueToday: dashData?.due_today || 0,
+			completed: dashData?.completed_activities || 0,
+			totalActivities: dashData?.total_activities || 0,
+			totalClasses: dashData?.total_classes || 0,
 		};
-
-
-		const recentActivities = dash_data?.recent_activities || [];
+		const recentActivities = dashData?.recent_activities || [];
 
 		return (
 			<View style={{ marginTop: 10 }}>
 				<ScrollView horizontal showsHorizontalScrollIndicator={false}>
 					<View style={{ flexDirection: 'row', gap: 16, paddingHorizontal: 16 }}>
 						<SummaryCard
-							title="Incoming"
+							title="Activities"
 							loading={loading}
 							formatNumber={formatNumber}
 							CText={CText}
-							stats={[{ label: '', value: stats.incoming }]}
+							stats={[
+								{ label: 'Total', value: stats.totalActivities },
+								{ label: 'Incoming', value: stats.incoming },
+								{ label: 'Due Today', value: stats.dueToday },
+								{ label: 'Completed', value: stats.completed },
+							]}
 							backgroundColor="#fff"
 							textColor={theme.colors.light.primary}
-							cardStyle={{
-								width: window.width * 0.75,
-								padding: 20,
-								borderRadius: 8,
-							}}
+							cardStyle={styles.summaryCard}
 						/>
-
 						<SummaryCard
-							title="Due"
+							title="Classes"
 							loading={loading}
 							formatNumber={formatNumber}
 							CText={CText}
-							stats={[{ label: '', value: stats.dueToday }]}
+							stats={[{ label: '', value: stats.totalClasses }]}
 							backgroundColor="#fff"
 							textColor={theme.colors.light.primary}
-							cardStyle={{
-								width: window.width * 0.75,
-								padding: 20,
-								borderRadius: 8,
-							}}
-						/>
-
-						<SummaryCard
-							title="Completed"
-							loading={loading}
-							formatNumber={formatNumber}
-							CText={CText}
-							stats={[{ label: '', value: stats.completed }]}
-							backgroundColor="#fff"
-							textColor={theme.colors.light.primary}
-							cardStyle={{
-								width: window.width * 0.2,
-								padding: 20,
-								borderRadius: 8,
-							}}
+							cardStyle={styles.summaryCardSmall}
 						/>
 					</View>
 				</ScrollView>
 
-
-				<View style={{ marginTop: 30, paddingHorizontal: 16 }}>
-					<CText fontSize={18} fontStyle={'B'} style={{ marginBottom: 10 }}>
+				<View style={styles.section}>
+					<CText fontSize={18} fontStyle="B" style={styles.sectionTitle}>
 						Recent Activities
 					</CText>
-
 					{loading ? (
 						[...Array(3)].map((_, i) => (
 							<ShimmerPlaceHolder
 								key={i}
 								LinearGradient={LinearGradient}
-								style={{
-									height: 70,
-									borderRadius: 16,
-									marginBottom: 12,
-								}}
+								style={styles.shimmerPlaceholder}
 							/>
 						))
 					) : recentActivities.length === 0 ? (
-						<View style={{ alignItems: 'center', marginTop: 20 }}>
-							<Icon name="school-outline" size={48} color="#bbb" />
-							<CText style={{ color: '#888', marginTop: 10 }}>
-								No recent activity yet.
-							</CText>
-						</View>
+						<NoData icon="school-outline" message="No recent activity yet." />
 					) : (
 						recentActivities.slice(0, 5).map((activity, index) => (
-							<View key={index} style={styles.updateItem}>
-								<View style={styles.iconCircle}>
-									<Icon name="document-text-outline" size={22} color={theme.colors.light.primary} />
-								</View>
-								<View style={styles.updateText}>
-									<Text style={styles.updateLabel}>{activity?.title || 'Untitled Activity'}</Text>
-									{activity?.due_date && (
-										<Text style={styles.updateDate}>
-											Due: {formatDate(activity?.due_date || '', 'MMM dd, yyyy')}
-										</Text>
-									)}
-								</View>
-							</View>
+							<ActivityItem
+								key={index}
+								title={activity?.title}
+								date={activity?.due_date}
+								isDue={true}
+							/>
 						))
 					)}
 				</View>
@@ -251,112 +208,192 @@ const HomeScreen = ({navigation}) => {
 		);
 	};
 
+	const renderTeacherDashboard = () => {
+		const stats = {
+			classesHandled: dashData?.total_classes || 0,
+			assignmentsToCheck: dashData?.pending_checks || 0,
+			upcomingClasses: dashData?.upcoming_classes || 0,
+			activities: dashData?.activities?.length || 0,
+		};
+		const recentSubmissions = dashData?.recent_submissions || [];
 
+		return (
+			<View style={{ marginTop: 10 }}>
+				<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+					<View style={{ flexDirection: 'row', gap: 16, paddingHorizontal: 16 }}>
+						<SummaryCard
+							title="Classes"
+							loading={loading}
+							formatNumber={formatNumber}
+							CText={CText}
+							stats={[{ label: '', value: stats.classesHandled }]}
+							backgroundColor="#fff"
+							textColor={theme.colors.light.primary}
+							cardStyle={styles.summaryCardSmall}
+						/>
+						<SummaryCard
+							title="Activities"
+							loading={loading}
+							formatNumber={formatNumber}
+							CText={CText}
+							stats={[{ label: '', value: stats.activities }]}
+							backgroundColor="#fff"
+							textColor={theme.colors.light.primary}
+							cardStyle={styles.summaryCardSmall}
+						/>
+					</View>
+				</ScrollView>
 
+				<View style={styles.section}>
+					<CText fontSize={18} fontStyle="B" style={styles.sectionTitle}>
+						Recent Submissions
+					</CText>
+					{loading ? (
+						[...Array(3)].map((_, i) => (
+							<ShimmerPlaceHolder
+								key={i}
+								LinearGradient={LinearGradient}
+								style={styles.shimmerPlaceholder}
+							/>
+						))
+					) : recentSubmissions.length === 0 ? (
+						<NoData icon="document-text-outline" message="No recent submissions yet." />
+					) : (
+						recentSubmissions.slice(0, 5).map((submission, index) => (
+							<ActivityItem
+								key={index}
+								title={submission?.title}
+								date={submission?.created_at}
+								student={submission?.student}
+								isDue={false}
+							/>
+						))
+					)}
+				</View>
+			</View>
+		);
+	};
 
 	return (
 		<>
 			<CustomHeader />
-				<SafeAreaView style={[globalStyles.safeArea]}>
-					<ScrollView
-						showsVerticalScrollIndicator={false}
-						contentContainerStyle={{ paddingBottom: 100 }}
-						refreshControl={
-							<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-						}
-					>
-						<View style={globalStyles.p_3}>
-							<CText fontSize={18} fontStyle={'B'}>Welcome, {user?.name || ''}</CText>
-						</View>
-						{hasRole('STUD') && renderStudentDashboard()}
-						{hasRole('ACAD') && renderStudentDashboard()}
-					</ScrollView>
-				</SafeAreaView>
+			<SafeAreaView style={globalStyles.safeArea}>
+				<ScrollView
+					showsVerticalScrollIndicator={false}
+					contentContainerStyle={{ paddingBottom: 100 }}
+					refreshControl={
+						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+					}
+				>
+					<View style={styles.welcomeContainer}>
+						<Greeting user={user} />
+						{lastUpdated && (
+							<View style={styles.updatedBadge}>
+								<Icon
+									name="time-outline"
+									size={14}
+									color={theme.colors.light.primary}
+									style={{ marginRight: 4 }}
+								/>
+								<Text style={styles.updatedText}>
+									{lastUpdated} {isCachedData && '• Cached'}
+								</Text>
+							</View>
+						)}
+					</View>
+
+					{hasRole('STUD') && renderStudentDashboard()}
+					{hasRole('ACAD') && renderTeacherDashboard()}
+				</ScrollView>
+			</SafeAreaView>
 		</>
 	);
-
 };
 
+const NoData = ({ icon, message }: { icon: string; message: string }) => (
+	<View style={styles.noDataContainer}>
+		<View style={styles.noDataIconWrapper}>
+			<Icon name={icon} size={40} color={theme.colors.light.primary} />
+		</View>
+		<CText style={styles.noDataText}>{message}</CText>
+	</View>
+);
+
+const ActivityItem = ({ title, date, student, isDue }: any) => (
+	<View style={styles.updateItem}>
+		<View style={styles.iconCircle}>
+			<Icon name="document-text-outline" size={22} color={theme.colors.light.primary} />
+		</View>
+		<View style={styles.updateText}>
+			{student && <Text style={styles.updateLabel}>{student}</Text>}
+			<Text style={styles.updateTitle} numberOfLines={1}>
+				Activity: {title || 'Untitled'}
+			</Text>
+			{date && (
+				<Text style={styles.updateDate}>
+					{isDue ? 'Due: ' : 'Created: '}
+					{formatDate(date, 'MMM dd, yyyy')}
+				</Text>
+			)}
+		</View>
+	</View>
+);
+
 const styles = StyleSheet.create({
-	cardBoardStyle: {
-		width: 200,
-		padding: 20,
-		// marginBottom: 16,
-		borderRadius: 16,
-		shadowColor: '#000',
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
-		// elevation: 3,
-		margin: 5
+	welcomeContainer: {
+		paddingHorizontal: 16,
+		marginTop: 8,
+		marginBottom: 12,
 	},
-	header: {
+	updatedBadge: {
 		flexDirection: 'row',
-		justifyContent: 'space-between',
 		alignItems: 'center',
-		marginBottom: 24,
-	},
-	earningText: {
-		fontSize: 28,
-		fontWeight: '700',
-		color: '#111',
-	},
-	earningSub: {
-		fontSize: 13,
-		color: '#777',
+		backgroundColor: theme.colors.light.primary_soft + '33',
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 12,
+		alignSelf: 'flex-start',
 		marginTop: 4,
 	},
-	circleContainer: {
-		width: 48,
-		height: 48,
-		borderRadius: 24,
-		borderWidth: 2,
-		borderColor: '#e53935',
+	updatedText: {
+		fontSize: 12,
+		color: theme.colors.light.primary,
+	},
+	noDataContainer: {
 		alignItems: 'center',
-		justifyContent: 'center',
-	},
-	percentChange: {
-		color: '#e53935',
-		fontWeight: '600',
-	},
-	statCard: {
-		flex: 1,
+		backgroundColor: '#f9f9f9',
 		padding: 16,
-		borderRadius: 16,
-		backgroundColor: '#f0f0f0',
-		marginBottom: 16,
+		borderRadius: 12,
+		marginTop: 16,
 	},
-	statValue: {
-		fontSize: 25,
-		fontWeight: 900,
-		color: '#fff',
+	noDataIconWrapper: {
+		backgroundColor: theme.colors.light.primary_soft + '22',
+		padding: 12,
+		borderRadius: 50,
 	},
-	statLabel: {
+	noDataText: {
+		color: '#777',
+		marginTop: 10,
+		textAlign: 'center',
 		fontSize: 14,
-		color: '#fff',
-		marginTop: 4,
-	},
-	sectionTitle: {
-		fontSize: 20,
-		fontWeight: '600',
-		marginBottom: 16,
-		color: '#333',
 	},
 	updateItem: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'space-between',
-		backgroundColor: theme.colors.light.background,
+		backgroundColor: '#fff',
 		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: '#ddd',
 		padding: 16,
 		marginBottom: 12,
+		shadowColor: '#000',
+		shadowOpacity: 0.05,
+		shadowRadius: 5,
+		elevation: 2,
 	},
 	iconCircle: {
 		width: 40,
 		height: 40,
 		borderRadius: 20,
-		backgroundColor: theme.colors.light.primary_soft +'55',
+		backgroundColor: theme.colors.light.primary_soft + '55',
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
@@ -365,19 +402,41 @@ const styles = StyleSheet.create({
 		marginLeft: 12,
 	},
 	updateLabel: {
-		fontSize: 15,
+		fontSize: 14,
 		fontWeight: '600',
 		color: '#333',
+	},
+	updateTitle: {
+		fontSize: 14,
+		color: '#444',
+		fontWeight: '500',
 	},
 	updateDate: {
 		fontSize: 12,
 		color: '#777',
 		marginTop: 2,
 	},
-	updateAmount: {
-		fontSize: 16,
-		fontWeight: '700',
-		color: '#4caf50',
+	summaryCard: {
+		width: Dimensions.get('window').width * 1.1,
+		padding: 20,
+		borderRadius: 12,
+	},
+	summaryCardSmall: {
+		width: Dimensions.get('window').width * 0.75,
+		padding: 20,
+		borderRadius: 12,
+	},
+	section: {
+		marginTop: 30,
+		paddingHorizontal: 16,
+	},
+	sectionTitle: {
+		marginBottom: 10,
+	},
+	shimmerPlaceholder: {
+		height: 70,
+		borderRadius: 16,
+		marginBottom: 12,
 	},
 });
 

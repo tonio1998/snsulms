@@ -157,13 +157,14 @@ export default function ProfileScreen({ navigation }) {
 									<Image
 										source={
 											userData?.profile_pic
-												? { uri: `${FILE_BASE_URL}/${userData.profile_pic}` }
+												? { uri: `${FILE_BASE_URL}/${userData.profile_pic}`, cache: 'force-cache' }
 												: userData?.avatar
-													? { uri: userData.avatar }
+													? { uri: userData.avatar, cache: 'force-cache' }
 													: {
 														uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
 															userData?.name || 'User'
 														)}&background=random`,
+														cache: 'force-cache'
 													}
 										}
 										style={styles.avatar}

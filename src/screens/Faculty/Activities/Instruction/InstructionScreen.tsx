@@ -33,7 +33,7 @@ import { useFacActivity } from '../../../../context/FacSharedActivityContext.tsx
 import CButton from "../../../../components/buttons/CButton.tsx";
 
 const InstructionScreen = ({ navigation, route }) => {
-	const { activity } = useFacActivity();
+	const { activity, refreshFromOnline } = useFacActivity();
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
@@ -72,7 +72,10 @@ const InstructionScreen = ({ navigation, route }) => {
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
-		await loadSubmissions();
+		await refreshFromOnline();
+		if (ActivityID) {
+			await loadSubmissions();
+		}
 		setRefreshing(false);
 	};
 

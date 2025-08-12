@@ -1,6 +1,7 @@
-import {createContext, useCallback, useContext, useEffect, useRef, useState} from "react";
-import {NetworkContext} from "./NetworkContext.tsx";
-import {getClassInfo} from "../api/modules/classesApi.ts";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { NetworkContext } from "./NetworkContext.tsx";
+import { getClassInfo } from "../api/modules/classesApi.ts";
+import { loadClassInfoFromLocal, saveClassInfoToLocal } from "../utils/cache/Faculty/localClassInfo";
 
 const ClassContext = createContext(null);
 
@@ -17,17 +18,40 @@ export const ClassProvider = ({ children, ClassID }) => {
         try {
             const res = await getClassInfo({ ClassID });
             setClasses(res);
+            await saveClassInfoToLocal(ClassID, res);
             fetchedRef.current = true;
         } catch (error) {
-            console.error('Error fetching class:', error);
+            console.error("Error fetching class:", error);
         } finally {
             setLoading(false);
         }
-    }, [loading, ClassID]);
+    }, [ClassID, loading]);
+
+    const fetchCached = useCallback(async () => {
+        if (!ClassID) return;
+        try {
+            const { data, date } = await loadClassInfoFromLocal(ClassID);
+            if (data) {
+                setClasses(data);
+                setLoading(false);
+                return;
+            }
+
+            if (network?.isOnline) {
+                const res = await getClassInfo({ ClassID });
+                const normalized = { ...res };
+                setClasses(normalized);
+                await saveClassInfoToLocal(ClassID, normalized);
+            }
+        } catch (error) {
+            await fetch();
+        }
+    }, [ClassID, network?.isOnline, fetch]);
 
     useEffect(() => {
-        fetch();
-    }, [fetch]);
+        if (!ClassID) return;
+        fetchCached();
+    }, [ClassID, fetchCached]);
 
     return (
         <ClassContext.Provider value={{ classes, loading, loadingSubmissions, refresh: fetch }}>
