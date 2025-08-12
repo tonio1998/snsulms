@@ -1,23 +1,23 @@
-import React, {useCallback, useMemo, useState} from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     View,
     TouchableOpacity,
     StyleSheet,
     Image,
     StatusBar,
-    Text,
     Platform,
+    Animated,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { theme } from '../../theme';
-import { useAuth } from '../../context/AuthContext.tsx';
-import { APP_NAME, FILE_BASE_URL } from '../../../env.ts';
-import { navigate } from '../../utils/navigation.ts';
-import { CText } from '../common/CText.tsx';
-import { getAcademicInfo } from '../../utils/getAcademicInfo.ts';
-import { formatAcad } from '../../utils/format.ts';
 import LinearGradient from 'react-native-linear-gradient';
-import {globalStyles} from "../../theme/styles.ts";
+import { theme } from '../../theme';
+import { globalStyles } from '../../theme/styles';
+import { useAuth } from '../../context/AuthContext';
+import { APP_NAME, FILE_BASE_URL } from '../../../env';
+import { navigate } from '../../utils/navigation';
+import { CText } from '../common/CText';
+import { getAcademicInfo } from '../../utils/getAcademicInfo';
+import { formatAcad } from '../../utils/format';
 
 const generateCircles = (count = 4) => {
     const fixedPositions = [
@@ -30,23 +30,18 @@ const generateCircles = (count = 4) => {
     return Array.from({ length: count }).map((_, index) => {
         const size = Math.floor(Math.random() * 40) + 70;
         const { top, left } = fixedPositions[index] || { top: 0, left: 0 };
-
-        return {
-            key: `circle-${index}`,
-            size,
-            top,
-            left,
-        };
+        return { key: `circle-${index}`, size, top, left };
     });
 };
 
-
 const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) => {
     const navigation = useNavigation();
-    const circles = useMemo(() => generateCircles(), []);
     const { user } = useAuth();
-
     const [acad, setAcad] = useState(null);
+    const circles = useMemo(() => generateCircles(), []);
+
+    const fadeAnim = useMemo(() => new Animated.Value(0), []);
+    const scaleAnim = useMemo(() => new Animated.Value(0.8), []);
 
     useFocusEffect(
         useCallback(() => {
@@ -54,52 +49,67 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
                 const acadInfo = await getAcademicInfo();
                 setAcad(acadInfo);
             })();
-        }, [])
+
+            Animated.parallel([
+                Animated.timing(fadeAnim, {
+                    toValue: 1,
+                    duration: 800,
+                    useNativeDriver: true,
+                }),
+                Animated.spring(scaleAnim, {
+                    toValue: 1,
+                    friction: 5,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        }, [fadeAnim, scaleAnim])
     );
 
     const handleProfile = () => navigate('Profile');
     const handleAcad = () => navigation.navigate('AcademicYear');
 
-
     return (
         <>
             <StatusBar
                 barStyle="light-content"
-                translucent={false}
+                translucent
                 backgroundColor="transparent"
             />
 
+            {/* Gradient Background */}
             <LinearGradient
                 colors={[theme.colors.light.primary, 'transparent']}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
-                style={styles.statusBarBackground}
+                style={styles.gradientBg}
             >
                 {circles.map(({ key, size, top, left }) => (
-                    <View
+                    <Animated.View
                         key={key}
-                        style={{
-                            position: 'absolute',
-                            width: size,
-                            height: size,
-                            borderRadius: size / 2,
-                            top,
-                            left,
-                            backgroundColor: 'rgba(255,255,255,0.1)',
-                        }}
+                        style={[
+                            styles.circle,
+                            {
+                                width: size,
+                                height: size,
+                                borderRadius: size / 2,
+                                top,
+                                left,
+                                opacity: fadeAnim,
+                                transform: [{ scale: scaleAnim }],
+                            },
+                        ]}
                     />
                 ))}
             </LinearGradient>
 
+            {/* Header Content */}
             <View style={styles.header}>
-                <View style={styles.left}>
+                {/* Left: App name / Custom leftContent */}
+                <View style={styles.leftSection}>
                     <CText
-                        fontSize={30}
+                        fontSize={26}
                         fontStyle="SB"
-                        style={[
-                            styles.appName,
-                            globalStyles.shadowText
-                        ]}
+                        style={[styles.appName, globalStyles.shadowText]}
                         numberOfLines={1}
                         adjustsFontSizeToFit
                     >
@@ -108,14 +118,15 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
                     {leftContent}
                 </View>
 
-                <View style={styles.right}>
+                {/* Right: Academic year + Avatar */}
+                <View style={styles.rightSection}>
                     <TouchableOpacity
                         onPress={handleAcad}
                         style={styles.acadBtn}
-                        activeOpacity={0.7}
+                        activeOpacity={0.85}
                     >
                         <CText
-                            fontSize={14}
+                            fontSize={13}
                             fontStyle="SB"
                             numberOfLines={1}
                             style={styles.acadText}
@@ -126,7 +137,7 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
 
                     <TouchableOpacity
                         onPress={handleProfile}
-                        activeOpacity={0.7}
+                        activeOpacity={0.8}
                         style={styles.avatarWrapper}
                     >
                         <Image
@@ -142,7 +153,6 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
                                         }
                             }
                             style={styles.avatar}
-                            resizeMode="cover"
                         />
                     </TouchableOpacity>
 
@@ -154,99 +164,67 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
 };
 
 const styles = StyleSheet.create({
-    gradientContainer: {
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44,
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-    },
-
-    statusText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-
-    statusBarSpacer: {
-        alignItems: 'center',
-        paddingBottom: 4,
-    },
-
-    statusBarBackground: {
-        // height: Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44,
+    gradientBg: {
         height: 120,
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 9,
+        zIndex: 1,
     },
-    statusText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: 'bold',
+    circle: {
+        position: 'absolute',
+        backgroundColor: 'rgba(255,255,255,0.1)',
     },
-
     header: {
         position: 'absolute',
         top: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 44,
         left: 0,
         right: 0,
         paddingHorizontal: 16,
-        paddingVertical: 6,
+        paddingVertical: 8,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        zIndex: 1000,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
+        zIndex: 2,
     },
-
-    left: {
+    leftSection: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
-        overflow: 'hidden',
     },
-
     appName: {
         color: theme.colors.light.card,
-        marginLeft: 10,
+        marginRight: 10,
+        textShadowColor: 'rgba(0,0,0,0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 4,
     },
-
-    right: {
+    rightSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        width: 200,
-        justifyContent: 'flex-end',
     },
-
     acadBtn: {
-        maxWidth: 150,
-        marginRight: 16,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255,255,255,0.18)',
+        marginRight: 12,
     },
-
     acadText: {
-        marginTop: 2,
         color: theme.colors.light.text,
     },
-
     avatarWrapper: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
+        width: 42,
+        height: 42,
+        borderRadius: 21,
         borderWidth: 1,
         borderColor: theme.colors.light.primary,
         overflow: 'hidden',
     },
-
     avatar: {
         width: '100%',
         height: '100%',
-        borderRadius: 19,
     },
 });
 

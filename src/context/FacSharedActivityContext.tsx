@@ -1,48 +1,74 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getOfflineActivityById, saveActivitiesOffline } from '../utils/sqlite/offlineActivityService.ts';
-import { getActivityDetails } from '../api/modules/activitiesApi.ts';
 import { NetworkContext } from './NetworkContext.tsx';
+import { getActivityDetails } from '../api/modules/activitiesApi.ts';
+import { loadActivityToLocal, saveActivityToLocal } from '../utils/cache/Faculty/localActivity';
 import {handleApiError} from "../utils/errorHandler.ts";
-import {useLoading} from "./LoadingContext.tsx";
 
-const ActivityContext = createContext(null);
+const ActivityContext = createContext({
+    activity: null,
+    loading: false,
+    refreshFromOnline: async () => {},
+});
 
 export const FacActivityProvider = ({ children, ActivityID }) => {
     const [activity, setActivity] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [loadingSubmissions, setLoadingSubmissions] = useState(false);
     const network = useContext(NetworkContext);
-    const { showLoading, hideLoading } = useLoading();
 
-    const fetch = async () => {
-        if (loading) return;
-        setLoading(true);
-        showLoading('Loading activity...');
+    const refreshFromOnline = async () => {
+        if (!network?.isOnline) {
+            console.warn('Cannot refresh: offline');
+            return;
+        }
+
         try {
-            if (network?.isOnline) {
-                const res = await getActivityDetails(ActivityID);
-                setActivity(res);
-                await saveActivitiesOffline(ActivityID, res);
-            } else {
-                const cached = await getOfflineActivityById(ActivityID);
-                if (cached) setActivity(cached);
-            }
-        } catch (_) {
+            setLoading(true);
+            const res = await getActivityDetails(ActivityID);
+            const normalized = { ...res };
+            setActivity(normalized);
+            await saveActivityToLocal(ActivityID, normalized);
+        } catch (error) {
+            console.error('Error refreshing from online:', error);
+            handleApiError(error, 'Fetch activity from online');
         } finally {
             setLoading(false);
-            hideLoading();
+        }
+    };
+
+    const loadFromCache = async () => {
+        try {
+            setLoading(true);
+            const cachedData = await loadActivityToLocal(ActivityID);
+            if (cachedData?.data) {
+                setActivity(cachedData.data);
+            } else {
+                console.log('No data found in cache, fetching from online');
+                await refreshFromOnline();
+            }
+        } catch (error) {
+            console.error('Error loading from cache:', error);
+            await refreshFromOnline();
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetch();
-    }, []);
+        if (!ActivityID) return;
+        loadFromCache();
+    }, [ActivityID]);
 
     return (
-        <ActivityContext.Provider value={{ activity, loading, loadingSubmissions }}>
+        <ActivityContext.Provider value={{ activity, loading, refreshFromOnline }}>
             {children}
         </ActivityContext.Provider>
     );
 };
 
-export const useFacActivity = () => useContext(ActivityContext);
+export const useFacActivity = () => {
+    const context = useContext(ActivityContext);
+    if (!context) {
+        throw new Error('useFacActivity must be used within a FacActivityProvider');
+    }
+    return context;
+};

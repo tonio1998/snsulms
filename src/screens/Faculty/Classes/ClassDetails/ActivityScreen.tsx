@@ -34,11 +34,13 @@ const ActivityScreen = ({ navigation }) => {
 	const { showLoading2, hideLoading2 } = useLoading2();
 
 	const [activities, setActivities] = useState([]);
+	const [activity, setActivity] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 	const [actType, setActType] = useState('');
 	const [showModal, setShowModal] = useState(false);
 	const slideAnim = useRef(new Animated.Value(height)).current;
+	const [lastFetched, setLastFetched] = useState(null);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -101,6 +103,7 @@ const ActivityScreen = ({ navigation }) => {
 			});
 
 			handleActTypeFilter(actType, enriched);
+			setActivity(enriched);
 		} catch (err) {
 			handleApiError(err, 'Failed to fetch activities');
 		} finally {
@@ -121,9 +124,14 @@ const ActivityScreen = ({ navigation }) => {
 
 	const handleActTypeFilter = (type, list = activities) => {
 		setActType(type);
-		const filtered = list.filter(item => item?.ActivityTypeID !== 1);
-		const filteredByType = type ? filtered.filter(item => item?.ActivityTypeID == type) : filtered;
-		setActivities(filteredByType);
+		if(type > 0){
+			const filtered = list.filter(item => item?.ActivityTypeID !== 1);
+			const filteredByType = type ? filtered.filter(item => item?.ActivityTypeID == type) : filtered;
+			setActivities(filteredByType);
+		}else{
+			setActivities(activity);
+			console.log("No filter", activity);
+		}
 	};
 
 	const handleViewAct = (Title, ActivityID) => {
