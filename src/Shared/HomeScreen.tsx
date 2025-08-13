@@ -36,6 +36,8 @@ import { loadDashboardCache, saveDashboardCache } from "../utils/cache/dashboard
 import Greeting from "../components/Greeting.tsx";
 import CustomHomeHeader from '../components/layout/CustomHomeHeader.tsx';
 import LinkScroll from "../components/LinkScroll.tsx";
+import MarqueeText from "../components/common/MarqueeText.tsx";
+import TextTicker from "react-native-text-ticker";
 const DASHBOARD_CACHE_KEY = 'dashboard_data';
 
 const HomeScreen = () => {
@@ -96,9 +98,7 @@ const HomeScreen = () => {
 					setLoading(false);
 					return;
 				}
-			}
-
-			if (network?.isOnline) {
+			}else{
 				const filter = { AcademicYear: acadStr };
 				const res = await getDashData(filter);
 				setDashData(res);
@@ -123,7 +123,6 @@ const HomeScreen = () => {
 				if (isActive) {
 					setAcad(acadStr);
 					setAcadRaw(acadInfo);
-					await getDashboardData(acadStr, false);
 				}
 			};
 			init();
@@ -164,9 +163,21 @@ const HomeScreen = () => {
 								{ label: 'Due Today', value: stats.dueToday },
 								{ label: 'Completed', value: stats.completed },
 							]}
-							backgroundColor="#fff"
-							textColor={theme.colors.light.primary}
-							cardStyle={styles.summaryCard}
+							gradientColors={[theme.colors.light.primary, theme.colors.light.primary]}
+							textColor={theme.colors.light.card}
+							cardStyle={[styles.summaryCardSmall, {width: Dimensions.get('window').width * 0.9}]}
+						/>
+						<SummaryCard
+							title="Activities"
+							loading={loading}
+							formatNumber={formatNumber}
+							CText={CText}
+							stats={[
+								{ label: 'Incoming', value: stats.incoming },
+							]}
+							gradientColors={[theme.colors.light.primary, '#fff']}
+							textColor={theme.colors.light.card}
+							cardStyle={styles.summaryCardSmall}
 						/>
 						<SummaryCard
 							title="Classes"
@@ -174,8 +185,8 @@ const HomeScreen = () => {
 							formatNumber={formatNumber}
 							CText={CText}
 							stats={[{ label: '', value: stats.totalClasses }]}
-							backgroundColor="#fff"
-							textColor={theme.colors.light.primary}
+							gradientColors={[theme.colors.light.warning, '#fff']}
+							textColor={theme.colors.light.text}
 							cardStyle={styles.summaryCardSmall}
 						/>
 					</View>
@@ -220,7 +231,7 @@ const HomeScreen = () => {
 		const recentSubmissions = dashData?.recent_submissions || [];
 
 		return (
-			<View style={{ marginTop: 10 }}>
+			<View>
 				<ScrollView horizontal showsHorizontalScrollIndicator={false}>
 					<View style={{ flexDirection: 'row', gap: 16, paddingHorizontal: 16 }}>
 						<SummaryCard
@@ -229,8 +240,8 @@ const HomeScreen = () => {
 							formatNumber={formatNumber}
 							CText={CText}
 							stats={[{ label: '', value: stats.classesHandled }]}
-							backgroundColor="#fff"
-							textColor={theme.colors.light.primary}
+							gradientColors={[theme.colors.light.primary, '#fff']}
+							textColor={theme.colors.light.card}
 							cardStyle={styles.summaryCardSmall}
 						/>
 						<SummaryCard
@@ -239,8 +250,8 @@ const HomeScreen = () => {
 							formatNumber={formatNumber}
 							CText={CText}
 							stats={[{ label: '', value: stats.activities }]}
-							backgroundColor="#fff"
-							textColor={theme.colors.light.primary}
+							gradientColors={[theme.colors.light.warning, '#fff']}
+							textColor={theme.colors.light.text}
 							cardStyle={styles.summaryCardSmall}
 						/>
 					</View>
@@ -288,7 +299,6 @@ const HomeScreen = () => {
 
 	return (
 		<>
-			<CustomHomeHeader />
 			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 0}]}>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
@@ -297,6 +307,7 @@ const HomeScreen = () => {
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}
 				>
+					<CustomHomeHeader />
 					<Text>{'\n\n\n\n\n'}</Text>
 					<View style={styles.welcomeContainer}>
 						{lastUpdated && (
@@ -312,10 +323,19 @@ const HomeScreen = () => {
 								</CText>
 							</View>
 						)}
-
 						<View style={{ flex: 1, paddingTop: 10 }}>
 							<LinkScroll buttons={buttons} />
 						</View>
+						<TextTicker
+							style={{ fontSize: 18, color: '#004D1A' }}
+							duration={12000}
+							loop
+							bounce={false}
+							repeatSpacer={50}
+							marqueeDelay={2000}
+						>
+							Welcome to SNSU! 🚨 Announcement: Start of Class for the AY 2025-2026 is on August 18th! Don’t miss it!
+						</TextTicker>
 					</View>
 
 					{hasRole('STUD') && renderStudentDashboard()}
@@ -438,8 +458,8 @@ const styles = StyleSheet.create({
 		borderRadius: 8,
 	},
 	summaryCardSmall: {
-		width: Dimensions.get('window').width * 0.75,
-		padding: 20,
+		width: Dimensions.get('window').width * 0.60,
+		// padding: 5,
 		borderRadius: 8,
 	},
 	section: {

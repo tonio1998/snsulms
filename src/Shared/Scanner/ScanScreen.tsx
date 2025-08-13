@@ -26,6 +26,8 @@ import { saveAttendanceOffline, syncOfflineAttendance } from "../../utils/sqlite
 import { handleApiError } from "../../utils/errorHandler.ts";
 import { CText } from "../../components/common/CText.tsx";
 import Icon from "react-native-vector-icons/Ionicons";
+import CustomHeader2 from "../../components/layout/CustomHeader2.tsx";
+import BackHeader from "../../components/layout/BackHeader.tsx";
 
 export default function ClassAttendanceScanScreen() {
     const { classes } = useClass();
@@ -200,7 +202,7 @@ export default function ClassAttendanceScanScreen() {
 
     return (
         <>
-            <CustomHeader title="Class Attendance" />
+            <BackHeader title="Scan QR Code" />
             <SafeAreaView style={globalStyles.safeArea}>
                 {/* STATIC CAMERA */}
                 <View style={styles.cameraWrapper}>

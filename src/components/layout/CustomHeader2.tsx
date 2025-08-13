@@ -73,7 +73,7 @@ const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null }) 
     return (
         <>
             <StatusBar
-                barStyle="light-content"
+                barStyle="dark-content"
                 translucent
                 backgroundColor="transparent"
             />
@@ -103,12 +103,12 @@ const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null }) 
             </View>
 
             <View style={styles.headerWrapper}>
-                <BlurView
-                    style={StyleSheet.absoluteFill}
-                    blurType="light"
-                    blurAmount={15}
-                    reducedTransparencyFallbackColor={theme.colors.light.card}
-                />
+                {/*<BlurView*/}
+                {/*    style={StyleSheet.absoluteFill}*/}
+                {/*    blurType="light"*/}
+                {/*    blurAmount={5}*/}
+                {/*    reducedTransparencyFallbackColor={theme.colors.light.card}*/}
+                {/*/>*/}
                 <View style={styles.headerContent}>
                     <View style={styles.leftSection}>
                         <TouchableOpacity
@@ -132,8 +132,8 @@ const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null }) 
                             />
                         </TouchableOpacity>
                         <View style={{ marginLeft: 10 }}>
-                            <CText fontSize={14} style={{ color: '#fff'}} fontStyle="SB">Hello 👋</CText>
-                            <CText fontSize={15} style={{ color: '#fff'}} fontStyle="SB">{user?.name}</CText>
+                            <CText fontSize={14} style={{ color: theme.colors.light.text}} fontStyle="SB">Hello 👋</CText>
+                            <CText fontSize={15} style={{ color: theme.colors.light.text}} fontStyle="SB">{user?.name}</CText>
                         </View>
                     </View>
 
@@ -143,7 +143,7 @@ const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null }) 
                             style={styles.acadBtn}
                             activeOpacity={0.85}
                         >
-                            <Icon name={'school'} size={25} color={theme.colors.light.card} />
+                            <Icon name={'school'} size={25} color={theme.colors.light.primary} />
                         </TouchableOpacity>
                         {rightContent}
                     </View>
@@ -157,12 +157,17 @@ const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null }) 
 const styles = StyleSheet.create({
     headerWrapper: {
         position: 'absolute',
-        top: Platform.OS === 'android' ? ((StatusBar.currentHeight + 5) || 24) : 44,
-        left: '3%',
-        right: '3%',
-        borderRadius: 100,
+        top: StatusBar.currentHeight + 5,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 10,
+        // borderRadius: 100,
         overflow: 'hidden',
+        // zIndex: -9,
         zIndex: 1,
+        // borderBottomWidth: 1,
+        // borderBottomColor: '#ddd',
+        // backgroundColor: theme.colors.light.card,
     },
     headerContent: {
         paddingHorizontal: 10,
@@ -188,7 +193,7 @@ const styles = StyleSheet.create({
     },
     header: {
         position: 'absolute',
-        top: Platform.OS === 'android' ? ((StatusBar.currentHeight + 5) || 24) : 44,
+        top: StatusBar.currentHeight + 5,
         left: '3%',
         right: '3%',
         paddingHorizontal: 10,
@@ -196,7 +201,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        zIndex: 2,
+        // zIndex: 1,
         borderRadius: 100,
         backgroundColor: theme.colors.light.card,
     },
@@ -220,11 +225,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 11,
         paddingVertical: 10,
         borderRadius: 100,
-        backgroundColor: theme.colors.light.primary,
+        backgroundColor: theme.colors.light.primary + '18',
         // marginRight: 12,
     },
     acadText: {
-        color: theme.colors.light.text,
+        color: theme.colors.light.primary,
     },
     avatarWrapper: {
         width: 42,

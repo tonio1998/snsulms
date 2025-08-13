@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Dimensions } from 'react-native';
+import {ActivityIndicator, Dimensions, View} from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -51,11 +51,17 @@ export default function ClassBottomNav({ route }) {
 function InnerTabs({ ClassID, isLandscape, hasRole }) {
 	const { classes } = useClass();
 
+	// if(!classes){
+	// 	return <>
+	// 	 	<View style={{flex: 1, backgroundColor: 'red'}}>
+	// 			<ActivityIndicator size="large" color={theme.colors.light.primary} />
+	// 		</View>
+	// 	</>;
+	// };
+
 	return (
 		<Tab.Navigator
 			tabBarPosition="bottom"
-			shifting={false}
-			sceneAnimationEnabled={false}
 			swipeEnabled={true}
 			screenOptions={({ route }) => ({
 				tabBarIcon: ({ focused, color }) => {
@@ -103,7 +109,6 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 						{route.name}
 					</CText>
 				),
-				lazy: true,
 				tabBarLabelPosition: isLandscape ? 'beside-icon' : 'below-icon',
 				tabBarActiveTintColor: theme.colors.light.primary,
 				tabBarInactiveTintColor: '#9F9F9F',
@@ -112,17 +117,19 @@ function InnerTabs({ ClassID, isLandscape, hasRole }) {
 					height: isLandscape ? 55 : 65,
 					paddingTop: 4,
 					paddingBottom: isLandscape ? 4 : 10,
-					shadowColor: '#000',
-					shadowOffset: { width: 0, height: -2 },
-					shadowOpacity: 0.1,
-					shadowRadius: 10,
+					// shadowColor: '#000',
+					// shadowOffset: { width: 0, height: -2 },
+					// shadowOpacity: 0.1,
+					// shadowRadius: 10,
 					borderColor: '#ccc',
 					flexDirection: isLandscape ? 'row' : 'column',
-					borderTopWidth: 1
+					borderTopWidth: 1,
+					// margin: 10,
+					// borderRadius: 10
 				},
 				tabBarIndicatorStyle: {
-					backgroundColor: theme.colors.light.primary + '55',
-					top: 5,
+					backgroundColor: theme.colors.light.primary,
+					top: -2,
 					padding: 2,
 					borderRadius: 10,
 				},

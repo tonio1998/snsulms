@@ -8,12 +8,18 @@ import HomeScreen from '../Shared/HomeScreen.tsx';
 import ClassesScreen from '../screens/Student/Classes/ClassesScreen.tsx';
 import ActivitiesScreen from '../screens/Student/Classes/ActivitiesScreen.tsx';
 import QRCodeScreen from '../Shared/User/QRCodeScreen.tsx';
-import GradesScreen from './Grades/GradesScreen.tsx';
 import ClassesListScreen from '../screens/Faculty/Classes/ClassesListScreen.tsx';
 
 import { useAccess } from '../hooks/useAccess.ts';
 import { useAuth } from '../context/AuthContext.tsx';
 import { CText } from '../components/common/CText.tsx';
+
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import TestBuilderScreen from "../Shared/Survey/TestBuilderScreen.tsx";
+import CalendarScreen from "../Shared/CalendarScreen.tsx";
+
+const ClassesStack = createNativeStackNavigator();
+const FacClassesStack = createNativeStackNavigator();
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -32,10 +38,11 @@ export default function BottomSwipeTabs() {
 				tabBarShowIcon: true,
 				tabBarPressColor: currentColors.primary,
 				tabBarIndicatorStyle: {
-					backgroundColor: theme.colors.light.primary + '55',
-					top: 5,
+					backgroundColor: theme.colors.light.primary,
+					top: -2,
 					padding: 2,
 					borderRadius: 10,
+					// elevation: 4,
 				},
 				tabBarIcon: ({ focused, color }) => {
 					let iconName = 'ellipse-outline';
@@ -119,13 +126,6 @@ export default function BottomSwipeTabs() {
 		</Tab.Navigator>
 	);
 }
-
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import TestBuilderScreen from "../Shared/Survey/TestBuilderScreen.tsx";
-import CalendarScreen from "../Shared/CalendarScreen.tsx";
-
-const ClassesStack = createNativeStackNavigator();
-const FacClassesStack = createNativeStackNavigator();
 
 function ClassesStackScreen() {
 	return (

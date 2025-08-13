@@ -72,11 +72,6 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
 
     return (
         <>
-            <StatusBar
-                barStyle="light-content"
-                translucent
-                backgroundColor="transparent"
-            />
             <View
                 colors={[theme.colors.light.primary, 'transparent']}
                 start={{ x: 0.5, y: 0 }}
@@ -106,7 +101,7 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
                 <BlurView
                     style={StyleSheet.absoluteFill}
                     blurType="light"
-                    blurAmount={15}
+                    blurAmount={1}
                     reducedTransparencyFallbackColor={theme.colors.light.card}
                 />
                 <View style={styles.headerContent}>
@@ -163,6 +158,7 @@ const styles = StyleSheet.create({
         borderRadius: 100,
         overflow: 'hidden',
         zIndex: 1,
+        backgroundColor: theme.colors.light.primary + '55'
     },
     headerContent: {
         paddingHorizontal: 10,
@@ -179,8 +175,8 @@ const styles = StyleSheet.create({
         right: 0,
         zIndex: -9,
         backgroundColor: theme.colors.light.primary,
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20
+        // borderBottomLeftRadius: 20,
+        // borderBottomRightRadius: 20
     },
     circle: {
         position: 'absolute',

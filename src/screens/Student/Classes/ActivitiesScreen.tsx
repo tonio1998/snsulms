@@ -24,6 +24,8 @@ import {
 	loadAllStudentActivitiesToLocal,
 	saveAllStudentActivitiesToLocal
 } from "../../../utils/cache/Student/localStudentActivitiesGroup";
+import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
+import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
 
 const ActivitiesScreen = ({ navigation }) => {
 	const { showLoading, hideLoading } = useLoading();
@@ -214,7 +216,7 @@ const ActivitiesScreen = ({ navigation }) => {
 
 	return (
 		<>
-			<CustomHeader />
+			<CustomHeader2 />
 			<SafeAreaView style={globalStyles.safeArea}>
 				<View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 10 }}>
 					<View style={styles.searchWrapper}>
@@ -233,12 +235,10 @@ const ActivitiesScreen = ({ navigation }) => {
 						) : null}
 					</View>
 
-					{/* Last updated indicator */}
-					{lastUpdated && !searchQuery && (
-						<Text style={{ fontSize: 12, color: '#777', marginBottom: 8 }}>
-							Last updated: {formatDate(lastUpdated)}
-						</Text>
-					)}
+					<LastUpdatedBadge
+						date={lastUpdated}
+						onReload={handleRefresh}
+					/>
 
 					{!searchQuery && (
 						<View style={styles.tabWrapper}>

@@ -1,15 +1,5 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
-import {
-	View,
-	Text,
-	FlatList,
-	TouchableOpacity,
-	RefreshControl,
-	SafeAreaView,
-	Image,
-	StyleSheet,
-	ActivityIndicator,
-} from 'react-native';
+import React, { useCallback, useContext, useState } from 'react';
+import { View, TouchableOpacity, SafeAreaView, Image, StyleSheet } from 'react-native';
 import { useAuth } from '../../../../context/AuthContext.tsx';
 import { NetworkContext } from '../../../../context/NetworkContext.tsx';
 import { globalStyles } from '../../../../theme/styles.ts';
@@ -22,6 +12,11 @@ import { useFacActivity } from '../../../../context/FacSharedActivityContext.tsx
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { ShimmerList } from '../../../../components/loaders/ShimmerList.tsx';
+import { LastUpdatedBadge } from "../../../../components/common/LastUpdatedBadge";
+import {
+	loadActivitySubmissionToLocal,
+	saveActivitySubmissionToLocal
+} from "../../../../utils/cache/Faculty/localActivitySubmission";
 
 const SubmissionListScreen = ({ navigation }) => {
 	const { activity } = useFacActivity();
@@ -31,14 +26,27 @@ const SubmissionListScreen = ({ navigation }) => {
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 	const [submissions, setSubmissions] = useState([]);
-	const [ActivityID, setActivityID] = useState(0);
+	const [lastFetched, setLastFetched] = useState(null);
 
 	const loadSubmissions = async (id) => {
 		if (!id || id <= 0) return;
 		setLoading(true);
 		try {
-			const data = await getActivityResponses({ ActivityID: id });
-			setSubmissions(data.data);
+			const { data, date } = await loadActivitySubmissionToLocal(id);
+			if (data) {
+				setSubmissions(data);
+				setLastFetched(date);
+				setLoading(false);
+				console.log('🔍 Fetching submissions from local cache', data);
+			}
+
+			if (!data) {
+				const res = await getActivityResponses({ ActivityID: id });
+				console.log('🔍 Fetching submissions from API', res);
+				setSubmissions(res.data);
+				const savedTime = await saveActivitySubmissionToLocal(id, res.data);
+				if (savedTime) setLastFetched(savedTime);
+			}
 		} catch (error) {
 			handleApiError(error, "Failed to fetch submissions");
 		} finally {
@@ -47,27 +55,35 @@ const SubmissionListScreen = ({ navigation }) => {
 	};
 
 	const onRefresh = async () => {
+		if (!activity?.ActivityID) return;
 		setRefreshing(true);
-		await loadSubmissions(ActivityID);
-		setRefreshing(false);
-	};
-
-	useEffect(() => {
-		if (activity?.ActivityID > 0) {
-			setActivityID(activity.ActivityID);
+		try {
+			const res = await getActivityResponses({ ActivityID: activity.ActivityID });
+			setSubmissions(res.data);
+			console.log('🔍 Fetching submissions from API', res.data);
+			const savedTime = await saveActivitySubmissionToLocal(activity.ActivityID, res.data);
+			if (savedTime) setLastFetched(savedTime);
+		} catch (error) {
+			handleApiError(error, "Failed to refresh submissions");
+		} finally {
+			setRefreshing(false);
 		}
-	}, [activity]);
+	};
 
 	useFocusEffect(
 		useCallback(() => {
-			if (ActivityID > 0) {
-				loadSubmissions(ActivityID);
+			if (activity?.ActivityID && activity.ActivityID > 0) {
+				loadSubmissions(activity.ActivityID);
 			}
-		}, [ActivityID])
+		}, [activity?.ActivityID])
 	);
 
-	const handleViewSubmission = (StudentActivityID) => {
-		navigation.navigate('SubmissionDetails', { StudentActivityID });
+
+	const handleViewSubmission = (StudentActivityID, ActivityID) => {
+		navigation.navigate('SubmissionDetails', {
+			StudentActivityID,
+			ActivityID
+		});
 	};
 
 	const renderSubmission = ({ item }) => {
@@ -79,7 +95,7 @@ const SubmissionListScreen = ({ navigation }) => {
 		return (
 			<TouchableOpacity
 				style={styles.card}
-				onPress={() => handleViewSubmission(item.StudentActivityID)}
+				onPress={() => handleViewSubmission(item.StudentActivityID, item.ActivityID)}
 			>
 				<View style={styles.submissionCard}>
 					<Image
@@ -133,6 +149,10 @@ const SubmissionListScreen = ({ navigation }) => {
 		<>
 			<BackHeader title="Submissions" />
 			<SafeAreaView style={globalStyles.safeArea}>
+				<LastUpdatedBadge
+					date={lastFetched}
+					onReload={onRefresh}
+				/>
 				<ShimmerList
 					data={submissions}
 					loading={loading}
@@ -193,12 +213,6 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 6,
-	},
-	emptyText: {
-		textAlign: 'center',
-		paddingVertical: 24,
-		color: '#9ca3af',
-		fontSize: 13,
 	},
 });
 

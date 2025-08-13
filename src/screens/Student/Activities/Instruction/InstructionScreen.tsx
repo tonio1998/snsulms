@@ -41,6 +41,8 @@ const InstructionScreen = ({ navigation }) => {
 	const [submissions, setSubmissions] = useState([]);
 	const { showAlert } = useAlert();
 
+	console.log("activity", activity);
+
 	const loadSubmissions = async () => {
 		if (!ActivityID || !network?.isOnline) return;
 		setLoading(true);
@@ -276,7 +278,7 @@ const InstructionScreen = ({ navigation }) => {
 					) : (
 						submissions.map((item) => (
 							<TouchableOpacity
-								key={item.ID || item.AttachmentID || item.id}
+								key={item?.id}
 								style={styles.attachmentRow}
 								activeOpacity={0.7}
 								onPress={() => openAttachment(item)}
@@ -284,10 +286,10 @@ const InstructionScreen = ({ navigation }) => {
 								<Icon name="document-outline" size={22} color={theme.colors.light.primary} />
 								<View style={styles.attachmentInfo}>
 									<CText numberOfLines={1} style={styles.attachmentTitle}>
-										{item.Title}
+										{item?.Title}
 									</CText>
 									<CText style={styles.attachmentDetails}>
-										{item.Extension.toUpperCase()} • {getFileSize(item.Size)}
+										{item?.provider.toUpperCase()} • {getFileSize(item?.FileSize)}
 									</CText>
 								</View>
 								<Icon name="chevron-forward" size={20} color="#bbb" />

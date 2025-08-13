@@ -9,10 +9,7 @@ const Drawer = createDrawerNavigator();
 
 export default function AppDrawer() {
   return (
-      <><StatusBar
-          backgroundColor="#1e90ff"
-          barStyle="light-content"
-      /><Drawer.Navigator
+      <><Drawer.Navigator
           initialRouteName="Dashboard"
           drawerContent={(props) => <CustomDrawerContent {...props} />}
           screenOptions={{

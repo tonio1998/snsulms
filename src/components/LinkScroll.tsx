@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import {ScrollView, TouchableOpacity, Text, View, Dimensions, Linking, Alert} from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
+import {theme} from "../theme";
 
 const screenWidth = Dimensions.get("window").width;
 async function openApp(url: string, fallbackUrl?: string) {
@@ -34,7 +35,7 @@ export default function LinkScroll({ buttons }) {
             const newX = Math.max(
                 0,
                 Math.min(
-                    scrollX + direction * 150, // step size
+                    scrollX + direction * 150,
                     contentWidth - screenWidth
                 )
             );
@@ -44,8 +45,7 @@ export default function LinkScroll({ buttons }) {
     };
 
     return (
-        <View style={{ marginVertical: 10 }}>
-            {/* Scrollable area */}
+        <View style={{ marginVertical: 10, marginHorizontal: 0 }}>
             <View>
                 <ScrollView
                     ref={scrollRef}
@@ -56,13 +56,13 @@ export default function LinkScroll({ buttons }) {
                     onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
                     scrollEventThrottle={16}
                 >
-                    {buttons.map(({ url, iconSet, iconName, name }, idx) => {
+                    {buttons.map(({ url, iconSet, iconName, name, fallbackUrl }, idx) => {
                         const IconComponent = iconSet === "Ionicons" ? Icon : FontAwesome;
                         return (
                             <TouchableOpacity
                                 key={idx}
                                 style={styles.link_button}
-                                onPress={() => Linking.openURL(url)}
+                                onPress={() => openApp(url, fallbackUrl)}
                             >
                                 <View style={styles.icon_box}>
                                     <IconComponent name={iconName} size={24} color="#004D1A" />
@@ -75,7 +75,6 @@ export default function LinkScroll({ buttons }) {
                     })}
                 </ScrollView>
 
-                {/* Left arrow */}
                 {scrollX > 0 && (
                     <TouchableOpacity
                         style={[styles.arrow_button, { left: 0 }]}
@@ -85,7 +84,6 @@ export default function LinkScroll({ buttons }) {
                     </TouchableOpacity>
                 )}
 
-                {/* Right arrow */}
                 {scrollX < contentWidth - screenWidth && (
                     <TouchableOpacity
                         style={[styles.arrow_button, { right: 0 }]}
@@ -101,7 +99,7 @@ export default function LinkScroll({ buttons }) {
 
 const styles = {
     link_container: {
-        paddingHorizontal: 10,
+        // paddingHorizontal: 10,
         alignItems: "center",
     },
     link_button: {
@@ -131,10 +129,10 @@ const styles = {
         position: "absolute",
         top: "50%",
         marginTop: -18,
-        backgroundColor: "#fff",
+        backgroundColor: theme.colors.light.primary + '44',
         padding: 6,
         borderRadius: 20,
-        elevation: 4,
+        // elevation: 4,
         shadowColor: "#000",
         shadowOpacity: 0.1,
         shadowRadius: 2,

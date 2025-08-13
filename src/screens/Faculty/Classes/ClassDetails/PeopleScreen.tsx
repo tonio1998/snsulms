@@ -28,10 +28,12 @@ const PeopleScreen = () => {
 	const [refreshing, setRefreshing] = useState(false);
 	const { showLoading, hideLoading } = useLoading();
 	const debounceTimeout = useRef(null);
-	const fetchClassmates = async (filters = {}) => {
+	const fetchClassmates = useCallback(async (filters = {}) => {
 		try {
 			showLoading('Loading...');
+
 			let list = [...(classes?.students || [])];
+
 			if (filters.search) {
 				const query = filters.search.toLowerCase();
 				list = list.filter((x) =>
@@ -43,22 +45,20 @@ const PeopleScreen = () => {
 				(a.student_info?.FirstName || '').localeCompare(b.student_info?.FirstName || '')
 			);
 
-			console.log(list);
-
 			setClassmates(list);
 		} catch (err) {
 			handleApiError(err, 'Error fetching classmates');
 		} finally {
 			hideLoading();
 		}
-	};
+	}, [classes?.students, showLoading, hideLoading]);
 
 	useFocusEffect(
 		useCallback(() => {
-			fetchClassmates();
-			return () => debounceTimeout.current && clearTimeout(debounceTimeout.current);
-		}, [])
+			fetchClassmates(); // run on screen focus
+		}, [fetchClassmates])
 	);
+
 
 	const handleSearch = (text) => {
 		setSearchQuery(text);

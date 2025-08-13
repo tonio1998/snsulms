@@ -137,7 +137,6 @@ const WallCommentsScreen = ({ route, navigation }) => {
 
 	return (
 		<>
-			<StatusBar backgroundColor="#00A859" barStyle="light-content" translucent={false} />
 			<SafeAreaView style={{ flex: 1, backgroundColor: '#f0f2f5' }}>
 				<KeyboardAvoidingView
 					behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

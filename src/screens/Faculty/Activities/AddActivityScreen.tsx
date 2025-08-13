@@ -116,6 +116,11 @@ const AddActivityScreen = ({ navigation, route }) => {
             return;
         }
 
+        if(!form.DueDate && form.StrictLate){
+            Alert.alert('Missing Fields', 'Due Date is required when Strict Late is enabled.');
+            return;
+        }
+
         if (!network?.isOnline) {
             Alert.alert('No Internet', 'You need to be online to add an activity.');
             return;
@@ -133,7 +138,7 @@ const AddActivityScreen = ({ navigation, route }) => {
             };
 
             if(FormID){
-                payload.FormID = FormID;
+                payload.FormID = FormID || 0;
             }
 
             const res = await addActivity(payload);

@@ -64,7 +64,6 @@ LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
 
 const UnauthenticatedStack = () => (
     <>
-        <StatusBar backgroundColor="translucent" barStyle="dark-content" />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="LoginOptions" component={LoginOptionsScreen} />
             <Stack.Screen name="Login" component={SigninForm} />
@@ -181,12 +180,14 @@ const AppNavigator = () => {
 
     return (
         <>
-            <StatusBar backgroundColor={theme.colors.light.primary} barStyle="dark-content" />
+            {/*<StatusBar backgroundColor={theme.colors.light.primary} barStyle="dark-content" />*/}
+            <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
             <SafeAreaProvider>
                 <AccessProvider>
                     <NavigationContainer ref={navigationRef} onReady={tryFlushPendingNavigation}>
                         <Stack.Navigator screenOptions={{
                             headerShown: false,
+                            animation: 'slide_from_right'
                         }}>
                             <Stack.Screen name="MainTabs" component={BottomTabNav} />
                             <Stack.Screen name="SurveyTest" component={SurveyBottomTabNav} />

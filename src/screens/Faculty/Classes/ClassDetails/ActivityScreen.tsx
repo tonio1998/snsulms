@@ -23,6 +23,7 @@ import { NetworkContext } from '../../../../context/NetworkContext.tsx';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useClass } from '../../../../context/SharedClassContext.tsx';
 import { useLoading2 } from '../../../../context/Loading2Context.tsx';
+import ProgressBar from "../../../../components/common/ProgressBar.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -83,7 +84,7 @@ const ActivityScreen = ({ navigation }) => {
 		// { label: 'Exam', value: 4 },
 	];
 
-	const fetchActivities = async () => {
+	const fetchActivities = useCallback(async () => {
 		try {
 			if (loading) return;
 			showLoading2('Loading activities...');
@@ -110,7 +111,13 @@ const ActivityScreen = ({ navigation }) => {
 			setLoading(false);
 			hideLoading2();
 		}
-	};
+	}, [loading, classes?.activities, actType, showLoading2, hideLoading2]);
+
+	useFocusEffect(
+		useCallback(() => {
+			fetchActivities();
+		}, [fetchActivities])
+	);
 
 	useEffect(() => {
 		if (ClassID) fetchActivities();
@@ -118,6 +125,7 @@ const ActivityScreen = ({ navigation }) => {
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
+		refresh();
 		await fetchActivities();
 		setRefreshing(false);
 	};
@@ -150,17 +158,18 @@ const ActivityScreen = ({ navigation }) => {
 				</CText>
 
 				{item?.Description?.trim() !== '' && (
-					<CText fontSize={14} style={styles.cardDesc}>
+					<CText fontSize={14} style={styles.cardDesc} numberOfLines={2}>
 						{item?.Description}
 					</CText>
 				)}
 
-				<View style={styles.progressSection}>
-					<Icon name="checkmark-done" size={16} color={theme.colors.light.primary} />
-					<CText fontSize={13} style={styles.percentText}>
-						{item?.CompletedPercent || 0}% completed
-					</CText>
-				</View>
+				{/*<View style={styles.progressSection}>*/}
+				{/*	<Icon name="checkmark-done" size={16} color={theme.colors.light.primary} />*/}
+				{/*	<CText fontSize={13} style={styles.percentText}>*/}
+				{/*		{item?.CompletedPercent || 0}% completed*/}
+				{/*	</CText>*/}
+				{/*</View>*/}
+				<ProgressBar percent={item?.CompletedPercent || 0} />
 
 				<View style={styles.cardFooter}>
 					{item?.DueDate && (

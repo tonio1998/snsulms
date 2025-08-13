@@ -16,10 +16,6 @@ import { APP_NAME, TAGLINE } from '../../env.ts';
 export default function SplashScreen() {
 	return (
 		<SafeAreaView style={styles.safeArea}>
-			<StatusBar
-				barStyle="light-content"
-				backgroundColor={theme.colors.light.primary}
-			/>
 			<ImageBackground
 				source={require('../../assets/img/bg2.png')}
 				style={styles.bg}

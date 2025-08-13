@@ -44,12 +44,14 @@ const InstructionScreen = ({ navigation, route }) => {
 	const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 	const [submissions, setSubmissions] = useState([]);
 
+	console.log('🔍 Fetching activity from API', activity);
+
 	const loadSubmissions = async () => {
 		setLoading(true);
 		try {
 			setLoadingSubmissions(true);
-			const res = await fetchClassAttachments(ActivityID);
-			setSubmissions(res.data);
+			const res = activity?.files || [];
+			setSubmissions(res);
 		} catch (err) {
 			handleApiError(err, 'Fetch');
 		} finally {

@@ -37,6 +37,7 @@ import {
 import { formatDate } from '../../../utils/dateFormatter';
 import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
 import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
+import {useLoading} from "../../../context/LoadingContext.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -49,6 +50,7 @@ const ClassesListScreen = ({ navigation }) => {
 	const { user } = useAuth();
 
 	const [searchQuery, setSearchQuery] = useState('');
+	const { showLoading, hideLoading } = useLoading();
 	const [acad, setAcad] = useState(null);
 	const [allClasses, setAllClasses] = useState([]);
 	const [filteredClasses, setFilteredClasses] = useState([]);
@@ -57,6 +59,9 @@ const ClassesListScreen = ({ navigation }) => {
 	const [showModal, setShowModal] = useState(false);
 	const slideAnim = useRef(new Animated.Value(height)).current;
 	const [lastFetched, setLastFetched] = useState(null);
+	if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+		UIManager.setLayoutAnimationEnabledExperimental(true);
+	}
 
 	useFocusEffect(
 		useCallback(() => {
@@ -73,7 +78,7 @@ const ClassesListScreen = ({ navigation }) => {
 	const loadClassesOnline = useCallback(async () => {
 		try {
 			setLoading(true);
-			showLoading2('Fetching classes...');
+			showLoading('Fetching classes...');
 			const filter = {
 				page: 1,
 				AcademicYear: acad,
@@ -89,7 +94,7 @@ const ClassesListScreen = ({ navigation }) => {
 			handleApiError(err);
 		} finally {
 			setLoading(false);
-			hideLoading2();
+			hideLoading();
 		}
 	}, [acad]);
 
@@ -106,7 +111,6 @@ const ClassesListScreen = ({ navigation }) => {
 				await loadClassesOnline();
 			}
 		} catch (err) {
-			console.error('Error loading from cache:', err);
 			await loadClassesOnline();
 		} finally {
 			setLoading(false);
@@ -121,7 +125,6 @@ const ClassesListScreen = ({ navigation }) => {
 	const handleSearchTextChange = (text) => {
 		setSearchQuery(text);
 		if (!text.trim()) {
-			// Show full list if search empty
 			setFilteredClasses(allClasses);
 		} else {
 			const lower = text.toLowerCase();
@@ -194,9 +197,12 @@ const ClassesListScreen = ({ navigation }) => {
 							<CText fontStyle="SB" fontSize={15}>
 								{item?.CourseCode}
 							</CText>
-							<CText fontStyle="M" fontSize={13} color="#666">
-								{item?.CourseName}
-							</CText>
+							<View style={{ maxWidth: '90%', width: 300}}>
+								<CText fontSize={13} numberOfLines={1} style={{ width: '110%' }}>
+									{item?.CourseName}
+								</CText>
+							</View>
+							<Text style={styles.sectionText}>Section: {item?.Section}</Text>
 						</View>
 						<Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#888" />
 					</View>
@@ -299,40 +305,41 @@ const ClassesListScreen = ({ navigation }) => {
 					<Icon name="add" size={24} color="white" />
 				</TouchableOpacity>
 
-				<Modal transparent visible={showModal} animationType="none">
-					<TouchableOpacity
-						style={globalStyles.overlay}
-						activeOpacity={1}
-						onPress={closeModal}
-					/>
-					<Animated.View
-						style={[
-							globalStyles.modalContainer,
-							{ transform: [{ translateY: slideAnim }] },
-						]}>
-						<TouchableOpacity
-							style={styles.modalOption}
-							onPress={() => handleOption('manual')}>
-							<CText fontStyle="SB" fontSize={16}>
-								Add Class Manually
-							</CText>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.modalOption}
-							onPress={() => handleOption('fetch')}>
-							<CText fontStyle="SB" fontSize={16}>
-								Fetch Enrollment
-							</CText>
-						</TouchableOpacity>
-						{/*<TouchableOpacity*/}
-						{/*	style={[styles.modalOption, { marginTop: 10 }]}*/}
-						{/*	onPress={closeModal}>*/}
-						{/*	<CText fontStyle="SB" fontSize={14} style={{ color: theme.colors.light.danger }}>*/}
-						{/*		Cancel*/}
-						{/*	</CText>*/}
-						{/*</TouchableOpacity>*/}
-					</Animated.View>
-				</Modal>
+				{showModal && (
+					<>
+						<Modal transparent visible={showModal} animationType="none">
+							<TouchableOpacity
+								style={globalStyles.overlay}
+								activeOpacity={1}
+								onPress={closeModal}
+							/>
+							<Animated.View
+								style={[
+									globalStyles.modalContainer,
+									{ transform: [{ translateY: slideAnim }] },
+								]}
+							>
+								<TouchableOpacity
+									style={globalStyles.option}
+									onPress={() => handleOption('manual')}
+								>
+									<CText fontStyle="SB" fontSize={16}>
+										Add Class Manually
+									</CText>
+								</TouchableOpacity>
+								<TouchableOpacity
+									style={globalStyles.option}
+									onPress={() => handleOption('fetch')}
+								>
+									<CText fontStyle="SB" fontSize={16}>
+										Fetch Enrollment
+									</CText>
+								</TouchableOpacity>
+							</Animated.View>
+						</Modal>
+					</>
+				)}
+
 			</SafeAreaView>
 		</>
 	);
@@ -341,6 +348,17 @@ const ClassesListScreen = ({ navigation }) => {
 export default ClassesListScreen;
 
 const styles = StyleSheet.create({
+	sectionText: {
+		backgroundColor: theme.colors.light.primary + '18',
+		color: theme.colors.light.primary,
+		paddingHorizontal: 8,
+		paddingVertical: 3,
+		borderRadius: 12,
+		alignSelf: 'flex-start',
+		marginTop: 4,
+		fontSize: 11,
+		fontWeight: '600',
+	},
 	container: {
 		flex: 1,
 		paddingHorizontal: 16,
@@ -376,6 +394,8 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 1 },
 		shadowOpacity: 0.1,
 		shadowRadius: 4,
+		borderWidth: 1,
+		borderColor: '#e1e1e1',
 		// elevation: 2,
 	},
 	cardHeader: {
