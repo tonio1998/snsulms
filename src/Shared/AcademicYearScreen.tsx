@@ -53,7 +53,6 @@ export default function AcademicYearScreen({ navigation }) {
 
 	return (
 		<>
-			<StatusBar barStyle="dark-content" />
 			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
 				<View style={styles.container}>
 					<CText fontSize={20} fontStyle="B" style={{ marginBottom: 10 }}>

@@ -67,8 +67,8 @@ export default function FacultyActivitySwipeTabs({ route }) {
 					tabBarActiveTintColor: theme.colors.light.primary,
 					tabBarInactiveTintColor: '#9F9F9F',
 					tabBarIndicatorStyle: {
-						backgroundColor: theme.colors.light.primary + '55',
-						top: 5,
+						backgroundColor: theme.colors.light.primary,
+						top: -2,
 						padding: 2,
 						borderRadius: 10,
 					},

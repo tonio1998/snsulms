@@ -70,11 +70,6 @@ const CustomHeader = ({ title = '', leftContent = null, rightContent = null }) =
 
     return (
         <>
-            <StatusBar
-                barStyle="light-content"
-                translucent
-                backgroundColor="transparent"
-            />
             <LinearGradient
                 colors={[theme.colors.light.primary, 'transparent']}
                 start={{ x: 0.5, y: 0 }}

@@ -294,9 +294,9 @@ export const globalStyles = StyleSheet.create({
         // paddingHorizontal: 15,
         // position: 'relative',
         // marginTop: 90,
-        // backgroundColor: theme.colors.light.background,
+        backgroundColor: theme.colors.light.background,
         paddingTop: 110,
-        // zIndex: -1
+        zIndex: -1,
     },
     picker: {
         height: 50,

@@ -36,13 +36,6 @@ export const ClassProvider = ({ children, ClassID }) => {
                 setLoading(false);
                 return;
             }
-
-            if (network?.isOnline) {
-                const res = await getClassInfo({ ClassID });
-                const normalized = { ...res };
-                setClasses(normalized);
-                await saveClassInfoToLocal(ClassID, normalized);
-            }
         } catch (error) {
             await fetch();
         }

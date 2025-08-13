@@ -41,7 +41,6 @@ const QRCodeScreen = () => {
 			const uri = await qrRef.current.capture();
 			await Share.open({ url: uri });
 		} catch (error) {
-			console.error('Share failed:', error);
 		}
 	};
 
@@ -58,13 +57,11 @@ const QRCodeScreen = () => {
 			});
 		} catch (error) {
 			handleApiError(error, 'Download Failed');
-			console.error('Download failed:', error);
 		}
 	};
 
 	return (
 		<SafeAreaView style={[globalStyles.flex1, { backgroundColor: theme.colors.light.background }]}>
-			<StatusBar barStyle={'dark-content'} />
 			<ScrollView contentContainerStyle={styles.scrollContent}>
 				<View style={styles.header}>
 					<View style={styles.logoContainer}>
@@ -173,7 +170,7 @@ const styles = StyleSheet.create({
 		gap: 8,
 		paddingHorizontal: 24,
 		paddingVertical: 12,
-		borderRadius: 50,
+		borderRadius: 8,
 		elevation: 3,
 	},
 	actionText: {

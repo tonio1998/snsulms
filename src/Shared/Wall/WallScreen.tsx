@@ -28,6 +28,7 @@ import { theme } from "../../theme";
 import BackHeader from "../../components/layout/BackHeader.tsx";
 import {useLoading} from "../../context/LoadingContext.tsx";
 import {useLoading2} from "../../context/Loading2Context.tsx";
+import {LastUpdatedBadge} from "../../components/common/LastUpdatedBadge";
 
 const PAGE_SIZE = 10;
 
@@ -58,6 +59,8 @@ const WallScreen = ({ route, navigation }) => {
 				setLastFetched(date);
 				setPage(Math.ceil(data.length / PAGE_SIZE));
 				setHasMore(true);
+			}else{
+				fetchWall(1, true);
 			}
 		};
 
@@ -274,22 +277,14 @@ const WallScreen = ({ route, navigation }) => {
 	return (
 		<>
 			<BackHeader title="Wall" />
-			<SafeAreaView style={[globalStyles.safeArea]}>
-				{lastFetched && (
-					<View style={{
-						paddingHorizontal: 16,
-						paddingBottom: 8,
-						paddingTop: 4,
-						backgroundColor: '#fff',
-						borderBottomWidth: StyleSheet.hairlineWidth,
-						borderBottomColor: '#ddd'
-					}}>
-						<CText fontSize={12} color="#777">
-							Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}
-						</CText>
-					</View>
-				)}
 
+			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
+				<View style={{ paddingHorizontal: 15 }}>
+					<LastUpdatedBadge
+						date={lastFetched}
+						onReload={handleRefresh}
+					/>
+				</View>
 				<FlatList
 					data={wall}
 					keyExtractor={(item) => String(item.id)}

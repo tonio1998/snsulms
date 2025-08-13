@@ -32,9 +32,11 @@ import {
 	fetchStudentSubmissions,
 	saveStudentGrade
 } from '../../../../api/modules/submissionApi.ts';
+import {fetchStudentActivitySubmissions} from "../../../../utils/cache/Faculty/localActivitySubmission";
 
 const SubmissionDetailsScreen = ({ navigation, route }) => {
 	const StudentActivityID = route.params.StudentActivityID;
+	const ActivityID = route.params.ActivityID;
 	const { user } = useAuth();
 	const network = useContext(NetworkContext);
 	const { showLoading, hideLoading } = useLoading();
@@ -45,6 +47,17 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 	const [gradeInput, setGradeInput] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
+	const [lastFetched, setLastFetched] = useState(null);
+
+	const fetchLocal = async () => {
+		const local = await fetchStudentActivitySubmissions(ActivityID, StudentActivityID);
+		if (local) {
+			setSubmission(local);
+			setAttachment(local?.attachments || []);
+			console.log('🔍 Fetching attachment from local cache', local?.attachments);
+			setGradeInput(local?.Grade ? local.Grade.toString() : '');
+		}
+	};
 
 	const fetchData = async () => {
 		try {
@@ -96,8 +109,8 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 	};
 
 	useEffect(() => {
-		fetchData();
-	}, []);
+		fetchLocal();
+	}, [ActivityID, StudentActivityID]);
 
 	const renderItem = ({ item }) => {
 		const isWebLink = item.Link.startsWith('http');
@@ -129,7 +142,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<BackHeader />
+			<BackHeader  title={'Submission Details'} />
 			<KeyboardAvoidingView
 				style={{ flex: 1 }}
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -182,7 +195,6 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 								</View>
 							</ScrollView>
 
-							{/* Grade Input */}
 							<View style={styles.fixedGradeInput}>
 								<View style={globalStyles.cardRow}>
 									<CText fontStyle="SB" fontSize={16} style={{ marginBottom: 8 }}>

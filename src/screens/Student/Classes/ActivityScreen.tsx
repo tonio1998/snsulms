@@ -16,6 +16,7 @@ import {
 	saveStudentClassActivitiesCache
 } from "../../../utils/cache/Student/localstudentActivitiesCache.ts";
 import {useAuth} from "../../../context/AuthContext.tsx";
+import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
 
 const ActivityScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -161,13 +162,10 @@ const ActivityScreen = ({ navigation, route }) => {
 					))}
 				</View>
 			</ScrollView>
-			<View>
-				{lastFetched ? (
-					<Text style={{ marginBottom: 8, fontSize: 12, color: 'gray' }}>
-						Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}
-					</Text>
-				) : null}
-			</View>
+			<LastUpdatedBadge
+				date={lastFetched}
+				onReload={fetchActivities}
+			/>
 		</View>
 	);
 

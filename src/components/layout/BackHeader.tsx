@@ -72,30 +72,7 @@ const BackHeader = ({
 
 	return (
 		<>
-			<StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-			<LinearGradient
-				colors={[theme.colors.light.primary, 'transparent']}
-				start={{ x: 0.5, y: 0 }}
-				end={{ x: 0.5, y: 1 }}
-				style={styles.gradientBackground}
-			>
-				{/*{circles.map(({ key, size, top, left }) => (*/}
-				{/*	<View*/}
-				{/*		key={key}*/}
-				{/*		style={{*/}
-				{/*			position: 'absolute',*/}
-				{/*			width: size,*/}
-				{/*			height: size,*/}
-				{/*			borderRadius: size / 2,*/}
-				{/*			top,*/}
-				{/*			left,*/}
-				{/*			backgroundColor: 'rgba(255,255,255,0.1)',*/}
-				{/*		}}*/}
-				{/*	/>*/}
-				{/*))}*/}
-			</LinearGradient>
-
-			{/* GestureDetector intercepts swipe gestures here */}
+			<StatusBar barStyle="dark-content" />
 			<GestureDetector gesture={blockSwipeGesture}>
 				<View style={styles.headerWrapper}>
 					<TouchableOpacity onPress={handlePress} style={styles.backButton}>

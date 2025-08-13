@@ -17,7 +17,6 @@ export const FacActivityProvider = ({ children, ActivityID }) => {
 
     const refreshFromOnline = async () => {
         if (!network?.isOnline) {
-            console.warn('Cannot refresh: offline');
             return;
         }
 
@@ -28,7 +27,6 @@ export const FacActivityProvider = ({ children, ActivityID }) => {
             setActivity(normalized);
             await saveActivityToLocal(ActivityID, normalized);
         } catch (error) {
-            console.error('Error refreshing from online:', error);
             handleApiError(error, 'Fetch activity from online');
         } finally {
             setLoading(false);
@@ -42,11 +40,9 @@ export const FacActivityProvider = ({ children, ActivityID }) => {
             if (cachedData?.data) {
                 setActivity(cachedData.data);
             } else {
-                console.log('No data found in cache, fetching from online');
                 await refreshFromOnline();
             }
         } catch (error) {
-            console.error('Error loading from cache:', error);
             await refreshFromOnline();
         } finally {
             setLoading(false);

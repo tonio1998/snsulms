@@ -26,6 +26,8 @@ import { useLoading } from '../../../context/LoadingContext.tsx';
 import { useAuth } from '../../../context/AuthContext.tsx';
 import { loadClassesFromLocal, saveClassesToLocal } from "../../../utils/cache/Student/localStudentClassesService";
 import { formatDate } from "../../../utils/dateFormatter";
+import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
+import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
 	UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -162,12 +164,12 @@ const ClassesScreen = ({ navigation, route }) => {
 						<CText fontStyle="SB" fontSize={16} style={styles.courseText}>
 							{classInfo?.CourseCode} - {classInfo?.CourseName}
 						</CText>
-						<Text style={styles.sectionText}>{classInfo?.Section}</Text>
+						<Text style={styles.sectionText}>Section: {classInfo?.Section}</Text>
 						<View style={styles.activityMeta}>
 							<CText fontSize={12}>Activities: {totalActivities}</CText>
-							<CText fontSize={12} style={{ color: theme.colors.light.primary }}>
-								Submitted: {submittedCount} / Assigned: {assignedCount}
-							</CText>
+							{/*<CText fontSize={12} style={{ color: theme.colors.light.primary }}>*/}
+							{/*	Submitted: {submittedCount} / Assigned: {assignedCount}*/}
+							{/*</CText>*/}
 							<View style={styles.progressBarContainer}>
 								<View style={styles.progressBar}>
 									<View
@@ -187,8 +189,7 @@ const ClassesScreen = ({ navigation, route }) => {
 				{isExpanded && (
 					<View style={styles.accordionBody}>
 						<View style={{
-							flexDirection: 'row', justifyContent: 'space-between',
-							alignItems: 'center', borderTopWidth: 1,
+							flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1,
 							borderColor: '#eee', padding: 10
 						}}>
 							<View style={styles.teacherRow}>
@@ -221,14 +222,9 @@ const ClassesScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<CustomHeader />
+			<CustomHeader2 />
 			<SafeAreaView style={globalStyles.safeArea}>
 				<View style={styles.container}>
-					{lastFetched ? (
-						<Text style={{ marginBottom: 8, fontSize: 12, color: 'gray' }}>
-							Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}
-						</Text>
-					) : null}
 					<View style={styles.searchWrapper}>
 						<TextInput
 							style={styles.searchInput}
@@ -240,6 +236,10 @@ const ClassesScreen = ({ navigation, route }) => {
 							clearButtonMode="while-editing"
 						/>
 					</View>
+					<LastUpdatedBadge
+						date={lastFetched}
+						onReload={fetchFromApi}
+					/>
 					<ShimmerList
 						data={classes}
 						loading={loading}
@@ -265,8 +265,8 @@ const styles = StyleSheet.create({
 	viewButton: {
 		paddingHorizontal: 14,
 		paddingVertical: 8,
-		borderRadius: 8,
-		backgroundColor: theme.colors.light.primary + '33',
+		borderRadius: theme.radius.sm,
+		backgroundColor: theme.colors.light.primary + '18',
 	},
 	container: {
 		flex: 1,
@@ -321,8 +321,8 @@ const styles = StyleSheet.create({
 		color: '#222',
 	},
 	sectionText: {
-		backgroundColor: theme.colors.light.primary,
-		color: '#fff',
+		backgroundColor: theme.colors.light.primary + '18',
+		color: theme.colors.light.primary,
 		paddingHorizontal: 8,
 		paddingVertical: 3,
 		borderRadius: 12,
@@ -368,9 +368,9 @@ const styles = StyleSheet.create({
 		marginTop: 8,
 	},
 	avatar: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
+		width: 35,
+		height: 35,
+		borderRadius: 50,
 		marginRight: 6,
 		backgroundColor: '#ccc',
 		borderWidth: 1,
