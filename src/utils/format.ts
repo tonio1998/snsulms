@@ -50,7 +50,7 @@ export function getFileSize(size: number) {
     size /= 1024;
     unitIndex++;
   }
-  return `${size.toFixed(2)} ${units[unitIndex]}`;
+  return `${size} ${units[unitIndex]}`;
 }
 
 export const getAddressFromCoords = async (latitude, longitude) => {

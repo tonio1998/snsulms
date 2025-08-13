@@ -75,10 +75,10 @@ const HomeScreen = () => {
 			const app = getApp();
 			const messaging = getMessaging(app);
 			const token = await getToken(messaging);
-			const isGenerated = await AsyncStorage.getItem('FCM_TOKEN_KEY');
+			const isGenerated = await await AsyncStorage.getItem('FCM_TOKEN_KEY_'+user?.id);
 			if (token && !isGenerated) {
 				await saveFcmToken(token);
-				await AsyncStorage.setItem('FCM_TOKEN_KEY', token);
+				await AsyncStorage.setItem('FCM_TOKEN_KEY_'+user?.id, token);
 			}
 		} catch (error) {
 			handleApiError(error, 'Get FCM Token');
