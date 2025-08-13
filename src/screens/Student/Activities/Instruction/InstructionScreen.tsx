@@ -264,8 +264,9 @@ const InstructionScreen = ({ navigation }) => {
 					{activity?.activity?.QuizID > 0 && (
 						<View style={{ marginBottom: 16 }}>
 							<CButton
-								variant="primary"
-								label="Go to Quiz"
+								type={'success'}
+								title="Go to Quiz"
+								style={{ padding: 12}}
 								onPress={() => navigation.navigate('QuizScreen', { QuizID: activity.activity.QuizID })}
 							/>
 						</View>
