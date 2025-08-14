@@ -211,7 +211,7 @@ const WallScreen = ({ navigation }) => {
 	return (
 		<>
 			<BackHeader title="Wall" />
-			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 90 }]}>
+			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
 				<FlatList
 					data={wall}
 					keyExtractor={(item) => String(item.id) + '_' + item.created_at}

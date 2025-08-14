@@ -250,9 +250,11 @@ const ClassesListScreen = ({ navigation }) => {
 								</TouchableOpacity>
 							</View>
 						</View>
-						<CText fontSize={12} style={{ color: '#777' }}>
-							{item?.ClassEnrollmentID ? 'Imported from Enrollment' : ''}
-						</CText>
+						{item?.ClassEnrollmentID && (
+							<CText fontSize={12} style={{ color: '#777' }}>
+								{item?.ClassEnrollmentID ? 'Imported from Enrollment' : ''}
+							</CText>
+						)}
 					</View>
 				)}
 			</View>

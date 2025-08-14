@@ -14,8 +14,8 @@ export const getStudentActivities = async ({ page = 1, search = '', ClassID = ''
     return response.data;
 };
 
-export const getStudenActivityDetails = async (ActivityID) => {
-    const response = await api.get(`/lms/myclasses/activities/students/${ActivityID}`);
+export const getStudenActivityDetails = async (StudentActivityID) => {
+    const response = await api.get(`/lms/myclasses/activities/students/${StudentActivityID}`);
     return response.data;
 };
 

@@ -33,6 +33,8 @@ import CButton from '../../../../components/buttons/CButton.tsx';
 const InstructionScreen = ({ navigation }) => {
 	const { activity, refreshFromOnline } = useActivity();
 	const [ActivityID, setActivityID] = useState(0);
+	const StudentActivityID = activity?.StudentActivityID;
+	console.log("formData.append('StudentActivityID', StudentActivityID.toString());:", activity)
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
@@ -41,9 +43,6 @@ const InstructionScreen = ({ navigation }) => {
 	const [submissions, setSubmissions] = useState([]);
 	const { showAlert } = useAlert();
 	const [loadingSubmissions, setLoadingSubmissions] = useState(false);
-
-	console.log("activity", activity);
-
 	const loadSubmissions = async () => {
 		setLoading(true);
 		try {
@@ -84,7 +83,7 @@ const InstructionScreen = ({ navigation }) => {
 		try {
 			const isSubmitted = activity?.SubmissionType === 'Submitted';
 			showLoading(isSubmitted ? 'Withdrawing...' : 'Submitting...');
-			const res = await turninSubmission({ ActivityID });
+			const res = await turninSubmission({ StudentActivityID });
 
 			if (res.success) {
 				showAlert(
@@ -132,7 +131,7 @@ const InstructionScreen = ({ navigation }) => {
 				<BackHeader
 					title="Instruction"
 					rightButton={
-						activity?.SubmissionType !== 'Submitted' && activity?.created_by !== user?.id && (
+						!activity?.Grade && (
 							<TouchableOpacity
 								style={[
 									styles.submitBtn,

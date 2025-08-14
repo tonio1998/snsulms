@@ -30,9 +30,9 @@ export const getActivityResponses = async ({ ActivityID }) => {
 };
 
 
-export const turninSubmission = async ({ ActivityID }) => {
+export const turninSubmission = async ({ StudentActivityID }) => {
     const response = await api.get('/lms/submission/turnin', {
-        params: { ActivityID }
+        params: { StudentActivityID }
     });
     return response.data;
 };
