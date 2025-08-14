@@ -9,7 +9,6 @@ import {
 	Text,
 	LayoutAnimation,
 	Platform,
-	UIManager,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -28,10 +27,6 @@ import { loadClassesFromLocal, saveClassesToLocal } from "../../../utils/cache/S
 import { formatDate } from "../../../utils/dateFormatter";
 import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
 import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-	UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const ClassesScreen = ({ navigation, route }) => {
 	const { user } = useAuth();
@@ -69,6 +64,7 @@ const ClassesScreen = ({ navigation, route }) => {
 		if (!user?.id) return;
 		const { data, date } = await loadClassesFromLocal(user.id);
 		if (data) {
+			console.log("classes", data);
 			setAllClasses(data);
 			setClasses(data);
 		}

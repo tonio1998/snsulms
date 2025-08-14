@@ -40,18 +40,20 @@ const InstructionScreen = ({ navigation }) => {
 	const [loading, setLoading] = useState(false);
 	const [submissions, setSubmissions] = useState([]);
 	const { showAlert } = useAlert();
+	const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 
 	console.log("activity", activity);
 
 	const loadSubmissions = async () => {
-		if (!ActivityID || !network?.isOnline) return;
 		setLoading(true);
 		try {
-			const res = await fetchClassAttachments(ActivityID);
-			setSubmissions(res?.data || []);
+			setLoadingSubmissions(true);
+			const res = activity?.files || [];
+			setSubmissions(res);
 		} catch (err) {
-			handleApiError(err, 'Fetching attachments failed');
+			handleApiError(err, 'Fetch');
 		} finally {
+			setLoadingSubmissions(false);
 			setLoading(false);
 		}
 	};
@@ -186,6 +188,14 @@ const InstructionScreen = ({ navigation }) => {
 								<CText style={styles.description}>{formatDate(activity.activity.DueDate)}</CText>
 							</>
 						)}
+						{activity?.DateSubmitted && (
+							<>
+								<CText fontSize={13} style={styles.sectionLabel}>
+									Date Submitted
+								</CText>
+								<CText style={styles.description}>{formatDate(activity.DateSubmitted)}</CText>
+							</>
+						)}
 
 						<View style={styles.pointsContainer}>
 							{activity?.activity?.Points > 0 && (
@@ -209,16 +219,6 @@ const InstructionScreen = ({ navigation }) => {
 								</View>
 							)}
 						</View>
-						{activity?.DateSubmitted && (
-							<View style={[styles.pointsBox, {marginTop: 10}]}>
-								<CText fontSize={18} fontStyle="SB" style={{ color: theme.colors.light.primary }}>
-									{formatDate(activity.DateSubmitted)}
-								</CText>
-								<CText fontSize={13} style={styles.pointsLabel}>
-									Date Submitted
-								</CText>
-							</View>
-						)}
 					</View>
 
 					<CText fontSize={18} fontStyle="SB" style={{ marginBottom: 12 }}>

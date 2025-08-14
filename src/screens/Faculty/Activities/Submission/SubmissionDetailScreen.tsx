@@ -156,7 +156,6 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 								refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 							>
 								<View style={styles.contentWrapper}>
-									{/* Profile */}
 									<View style={styles.profileCard}>
 										<Image
 											source={

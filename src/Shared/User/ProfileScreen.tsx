@@ -155,7 +155,6 @@ export default function ProfileScreen({ navigation }) {
 					contentContainerStyle={{ paddingBottom: 40 }}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 				>
-					{/* Profile Picture Section */}
 					<View style={{ alignItems: 'center', marginTop: 40 }}>
 						<TouchableOpacity
 							onPress={handleChangeProfilePic}
@@ -187,7 +186,6 @@ export default function ProfileScreen({ navigation }) {
 							)}
 						</TouchableOpacity>
 
-						{/* Name & Email */}
 						<View style={{ marginTop: 16, alignItems: 'center' }}>
 							{loading ? (
 								<>
@@ -295,7 +293,8 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
 	logoutButton: {
 		backgroundColor: '#f00',
-		padding: 12,
+		padding: 10,
+		paddingHorizontal: 15,
 		borderRadius: 8,
 		flexDirection: 'row'
 	},

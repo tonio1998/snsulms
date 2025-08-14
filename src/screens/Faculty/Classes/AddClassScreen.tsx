@@ -1,4 +1,4 @@
-import React, {useState, useContext, useCallback} from 'react';
+import React, {useState, useContext, useCallback, useEffect} from 'react';
 import {
     View,
     TextInput,
@@ -19,9 +19,9 @@ import BackHeader from "../../../components/layout/BackHeader.tsx";
 import {handleApiError} from "../../../utils/errorHandler.ts";
 import {useFocusEffect} from "@react-navigation/native";
 import {getAcademicInfo} from "../../../utils/getAcademicInfo.ts";
-import SmartSelectPicker from "../../../components/pickers/SmartSelectPicker.tsx"; // Adjust to your real API path
+import SmartSelectPicker from "../../../components/pickers/SmartSelectPicker.tsx";
 
-const AddClassScreen = ({ navigation }) => {
+const AddClassScreen = ({ navigation, route }) => {
     const [form, setForm] = useState({
         CourseCode: '',
         CourseName: '',
@@ -29,6 +29,10 @@ const AddClassScreen = ({ navigation }) => {
         CampusID: '5',
         Attendance: 'N',
     });
+
+    const enrollment = route.params?.enrollmentdata;
+
+    console.log('🔍 Fetching classes from API', route);
 
     const { showLoading, hideLoading } = useLoading();
     const { showAlert } = useAlert();
@@ -53,6 +57,18 @@ const AddClassScreen = ({ navigation }) => {
         }, [])
     );
 
+    useEffect(() => {
+        if (enrollment) {
+            setForm({
+                CourseCode: enrollment?.course?.CourseCode || '',
+                CourseName: "Copy of " + enrollment?.course?.Description || '',
+                Section: enrollment?.SectionCode || '',
+                CampusID: enrollment?.CampusID || '5',
+            });
+        }
+    }, [enrollment]);
+
+
     const handleChange = (key, value) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
@@ -74,6 +90,11 @@ const AddClassScreen = ({ navigation }) => {
                 ...form,
                 AcademicYear: acad,
             };
+
+            if(enrollment){
+                formData.ClassEnrollmentID = enrollment.ClassID;
+            }
+
             const res = await addClass(formData);
             if (res.success) {
                 showAlert('success', 'Class Added', 'The class was successfully added.');
@@ -83,7 +104,7 @@ const AddClassScreen = ({ navigation }) => {
             }
         } catch (error) {
             handleApiError(error, 'Failed to add class');
-            showAlert('error', 'Error', 'An error occurred while adding the class.');
+            showAlert('error', 'Error', error.response?.data?.message);
         } finally {
             hideLoading();
         }

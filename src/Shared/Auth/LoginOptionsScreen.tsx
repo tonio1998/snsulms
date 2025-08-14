@@ -92,13 +92,15 @@ export default function LoginOptionsScreen() {
 				email: user?.email,
 				photo: user?.photo,
 			});
+
+			console.log("response", response);
 			await loginAuth(response.data);
 		} catch (error) {
 			const message =
 				error?.response?.data?.message ||
 				error?.message ||
 				'Something went wrong during Google login.';
-			Alert.alert('Login Failed', 'Something went wrong during Google login.');
+			// Alert.alert('Login Failed', 'Something went wrong during Google login.');
 			handleApiError(error, 'Google Login');
 		} finally {
 			hideLoading();
@@ -115,7 +117,7 @@ export default function LoginOptionsScreen() {
 				<View style={styles.wrapper}>
 					<View style={styles.header}>
 						<Image source={require('../../../assets/img/ic_launcher.png')} style={styles.logo} />
-						<CText fontStyle="B" fontSize={40} style={styles.appName}>{APP_NAME}</CText>
+						<CText fontStyle="SB" fontSize={40} style={styles.appName}>{APP_NAME}</CText>
 						<CText fontStyle="R" fontSize={14} style={styles.tagline}>{TAGLINE}</CText>
 					</View>
 
