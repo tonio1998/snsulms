@@ -44,13 +44,17 @@ export function formatNumber(amount: number | string): string {
 
 
 export function getFileSize(size: number) {
-  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  let unitIndex = 0;
-  while (size >= 1024) {
-    size /= 1024;
-    unitIndex++;
+  if(size > 0){
+    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    let unitIndex = 0;
+    while (size >= 1024) {
+      size /= 1024;
+      unitIndex++;
+    }
+    return `${size.toFixed(2)} ${units[unitIndex]}`;
+  }else{
+    return 0;
   }
-  return `${size} ${units[unitIndex]}`;
 }
 
 export const getAddressFromCoords = async (latitude, longitude) => {

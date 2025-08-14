@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
 		backgroundColor: '#ffffff',
 		alignItems: 'center',
 		justifyContent: 'center',
+		elevation: 5
 	},
 
 	titleContainer: {

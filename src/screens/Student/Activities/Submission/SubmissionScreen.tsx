@@ -33,10 +33,16 @@ import {NetworkContext} from "../../../../context/NetworkContext.tsx";
 import {useAuth} from "../../../../context/AuthContext.tsx";
 import {useFocusEffect} from "@react-navigation/native";
 import {SubmissionModal} from "../../../../components/SubmissionModal.tsx";
-import {loadStudentActivityToLocal} from "../../../../utils/cache/Student/localStudentActivity";
+import {
+	loadStudentActivityToLocal,
+	saveStudentActivityToLocal
+} from "../../../../utils/cache/Student/localStudentActivity";
+import {LastUpdatedBadge} from "../../../../components/common/LastUpdatedBadge";
+import {useLoading2} from "../../../../context/Loading2Context.tsx";
 
 export default function SubmissionScreen({ navigation, route }) {
-	const { activity } = useActivity();
+	const { activity, refreshFromOnline } = useActivity();
+
 	const [ActivityID, setActivityID] = useState(0);
 	const [StudentActivityID, setStudentActivityID] = useState(0);
 	const network = useContext(NetworkContext);
@@ -48,34 +54,31 @@ export default function SubmissionScreen({ navigation, route }) {
 	const [link, setLink] = useState('');
 	const [modalVisible, setModalVisible] = useState(false);
 	const [uploading, setUploading] = useState(false);
-
+	const [lastFetched, setLastFetched] = useState(null);
+	const { showLoading2, hideLoading2 } = useLoading2();
 	const loadLocalSubmissions = async () => {
+		showLoading2('Loading submissions...');
 		try {
 			setLoadingSubmissions(true);
-			const { data } = await loadStudentActivityToLocal(StudentActivityID);
-			if (data) {
-				console.log("🔍 Loaded submissions from cache", data);
-				setSubmissions(data?.attachments);
+			const { data, date } = await loadStudentActivityToLocal(StudentActivityID);
+			if (data?.student_info) {
+				console.log("data", data);
+				setLastFetched(date);
+				setSubmissions(data?.st_attachments || []);
 			} else {
 				await loadSubmissions();
 			}
 		} catch (error) {
-			console.error('Error loading from cache:', error);
 		} finally {
 			setLoadingSubmissions(false);
+			hideLoading2();
 		}
 	};
 
 	const loadSubmissions = async () => {
 		try {
 			setLoadingSubmissions(true);
-			const res = await fetchStudentSubmissions({
-				StudentActivityID: StudentActivityID,
-				StudentID: user?.conn_id
-			});
-
-			console.log("🔍 Fetched submissions from API", res);
-			setSubmissions(res.data);
+			refreshFromOnline();
 		} catch (err) {
 			handleApiError(err, 'Fetch');
 		} finally {
@@ -90,18 +93,6 @@ export default function SubmissionScreen({ navigation, route }) {
 			loadLocalSubmissions();
 		}
 	}, [activity]);
-
-	// useEffect(() => {
-	// 	if (ActivityID > 0) {
-	// 		loadSubmissions();
-	// 	}
-	// }, [ActivityID]);
-
-	useFocusEffect(
-		useCallback(() => {
-			loadLocalSubmissions();
-		}, [])
-	);
 
 	const handleFileSelect = async () => {
 		try {
@@ -122,13 +113,14 @@ export default function SubmissionScreen({ navigation, route }) {
 				type: file.type,
 				name: file.name,
 			});
+			formData.append('StudentActivityID', StudentActivityID.toString());
 			formData.append('ActivityID', ActivityID.toString());
 
 			setUploading(true);
 			const response = await uploadStudentSubmission(formData);
 
 			if (response.success && response.data) {
-				setSubmissions(prev => [response.data, ...prev]); // Update immediately
+				setSubmissions(prev => [response.data, ...prev]);
 				ToastAndroid.show('File uploaded successfully.', ToastAndroid.SHORT);
 			} else {
 				ToastAndroid.show(response?.message || 'Server rejected the file.', ToastAndroid.SHORT);
@@ -149,6 +141,7 @@ export default function SubmissionScreen({ navigation, route }) {
 
 		const formData = new FormData();
 		formData.append('link', link);
+		formData.append('StudentActivityID', StudentActivityID.toString());
 		formData.append('ActivityID', ActivityID.toString());
 
 		try {
@@ -244,10 +237,12 @@ export default function SubmissionScreen({ navigation, route }) {
 		<>
 			<BackHeader title="Submission" />
 			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 100}]}>
-				{loadingSubmissions && (
-					<ActivityIndicator size="large" color={theme.colors.light.primary} />
-				)}
-
+				<View style={{ paddingHorizontal: 10 }}>
+					<LastUpdatedBadge
+						date={lastFetched}
+						onReload={loadSubmissions}
+					/>
+				</View>
 				<FlatList
 					data={submissions}
 					keyExtractor={(item, index) => `${item.id}-${index}`}

@@ -50,6 +50,7 @@ const ActivityScreen = ({ navigation, route }) => {
 			showLoading('Loading activities...');
 			const res = await getStudentActivities({ page: 1, search: '', ClassID });
 			const list = res?.data ?? [];
+			console.log('list', list);
 			setAllActivities(list);
 			filterActivities(actType, list);
 			const date = await saveStudentClassActivitiesCache(ClassID, user?.id, list);
@@ -67,6 +68,7 @@ const ActivityScreen = ({ navigation, route }) => {
 		try {
 			const { data, date } = await loadStudentClassActivitiesCache(ClassID, user?.id);
 			if (data && data.length > 0) {
+				console.log('data', data);
 				setAllActivities(data);
 				filterActivities(actType, data);
 			}

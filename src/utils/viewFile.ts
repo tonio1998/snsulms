@@ -58,6 +58,10 @@ export const viewFile = async (filePath: string, fileName: string) => {
         await FileViewer.open(localPath, { showOpenWithDialog: false });
 
     } catch (error) {
-        ToastAndroid.show("["+fileName+"] "+error?.response?.data?.message || 'Download failed.', ToastAndroid.SHORT);
+        ToastAndroid.show(
+            `The file "${fileName}" may have been moved or deleted.`,
+            ToastAndroid.SHORT
+        );
+
     }
 };

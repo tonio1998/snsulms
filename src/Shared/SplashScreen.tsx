@@ -33,7 +33,7 @@ export default function SplashScreen() {
 					<CText fontSize={40} fontStyle="SB" style={styles.title}>
 						{APP_NAME}
 					</CText>
-					<CText fontStyle="B" fontSize={12} style={styles.tagline}>
+					<CText fontStyle="SB" fontSize={12} style={styles.tagline}>
 						{TAGLINE}
 					</CText>
 
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
 	tagline: {
 		color: '#fff',
 		marginBottom: 20,
-		...globalStyles.shadowText,
+		textAlign: 'center',
 	},
 	loader: {
 		marginTop: 20,
