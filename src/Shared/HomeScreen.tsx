@@ -8,7 +8,8 @@ import {
 	PermissionsAndroid,
 	RefreshControl,
 	Text,
-	Dimensions, TouchableOpacity, Linking, Alert,
+	Dimensions,
+	StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -19,7 +20,6 @@ import { getMessaging, getToken } from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveFcmToken } from '../api/modules/userApi';
 import { handleApiError } from '../utils/errorHandler';
-import CustomHeader from '../components/layout/CustomHeader';
 import { getApp } from '@react-native-firebase/app';
 import { useAuth } from '../context/AuthContext';
 import { getDashData } from '../api/modules/dashboardApi';
@@ -32,13 +32,10 @@ import LinearGradient from 'react-native-linear-gradient';
 import { NetworkContext } from '../context/NetworkContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { getAcademicInfo } from '../utils/getAcademicInfo';
-import { loadDashboardCache, saveDashboardCache } from "../utils/cache/dashboardCache.ts";
-import Greeting from "../components/Greeting.tsx";
 import CustomHomeHeader from '../components/layout/CustomHomeHeader.tsx';
 import LinkScroll from "../components/LinkScroll.tsx";
-import MarqueeText from "../components/common/MarqueeText.tsx";
 import TextTicker from "react-native-text-ticker";
-const DASHBOARD_CACHE_KEY = 'dashboard_data';
+import {loadDashboardCache, saveDashboardCache} from "../utils/cache/dashboardCache.ts";
 
 const HomeScreen = () => {
 	const network = useContext(NetworkContext);
@@ -50,9 +47,19 @@ const HomeScreen = () => {
 	const [loading, setLoading] = useState(false);
 	const [acad, setAcad] = useState<string | null>(null);
 	const [acadRaw, setAcadRaw] = useState<any>(null);
-	const window = Dimensions.get('window');
-	const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+	const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 	const [isCachedData, setIsCachedData] = useState(false);
+
+	useFocusEffect(
+		useCallback(() => {
+			StatusBar.setBarStyle('light-content');
+			StatusBar.setBackgroundColor('#1e1e1e');
+			return () => {
+				StatusBar.setBarStyle('dark-content');
+				StatusBar.setBackgroundColor('#ffffff');
+			};
+		}, [])
+	);
 
 	useEffect(() => {
 		const requestNotificationPermission = async () => {
@@ -60,13 +67,10 @@ const HomeScreen = () => {
 				const granted = await PermissionsAndroid.request(
 					PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
 				);
-				if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-					return;
-				}
+				if (granted !== PermissionsAndroid.RESULTS.GRANTED) return;
 			}
 			await getFCMToken();
 		};
-
 		requestNotificationPermission();
 	}, []);
 
@@ -75,10 +79,10 @@ const HomeScreen = () => {
 			const app = getApp();
 			const messaging = getMessaging(app);
 			const token = await getToken(messaging);
-			const isGenerated = await await AsyncStorage.getItem('FCM_TOKEN_KEY_'+user?.id);
+			const isGenerated = await AsyncStorage.getItem(`FCM_TOKEN_KEY_${user?.id}`);
 			if (token && !isGenerated) {
 				await saveFcmToken(token);
-				await AsyncStorage.setItem('FCM_TOKEN_KEY_'+user?.id, token);
+				await AsyncStorage.setItem(`FCM_TOKEN_KEY_${user?.id}`, token);
 			}
 		} catch (error) {
 			handleApiError(error, 'Get FCM Token');
@@ -88,25 +92,22 @@ const HomeScreen = () => {
 	const getDashboardData = async (acadStr: string, forceRefresh = false) => {
 		try {
 			setLoading(true);
-
 			if (!forceRefresh) {
-				const cached = await loadDashboardCache(acadStr, user?.id);
-				if (cached) {
-					setDashData(cached.data);
-					setLastUpdated(cached.updatedAt);
+				const { data, date } = await loadDashboardCache(user?.id, acadStr);
+				if (data) {
+					setDashData(data);
+					setLastUpdated(date);
 					setIsCachedData(true);
 					setLoading(false);
 					return;
 				}
-			}else{
-				const filter = { AcademicYear: acadStr };
-				const res = await getDashData(filter);
-				setDashData(res);
-				const updatedAt = new Date().toLocaleString();
-				setLastUpdated(updatedAt);
-				setIsCachedData(false);
-				await saveDashboardCache(acadStr, user?.id, res);
 			}
+			const filter = { AcademicYear: acadStr };
+			const res = await getDashData(filter);
+			setDashData(res);
+			const savedDate = await saveDashboardCache(user?.id, acadStr, res);
+			setLastUpdated(savedDate);
+			setIsCachedData(false);
 		} catch (error) {
 			handleApiError(error, 'Fetch Dashboard Data');
 		} finally {
@@ -123,6 +124,7 @@ const HomeScreen = () => {
 				if (isActive) {
 					setAcad(acadStr);
 					setAcadRaw(acadInfo);
+					await getDashboardData(acadStr);
 				}
 			};
 			init();
@@ -258,7 +260,7 @@ const HomeScreen = () => {
 				</ScrollView>
 
 				<View style={styles.section}>
-					<CText fontSize={18} fontStyle="B" style={styles.sectionTitle}>
+					<CText fontSize={17} fontStyle="SB" style={styles.sectionTitle}>
 						Recent Submissions
 					</CText>
 					{loading ? (
@@ -319,7 +321,7 @@ const HomeScreen = () => {
 									style={{ marginRight: 4 }}
 								/>
 								<CText fontStyle={'SB'} style={styles.updatedText}>
-									Last Update: {lastUpdated}
+									Last Update: {formatDate(lastUpdated, 'MMM dd, yyyy HH:mm')}
 								</CText>
 							</View>
 						)}

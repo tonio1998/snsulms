@@ -148,11 +148,13 @@ const SubmissionListScreen = ({ navigation }) => {
 	return (
 		<>
 			<BackHeader title="Submissions" />
-			<SafeAreaView style={globalStyles.safeArea}>
-				<LastUpdatedBadge
-					date={lastFetched}
-					onReload={onRefresh}
-				/>
+			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 90}]}>
+				<View style={{paddingHorizontal: 16}}>
+					<LastUpdatedBadge
+						date={lastFetched}
+						onReload={onRefresh}
+					/>
+				</View>
 				<ShimmerList
 					data={submissions}
 					loading={loading}

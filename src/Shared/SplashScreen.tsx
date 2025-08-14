@@ -30,10 +30,10 @@ export default function SplashScreen() {
 						style={styles.logo}
 					/>
 
-					<CText fontSize={40} fontStyle="B" style={styles.title}>
+					<CText fontSize={40} fontStyle="SB" style={styles.title}>
 						{APP_NAME}
 					</CText>
-					<CText fontStyle="SB" fontSize={13} style={styles.tagline}>
+					<CText fontStyle="B" fontSize={12} style={styles.tagline}>
 						{TAGLINE}
 					</CText>
 

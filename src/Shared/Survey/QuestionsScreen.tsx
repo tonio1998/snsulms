@@ -11,7 +11,6 @@ import {
     TextInput,
     Modal,
     Platform,
-    UIManager,
     Switch,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -27,10 +26,6 @@ import { theme } from "../../theme";
 import CButton from "../../components/buttons/CButton.tsx";
 import QuizScreen from "./QuizScreen.tsx";
 import {RenderAnswerPreview} from "../../components/testBuilder/renderAnswerPreview.tsx";
-
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 export default function QuestionsScreen({ navigation, route }) {
     const [sections, setSections] = useState([]);

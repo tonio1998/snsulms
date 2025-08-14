@@ -28,23 +28,25 @@ import { ShimmerList } from '../../../components/loaders/ShimmerList.tsx';
 import { useAuth } from '../../../context/AuthContext.tsx';
 import { useLoading2 } from '../../../context/Loading2Context.tsx';
 import { getAcademicInfo } from '../../../utils/getAcademicInfo.ts';
-import { getFacClasses } from '../../../api/modules/classesApi.ts';
-import {
-	loadFacClassesFromLocal,
-	saveFacClassesToLocal,
-} from '../../../utils/cache/Faculty/localClasses';
-import { formatDate } from '../../../utils/dateFormatter';
 import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
-import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
 import {useLoading} from "../../../context/LoadingContext.tsx";
+import {
+	loadEnrollmentClassesToLocal,
+	saveEnrollmentClassesToLocal
+} from "../../../utils/cache/Faculty/localEnrollmentClasses";
+import {loadEnrollmentClasses} from "../../../api/modules/enrollmentApi.ts";
+import BackHeader from "../../../components/layout/BackHeader.tsx";
 
 const { height } = Dimensions.get('window');
 
-const ClassesListScreen = ({ navigation }) => {
+const EnrollmentClassesListScreen = ({ navigation, route }) => {
 	const { showLoading2, hideLoading2 } = useLoading2();
 	const { user } = useAuth();
 
+	console.log('🔍 Fetching classes from API', route);
+
 	const [searchQuery, setSearchQuery] = useState('');
+	const { showLoading, hideLoading } = useLoading();
 	const [acad, setAcad] = useState(null);
 	const [allClasses, setAllClasses] = useState([]);
 	const [filteredClasses, setFilteredClasses] = useState([]);
@@ -66,26 +68,31 @@ const ClassesListScreen = ({ navigation }) => {
 		}, [])
 	);
 
+	const handleUse = (item) => {
+		navigation.navigate('AddClass', { enrollmentdata: item });
+	};
+
 	const loadClassesOnline = useCallback(async () => {
 		try {
 			setLoading(true);
-			showLoading2('Fetching classes...');
+			showLoading('Fetching classes...');
 			const filter = {
 				page: 1,
 				AcademicYear: acad,
 			};
-			const res = await getFacClasses(filter);
+
+			const res = await loadEnrollmentClasses(filter);
 			const data = res?.data ?? [];
 			setAllClasses(data);
 			setFilteredClasses(data);
 
-			const now = await saveFacClassesToLocal(user?.id, data);
+			const now = await saveEnrollmentClassesToLocal(user?.id, data);
 			setLastFetched(now);
 		} catch (err) {
 			handleApiError(err);
 		} finally {
 			setLoading(false);
-			hideLoading2();
+			hideLoading();
 		}
 	}, [acad]);
 
@@ -93,8 +100,9 @@ const ClassesListScreen = ({ navigation }) => {
 		try {
 			setLoading(true);
 			showLoading2('Loading classes...');
-			const { data, date } = await loadFacClassesFromLocal(user?.id);
+			const { data, date } = await loadEnrollmentClassesToLocal(user?.id);
 			if (data) {
+				console.log("🔍 Fetched classes from cache", data);
 				setAllClasses(data);
 				setFilteredClasses(data);
 				setLastFetched(date);
@@ -122,7 +130,6 @@ const ClassesListScreen = ({ navigation }) => {
 			const filtered = allClasses.filter(
 				(item) =>
 					item?.CourseName?.toLowerCase().includes(lower) ||
-					item?.CourseCode?.toLowerCase().includes(lower) ||
 					item.teacher?.name?.toLowerCase().includes(lower)
 			);
 			setFilteredClasses(filtered);
@@ -139,44 +146,12 @@ const ClassesListScreen = ({ navigation }) => {
 		setExpanded((prev) => (prev === id ? null : id));
 	};
 
-	const openModal = () => {
-		setShowModal(true);
-		Animated.timing(slideAnim, {
-			toValue: 0,
-			duration: 300,
-			easing: Easing.out(Easing.ease),
-			useNativeDriver: true,
-		}).start();
-	};
-
-	const closeModal = () => {
-		Animated.timing(slideAnim, {
-			toValue: height,
-			duration: 250,
-			useNativeDriver: true,
-		}).start(() => setShowModal(false));
-	};
-
-	const handleOption = (type) => {
-		closeModal();
-		if (type === 'manual') {
-			navigation.navigate('AddClass');
-		} else if (type === 'fetch') {
-			navigation.navigate('FetchEnrollment');
-		}
-	};
-
 	const handleCopy = (text) => {
 		Clipboard.setString(text);
 	};
 
-	const handleDuplicateClass = (item) => {
-		Alert.alert('Duplicate Class', `This would duplicate the class: ${item.CourseCode} - ${item.Section}`);
-	};
-
 	const renderClassItem = ({ item }) => {
-		if ((item?.CourseName || "").length === 0 && (item?.CourseCode || "").length === 0) return null;
-		const teacher = item?.teacher || {};
+		const teacher = item?.creator || {};
 		const avatarUri = teacher.avatar
 			? teacher.avatar
 			: `https://ui-avatars.com/api/?name=${encodeURIComponent(teacher.name ?? 'User')}`;
@@ -188,41 +163,19 @@ const ClassesListScreen = ({ navigation }) => {
 					<View style={styles.cardHeader}>
 						<View>
 							<CText fontStyle="SB" fontSize={15}>
-								{item?.CourseCode || 'N/A'}
+								{item?.course?.CourseCode}
 							</CText>
 							<View style={{ maxWidth: '90%', width: 300}}>
 								<CText fontSize={13} numberOfLines={1} style={{ width: '110%' }}>
-									{item?.CourseName}
+									{item?.course?.Description}
 								</CText>
 							</View>
-							<Text style={styles.sectionText}>Section: {item?.Section}</Text>
+							<Text style={styles.sectionText}>Section: {item?.SectionCode}</Text>
 						</View>
 						<Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#888" />
 					</View>
 				{isExpanded && (
 					<View style={styles.expandedContent}>
-						<View style={styles.summaryRow}>
-							<View>
-								<CText fontStyle="SB" fontSize={20} style={{ textAlign: 'center' }}>
-									{item.activities.length}
-								</CText>
-								<CText fontSize={11}>Activities</CText>
-							</View>
-							<View>
-								<CText fontStyle="SB" fontSize={20} style={{ textAlign: 'center' }}>
-									{item.students.length}
-								</CText>
-								<CText fontSize={11}>Students</CText>
-							</View>
-							<TouchableOpacity onPress={() => handleCopy(item.ClassCode)}>
-								<View style={{ alignItems: 'center' }}>
-									<CText fontStyle="SB" fontSize={20}>
-										{item.ClassCode}
-									</CText>
-									<CText fontSize={11}>Class Code</CText>
-								</View>
-							</TouchableOpacity>
-						</View>
 						<View style={{
 							flexDirection: 'row', justifyContent: 'space-between',
 							alignItems: 'center', borderTopWidth: 1,
@@ -238,21 +191,14 @@ const ClassesListScreen = ({ navigation }) => {
 							<View style={styles.teacherRow}>
 								<TouchableOpacity
 									style={styles.viewButton}
-									onPress={() =>
-										navigation.navigate('ClassDetails', {
-											ClassStudentID: item.ClassStudentID,
-											ClassID: item?.ClassID,
-										})
-									}>
+									onPress={() => handleUse(item)}
+								>
 									<CText fontStyle="SB" fontSize={14} style={{ color: theme.colors.light.primary }}>
-										View
+										Use
 									</CText>
 								</TouchableOpacity>
 							</View>
 						</View>
-						<CText fontSize={12} style={{ color: '#777' }}>
-							{item?.ClassEnrollmentID ? 'Imported from Enrollment' : ''}
-						</CText>
 					</View>
 				)}
 			</View>
@@ -262,13 +208,9 @@ const ClassesListScreen = ({ navigation }) => {
 
 	return (
 		<>
-			<CustomHeader2 />
+			<BackHeader title="Enrollment Classes" />
 			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 100}]}>
-				<View style={[styles.container, {paddingTop: 0}]}>
-					<LastUpdatedBadge
-						date={lastFetched}
-						onReload={loadClassesOnline}
-					/>
+				<View style={styles.container}>
 					<View style={styles.searchBox}>
 						<Icon name="search-outline" size={18} color="#999" style={styles.searchIcon} />
 						<TextInput
@@ -285,6 +227,11 @@ const ClassesListScreen = ({ navigation }) => {
 						)}
 					</View>
 
+					<LastUpdatedBadge
+						date={lastFetched}
+						onReload={loadClassesOnline}
+					/>
+
 					<ShimmerList
 						data={filteredClasses}
 						loading={loading}
@@ -295,52 +242,12 @@ const ClassesListScreen = ({ navigation }) => {
 						onRefresh={loadClassesOnline}
 					/>
 				</View>
-
-				<TouchableOpacity style={globalStyles.fab} activeOpacity={0.7} onPress={openModal}>
-					<Icon name="add" size={24} color="white" />
-				</TouchableOpacity>
-
-				{showModal && (
-					<>
-						<Modal transparent visible={showModal} animationType="none">
-							<TouchableOpacity
-								style={globalStyles.overlay}
-								activeOpacity={1}
-								onPress={closeModal}
-							/>
-							<Animated.View
-								style={[
-									globalStyles.modalContainer,
-									{ transform: [{ translateY: slideAnim }] },
-								]}
-							>
-								<TouchableOpacity
-									style={globalStyles.option}
-									onPress={() => handleOption('manual')}
-								>
-									<CText fontStyle="SB" fontSize={16}>
-										Add Class
-									</CText>
-								</TouchableOpacity>
-								<TouchableOpacity
-									style={globalStyles.option}
-									onPress={() => handleOption('fetch')}
-								>
-									<CText fontStyle="SB" fontSize={16}>
-										Import
-									</CText>
-								</TouchableOpacity>
-							</Animated.View>
-						</Modal>
-					</>
-				)}
-
 			</SafeAreaView>
 		</>
 	);
 };
 
-export default ClassesListScreen;
+export default EnrollmentClassesListScreen;
 
 const styles = StyleSheet.create({
 	sectionText: {

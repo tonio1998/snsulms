@@ -33,6 +33,7 @@ import {NetworkContext} from "../../../../context/NetworkContext.tsx";
 import {useAuth} from "../../../../context/AuthContext.tsx";
 import {useFocusEffect} from "@react-navigation/native";
 import {SubmissionModal} from "../../../../components/SubmissionModal.tsx";
+import {loadStudentActivityToLocal} from "../../../../utils/cache/Student/localStudentActivity";
 
 export default function SubmissionScreen({ navigation, route }) {
 	const { activity } = useActivity();
@@ -48,6 +49,23 @@ export default function SubmissionScreen({ navigation, route }) {
 	const [modalVisible, setModalVisible] = useState(false);
 	const [uploading, setUploading] = useState(false);
 
+	const loadLocalSubmissions = async () => {
+		try {
+			setLoadingSubmissions(true);
+			const { data } = await loadStudentActivityToLocal(StudentActivityID);
+			if (data) {
+				console.log("🔍 Loaded submissions from cache", data);
+				setSubmissions(data?.attachments);
+			} else {
+				await loadSubmissions();
+			}
+		} catch (error) {
+			console.error('Error loading from cache:', error);
+		} finally {
+			setLoadingSubmissions(false);
+		}
+	};
+
 	const loadSubmissions = async () => {
 		try {
 			setLoadingSubmissions(true);
@@ -55,6 +73,8 @@ export default function SubmissionScreen({ navigation, route }) {
 				StudentActivityID: StudentActivityID,
 				StudentID: user?.conn_id
 			});
+
+			console.log("🔍 Fetched submissions from API", res);
 			setSubmissions(res.data);
 		} catch (err) {
 			handleApiError(err, 'Fetch');
@@ -67,18 +87,19 @@ export default function SubmissionScreen({ navigation, route }) {
 		if (activity?.ActivityID > 0) {
 			setActivityID(activity.ActivityID);
 			setStudentActivityID(activity.StudentActivityID);
+			loadLocalSubmissions();
 		}
 	}, [activity]);
 
-	useEffect(() => {
-		if (ActivityID > 0) {
-			loadSubmissions();
-		}
-	}, [ActivityID]);
+	// useEffect(() => {
+	// 	if (ActivityID > 0) {
+	// 		loadSubmissions();
+	// 	}
+	// }, [ActivityID]);
 
 	useFocusEffect(
 		useCallback(() => {
-			loadSubmissions();
+			loadLocalSubmissions();
 		}, [])
 	);
 
@@ -222,7 +243,7 @@ export default function SubmissionScreen({ navigation, route }) {
 	return (
 		<>
 			<BackHeader title="Submission" />
-			<SafeAreaView style={globalStyles.safeArea}>
+			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 100}]}>
 				{loadingSubmissions && (
 					<ActivityIndicator size="large" color={theme.colors.light.primary} />
 				)}

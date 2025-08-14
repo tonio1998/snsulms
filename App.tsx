@@ -1,7 +1,7 @@
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
-import {StatusBar, Vibration, LogBox, AppState} from 'react-native';
+import {StatusBar, Vibration, LogBox, AppState, UIManager, Platform} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -58,6 +58,7 @@ import QuizScreen from "./src/Shared/Survey/QuizScreen.tsx";
 import QuizStartScreen from "./src/Shared/Survey/QuizStartScreen.tsx";
 import ResponsePreviewScreen from "./src/Shared/Survey/ResponsePreviewScreen.tsx";
 import QuizBuilderScreen from "./src/Shared/Survey/QuizBuilderScreen.tsx";
+import EnrollmentClassesListScreen from "./src/screens/Faculty/Classes/EnrollmentClassesListScreen.tsx";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -204,6 +205,7 @@ const AppNavigator = () => {
                             <Stack.Screen name="ClassMeeting" component={CreateMeetingScreen} />
                             <Stack.Screen name="ActivityDetails" component={StudentActivityBottomNav} />
                             <Stack.Screen name="FacActivityDetails" component={FacultyActivityBottomNav} />
+                            <Stack.Screen name="FetchEnrollment" component={EnrollmentClassesListScreen} />
                             <Stack.Screen
                                 name="WallComments"
                                 component={WallCommentsScreen}
@@ -227,6 +229,16 @@ const AppNavigator = () => {
 };
 
 export default function App(): React.JSX.Element {
+    useEffect(() => {
+        if (
+            Platform.OS === 'android' &&
+            UIManager.setLayoutAnimationEnabledExperimental &&
+            typeof UIManager.setLayoutAnimationEnabledExperimental === 'function'
+        ) {
+            UIManager.setLayoutAnimationEnabledExperimental(true);
+        }
+    }, []);
+
     return (
         <LoadingProvider>
             <Loading2Provider>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dimensions } from 'react-native';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { theme } from '../theme';
 
@@ -17,34 +17,42 @@ import { CText } from '../components/common/CText.tsx';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TestBuilderScreen from "../Shared/Survey/TestBuilderScreen.tsx";
 import CalendarScreen from "../Shared/CalendarScreen.tsx";
+import SchedulesScreen from "../Shared/Schedule/SchedulesScreen.tsx";
 
 const ClassesStack = createNativeStackNavigator();
 const FacClassesStack = createNativeStackNavigator();
 
-const Tab = createMaterialTopTabNavigator();
+const Tab = createBottomTabNavigator();
 
 const currentColors = theme.colors.light;
-const numberOfTabs = 4;
-export default function BottomSwipeTabs() {
+
+export default function BottomTabs() {
 	const { hasRole } = useAccess();
 	const { user } = useAuth();
-	const tabWidth = Dimensions.get('window').width / numberOfTabs;
+
 	return (
 		<Tab.Navigator
 			initialRouteName="Home"
-			tabBarPosition="bottom"
 			screenOptions={({ route }) => ({
+				headerShown: false,
 				swipeEnabled: true,
 				tabBarShowIcon: true,
-				tabBarPressColor: currentColors.primary,
-				tabBarIndicatorStyle: {
-					backgroundColor: theme.colors.light.primary,
-					top: -2,
-					padding: 2,
-					borderRadius: 10,
-					// elevation: 4,
+				tabBarActiveTintColor: currentColors.primary,
+				tabBarInactiveTintColor: '#9F9F9F',
+				tabBarStyle: {
+					backgroundColor: currentColors.card,
+					height: 65,
+					paddingBottom: 10,
+					paddingTop: 4,
+					borderTopColor: '#ccc',
+					borderTopWidth: 1,
+					elevation: 4,
+					shadowColor: '#000',
+					shadowOpacity: 0.1,
+					shadowRadius: 10,
+					shadowOffset: { width: 0, height: -2 },
 				},
-				tabBarIcon: ({ focused, color }) => {
+				tabBarIcon: ({ focused, color, size }) => {
 					let iconName = 'ellipse-outline';
 					switch (route.name) {
 						case 'Home':
@@ -54,7 +62,7 @@ export default function BottomSwipeTabs() {
 							iconName = focused ? 'reader' : 'reader-outline';
 							break;
 						case 'Classes':
-							iconName = focused ? 'people' : 'people-outline';
+							iconName = focused ? 'library' : 'library-outline';
 							break;
 						case 'myQR':
 							iconName = 'qr-code';
@@ -62,18 +70,20 @@ export default function BottomSwipeTabs() {
 						case 'Grades':
 							iconName = focused ? 'bar-chart' : 'bar-chart-outline';
 							break;
-							case 'Test Builder':
+						case 'Test Builder':
 							iconName = focused ? 'book' : 'book-outline';
 							break;
-							case 'Calendar':
+						case 'Calendar':
 							iconName = focused ? 'calendar' : 'calendar-outline';
+							break;
+						case 'Schedule':
+							iconName = focused ? 'time' : 'time-outline';
 							break;
 						default:
 							break;
 					}
 					return <Icon name={iconName} size={22} color={color} />;
 				},
-
 				tabBarLabel: ({ focused, color }) => (
 					<CText
 						numberOfLines={1}
@@ -87,26 +97,11 @@ export default function BottomSwipeTabs() {
 						{route.name}
 					</CText>
 				),
-
-				tabBarActiveTintColor: currentColors.primary,
-				tabBarInactiveTintColor: '#9F9F9F',
-
-				tabBarStyle: {
-					backgroundColor: currentColors.card,
-					height: 65,
-					paddingBottom: 10,
-					paddingTop: 4,
-					elevation: 4,
-					shadowColor: '#000',
-					shadowOpacity: 0.1,
-					shadowRadius: 10,
-					shadowOffset: { width: 0, height: -2 },
-					borderTopColor: '#ccc',
-					borderTopWidth: 1,
-				},
 			})}
 		>
 			<Tab.Screen name="Home" component={HomeScreen} />
+			<Tab.Screen name="Schedule" component={SchedulesScreen} />
+
 			{hasRole('STUD') && (
 				<>
 					<Tab.Screen name="Classes" component={ClassesStackScreen} />
@@ -122,7 +117,6 @@ export default function BottomSwipeTabs() {
 			)}
 
 			<Tab.Screen name="Calendar" component={CalendarScreen} />
-
 		</Tab.Navigator>
 	);
 }

@@ -8,7 +8,6 @@ export const ActivityProvider = ({ children, StudentActivityID, ActivityID }) =>
     const [activity, setActivity] = useState(null);
     const [loading, setLoading] = useState(false);
     const network = useContext(NetworkContext);
-
     const refreshFromOnline = async () => {
         if (!network?.isOnline) {
             console.warn('Cannot refresh: offline');

@@ -35,45 +35,44 @@ LocaleConfig.defaultLocale = 'en';
 
 const STORAGE_KEY_PREFIX = 'cachedGoogleCalendarEvents_';
 
-// Combined fetch for primary calendar + Philippine holidays
 const fetchGoogleCalendarEvents = async (accessToken) => {
-	const fetchCalendarEvents = async (calendarId) => {
-		const response = await fetch(
-			`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
-			{
-				headers: { Authorization: `Bearer ${accessToken}` },
-			}
-		);
-		if (!response.ok) throw new Error(`Failed to fetch events from ${calendarId}`);
-		const data = await response.json();
-		return data.items || [];
-	};
+	if (!accessToken) throw new Error("Access token is required");
 
 	try {
-		const primaryEvents = await fetchCalendarEvents('primary');
+		const response = await fetch(
+			'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+			{
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+					'Content-Type': 'application/json',
+				},
+			}
+		);
 
-		const holidayCalendarId = 'en.ph#holiday@group.v.calendar.google.com';
-		let holidayEvents = [];
-
-		try {
-			holidayEvents = await fetchCalendarEvents(holidayCalendarId);
-		} catch (err) {
-			console.warn('Could not fetch holiday events:', err.message);
+		if (!response.ok) {
+			throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
 		}
 
-		const allEvents = [...primaryEvents, ...holidayEvents];
-		allEvents.sort((a, b) => {
+		const data = await response.json();
+		const events = data.items || [];
+
+		const filteredEvents = events.filter(event =>
+			event?.conferenceData?.createRequest?.requestId?.toLowerCase().startsWith('snsu-meet-')
+		);
+
+		filteredEvents.sort((a, b) => {
 			const aDate = a.start?.dateTime || a.start?.date || '';
 			const bDate = b.start?.dateTime || b.start?.date || '';
 			return aDate.localeCompare(bDate);
 		});
 
-		return allEvents;
+		return filteredEvents;
 	} catch (error) {
 		console.error('Error fetching Google Calendar events:', error);
 		return [];
 	}
 };
+
 
 const CalendarScreen = () => {
 	const [events, setEvents] = useState([]);

@@ -19,6 +19,7 @@ import BackHeader from '../../../../components/layout/BackHeader.tsx';
 import { useLoading } from '../../../../context/LoadingContext.tsx';
 import { handleApiError } from '../../../../utils/errorHandler.ts';
 import { useClass } from '../../../../context/SharedClassContext.tsx';
+import {useLoading2} from "../../../../context/Loading2Context.tsx";
 
 const PeopleScreen = () => {
 	const { classes } = useClass();
@@ -28,12 +29,15 @@ const PeopleScreen = () => {
 	const [refreshing, setRefreshing] = useState(false);
 	const { showLoading, hideLoading } = useLoading();
 	const debounceTimeout = useRef(null);
+	const { showLoading2, hideLoading2 } = useLoading2();
+	const [loading, setLoading] = useState(false);
+
 	const fetchClassmates = useCallback(async (filters = {}) => {
 		try {
 			showLoading('Loading...');
 
 			let list = [...(classes?.students || [])];
-
+			console.log('🔍 Fetching classmates from API', classes);
 			if (filters.search) {
 				const query = filters.search.toLowerCase();
 				list = list.filter((x) =>
@@ -42,7 +46,7 @@ const PeopleScreen = () => {
 			}
 
 			list.sort((a, b) =>
-				(a.student_info?.FirstName || '').localeCompare(b.student_info?.FirstName || '')
+				(a.details?.LastName || '').localeCompare(b.details?.LastName || '')
 			);
 
 			setClassmates(list);
@@ -51,11 +55,11 @@ const PeopleScreen = () => {
 		} finally {
 			hideLoading();
 		}
-	}, [classes?.students, showLoading, hideLoading]);
+	}, [loading, classes?.students, showLoading, hideLoading, showLoading2, hideLoading2]);
 
 	useFocusEffect(
 		useCallback(() => {
-			fetchClassmates(); // run on screen focus
+			fetchClassmates();
 		}, [fetchClassmates])
 	);
 
@@ -86,7 +90,8 @@ const PeopleScreen = () => {
 				/>
 				<View style={{ flex: 1 }}>
 					<CText style={styles.name} fontStyle="SB" fontSize={14.5}>
-						{item.details?.FirstName} {item.details?.LastName}
+						{item.details?.LastName}, {item.details?.FirstName}
+						{item.details?.MiddleName ? ` ${item.details.MiddleName.charAt(0)}.` : ''}
 					</CText>
 					<CText style={styles.email}>{item.details?.user?.email}</CText>
 				</View>

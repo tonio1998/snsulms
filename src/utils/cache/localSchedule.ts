@@ -1,14 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {handleApiError} from "../errorHandler.ts";
 
-const getDashboardCacheKeys = (userId: string, acadStr: string) => ({
-    CACHE_KEY: `dashboard_cache_${userId}_${acadStr}`,
-    CACHE_DATE_KEY: `dashboard_cache_date_${userId}_${acadStr}`,
+const getCacheKeys = (userId: string, acadStr: string) => ({
+    CACHE_KEY: `class_schedule_cache_${userId}_${acadStr}`,
+    CACHE_DATE_KEY: `class_schedule_cache_date_${userId}_${acadStr}`,
 });
 
-export const saveDashboardCache = async (userId: string, acadStr: string, data: any) => {
+export const saveScheduleCache = async (userId: string, acadStr: string, data: any) => {
     if (!userId || !acadStr) return null;
-    const { CACHE_KEY, CACHE_DATE_KEY } = getDashboardCacheKeys(userId, acadStr);
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(userId, acadStr);
 
     try {
         const now = new Date();
@@ -21,9 +21,9 @@ export const saveDashboardCache = async (userId: string, acadStr: string, data: 
     }
 };
 
-export const loadDashboardCache = async (userId: string, acadStr: string) => {
+export const loadScheduleCache = async (userId: string, acadStr: string) => {
     if (!userId || !acadStr) return { data: null, date: null };
-    const { CACHE_KEY, CACHE_DATE_KEY } = getDashboardCacheKeys(userId, acadStr);
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(userId, acadStr);
 
     try {
         const dataStr = await AsyncStorage.getItem(CACHE_KEY);
