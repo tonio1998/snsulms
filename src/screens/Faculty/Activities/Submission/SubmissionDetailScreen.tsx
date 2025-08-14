@@ -206,18 +206,17 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 									</CText>
 
 									{submission?.SubmissionType === 'Submitted' ? (
-										<>
-											{attachment.length > 0 ? (
-												attachment.map((item, index) => renderItem({ item, index }))
-											) : (
-												<Text style={styles.emptyText}>No attachments found.</Text>
-											)}
-										</>
+										attachment.length > 0 ? (
+											attachment.map((item, index) => renderItem({ item, index }))
+										) : (
+											<Text style={styles.emptyText}>No attachments found.</Text>
+										)
+									) : submission?.SubmissionType === 'Assigned' ? (
+										<CText style={styles.emptyText}>Activity not yet turned in.</CText>
 									) : (
-										<>
-										<CText style={styles.emptyText}>Already have attachment not yet turned it.</CText>
-										</>
+										<Text style={styles.emptyText}>No attachments found.</Text>
 									)}
+
 
 
 								</View>
