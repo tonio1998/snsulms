@@ -27,6 +27,7 @@ import { loadClassesFromLocal, saveClassesToLocal } from "../../../utils/cache/S
 import { formatDate } from "../../../utils/dateFormatter";
 import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
 import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
+import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
 
 const ClassesScreen = ({ navigation, route }) => {
 	const { user } = useAuth();
@@ -236,6 +237,11 @@ const ClassesScreen = ({ navigation, route }) => {
 						date={lastFetched}
 						onReload={fetchFromApi}
 					/>
+					{loading && (
+						<>
+							<ActivityIndicator2 />
+						</>
+					)}
 					<ShimmerList
 						data={classes}
 						loading={loading}

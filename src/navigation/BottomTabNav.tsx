@@ -100,7 +100,6 @@ export default function BottomTabs() {
 			})}
 		>
 			<Tab.Screen name="Home" component={HomeScreen} />
-			<Tab.Screen name="Schedule" component={SchedulesScreen} />
 
 			{hasRole('STUD') && (
 				<>
@@ -115,7 +114,7 @@ export default function BottomTabs() {
 					<Tab.Screen name="Test Builder" component={TestBuilderScreen} />
 				</>
 			)}
-
+			<Tab.Screen name="Schedule" component={SchedulesScreen} />
 			<Tab.Screen name="Calendar" component={CalendarScreen} />
 		</Tab.Navigator>
 	);

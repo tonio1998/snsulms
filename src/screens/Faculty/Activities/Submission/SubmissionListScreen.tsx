@@ -17,6 +17,7 @@ import {
 	loadActivitySubmissionToLocal,
 	saveActivitySubmissionToLocal
 } from "../../../../utils/cache/Faculty/localActivitySubmission";
+import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
 
 const SubmissionListScreen = ({ navigation }) => {
 	const { activity } = useFacActivity();
@@ -56,17 +57,16 @@ const SubmissionListScreen = ({ navigation }) => {
 
 	const onRefresh = async () => {
 		if (!activity?.ActivityID) return;
-		setRefreshing(true);
+		setLoading(true);
 		try {
 			const res = await getActivityResponses({ ActivityID: activity.ActivityID });
 			setSubmissions(res.data);
-			console.log('🔍 Fetching submissions from API', res.data);
 			const savedTime = await saveActivitySubmissionToLocal(activity.ActivityID, res.data);
 			if (savedTime) setLastFetched(savedTime);
 		} catch (error) {
 			handleApiError(error, "Failed to refresh submissions");
 		} finally {
-			setRefreshing(false);
+			setLoading(false);
 		}
 	};
 
@@ -155,6 +155,11 @@ const SubmissionListScreen = ({ navigation }) => {
 						onReload={onRefresh}
 					/>
 				</View>
+				{loading && (
+					<>
+						<ActivityIndicator2 />
+					</>
+				)}
 				<ShimmerList
 					data={submissions}
 					loading={loading}

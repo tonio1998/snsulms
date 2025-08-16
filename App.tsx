@@ -54,11 +54,17 @@ import {Loading2Provider} from "./src/context/Loading2Context.tsx";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 import SurveyBottomTabNav from "./src/navigation/Survey/SurveyBottomTabNav.tsx";
 import AddQuestionScreen from "./src/Shared/Survey/AddQuestionScreen.tsx";
-import QuizScreen from "./src/Shared/Survey/QuizScreen.tsx";
-import QuizStartScreen from "./src/Shared/Survey/QuizStartScreen.tsx";
+import QuizScreen from "./src/Shared/Survey/Quiz/QuizScreen.tsx";
+import QuizStartScreen from "./src/Shared/Survey/Quiz/QuizStartScreen.tsx";
 import ResponsePreviewScreen from "./src/Shared/Survey/ResponsePreviewScreen.tsx";
-import QuizBuilderScreen from "./src/Shared/Survey/QuizBuilderScreen.tsx";
+import UseExistingQuiz from "./src/Shared/Survey/UseExistingQuiz.tsx";
 import EnrollmentClassesListScreen from "./src/screens/Faculty/Classes/EnrollmentClassesListScreen.tsx";
+import OutlineListScreen from "./src/screens/Faculty/Classes/Outline/OutlineListScreen.tsx";
+import AddOutlineScreen from "./src/screens/Faculty/Classes/Outline/AddOutlineScreen.tsx";
+import OutlineDetailsScreen from "./src/screens/Faculty/Classes/Outline/OutlineDetailsScreen.tsx";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {endSurvey} from "./src/api/testBuilder/testbuilderApi.ts";
+import CreateTestScreen from "./src/Shared/Survey/CreateTestScreen.tsx";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -76,33 +82,6 @@ const UnauthenticatedStack = () => (
 const AppNavigator = () => {
     const { user } = useAuth();
     const [splashVisible, setSplashVisible] = useState(true);
-
-    useEffect(() => {
-        let syncInterval;
-        const startSync = () => {
-            syncAllTables(tableConfigs);
-            syncInterval = setInterval(() => {
-                syncAllTables(tableConfigs);
-                // console.log('AppNavigatorssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss');
-            }, 5 * 5 * 1000);
-        };
-
-        const stopSync = () => clearInterval(syncInterval);
-
-        const handleAppStateChange = (nextState) => {
-            if (nextState === 'active') startSync();
-            else stopSync();
-        };
-
-        startSync();
-
-        const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-        return () => {
-            stopSync();
-            subscription.remove();
-        };
-    }, []);
 
     useEffect(() => {
         const unsubscribeNetInfo = NetInfo.addEventListener(state => {
@@ -158,7 +137,6 @@ const AppNavigator = () => {
 
         setupFCM();
 
-        // Cleanup
         return () => {
             unsubscribeNetInfo();
         };
@@ -192,10 +170,14 @@ const AppNavigator = () => {
                         }}>
                             <Stack.Screen name="MainTabs" component={BottomTabNav} />
                             <Stack.Screen name="SurveyTest" component={SurveyBottomTabNav} />
+                            <Stack.Screen name="CreateTest" component={CreateTestScreen} />
+                            {/*<Stack.Screen name="OutlineList" component={OutlineListScreen} options={{ headerShown: false }} />*/}
+                            <Stack.Screen name="AddOutline" component={AddOutlineScreen} options={{ headerShown: false }} />
+                            <Stack.Screen name="OutlineDetails" component={OutlineDetailsScreen} options={{ headerShown: false }} />
                             <Stack.Screen name="AddQuestionScreen" component={AddQuestionScreen} />
                             <Stack.Screen name="QuizStartScreen" component={QuizStartScreen} options={{ headerShown: false }} />
                             <Stack.Screen name="ResponsePreview" component={ResponsePreviewScreen} />
-                            <Stack.Screen name="QuizBuilder" component={QuizBuilderScreen} />
+                            <Stack.Screen name="QuizBuilder" component={UseExistingQuiz} />
                             <Stack.Screen name="QuizScreen" component={QuizScreen} />
                             <Stack.Screen name="JoinClass" component={JoinClassScreen} />
                             <Stack.Screen name="AddClass" component={AddClassScreen} />
@@ -229,7 +211,29 @@ const AppNavigator = () => {
 };
 
 export default function App(): React.JSX.Element {
+
+    const syncPendingResponses = async () => {
+        const keys = await AsyncStorage.getAllKeys();
+        const responseKeys = keys.filter((k) => k.startsWith("surveyResponse_"));
+
+        for (const key of responseKeys) {
+            const saved = await AsyncStorage.getItem(key);
+            if (!saved) continue;
+
+            const data = JSON.parse(saved);
+
+            try {
+                await endSurvey(data.surveyId, data);
+                await AsyncStorage.removeItem(key);
+            } catch (e) {
+                console.log("Still offline or upload failed, will retry later", e);
+            }
+        }
+    };
+
+
     useEffect(() => {
+        syncPendingResponses();
         if (
             Platform.OS === 'android' &&
             UIManager.setLayoutAnimationEnabledExperimental &&
@@ -238,6 +242,7 @@ export default function App(): React.JSX.Element {
             UIManager.setLayoutAnimationEnabledExperimental(true);
         }
     }, []);
+
 
     return (
         <LoadingProvider>

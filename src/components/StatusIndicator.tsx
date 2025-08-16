@@ -27,17 +27,7 @@ const StatusIndicator = () => {
 		);
 	}
 
-	if (connectionType === 'cellular') {
-		return (
-			<View style={styles.statusContainer}>
-				<Text style={[styles.statusText, styles.slowText]}>
-					Cellular connection detected, speed may vary...
-				</Text>
-			</View>
-		);
-	}
-
-	return null; // no warning when online and on wifi
+	return null;
 };
 
 const styles = StyleSheet.create({

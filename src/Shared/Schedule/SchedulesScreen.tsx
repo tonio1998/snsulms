@@ -12,6 +12,7 @@ import { loadScheduleCache, saveScheduleCache } from "../../utils/cache/localSch
 import { useAuth } from "../../context/AuthContext.tsx";
 import { LastUpdatedBadge } from "../../components/common/LastUpdatedBadge";
 import { CText } from "../../components/common/CText.tsx";
+import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx";
 
 const dayLabels = { M: 'Monday', T: 'Tuesday', W: 'Wednesday', Th: 'Thursday', F: 'Friday', S: 'Saturday', Su: 'Sunday' };
 const colors = ['#FFB6C1', '#87CEFA', '#90EE90', '#FFD700', '#FF7F50', '#DA70D6'];
@@ -53,9 +54,10 @@ const SchedulesScreen = () => {
 	const [acad, setAcad] = useState<string | null>(null);
 	const { showLoading2, hideLoading2 } = useLoading2();
 	const [lastFetched, setLastFetched] = useState<Date | null>(null);
+	const [loading, setLoading] = useState(false);
 
 	const fetchClassSchedule = async (acadStr: string) => {
-		showLoading2('Loading schedules...');
+		// showLoading2('Loading schedules...');
 		try {
 			const res = await getAllSchedules({ AcademicYear: acadStr });
 			if (res) {
@@ -67,7 +69,7 @@ const SchedulesScreen = () => {
 		} catch (error) {
 			handleApiError(error, 'Fetch Class Schedules');
 		} finally {
-			hideLoading2();
+			// hideLoading2();
 		}
 	};
 
@@ -102,9 +104,9 @@ const SchedulesScreen = () => {
 
 	const onRefresh = async () => {
 		if (acad) {
-			setRefreshing(true);
+			setLoading(true);
 			await fetchClassSchedule(acad);
-			setRefreshing(false);
+			setLoading(false);
 		}
 	};
 
@@ -117,6 +119,11 @@ const SchedulesScreen = () => {
 				<View style={{paddingHorizontal: 16 }}>
 					<LastUpdatedBadge date={lastFetched} onReload={() => acad && fetchClassSchedule(acad)} />
 				</View>
+				{loading && (
+					<>
+						<ActivityIndicator2 />
+					</>
+				)}
 				<ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
 					<ScrollView horizontal>
 						<View style={styles.table}>
@@ -152,11 +159,11 @@ const SchedulesScreen = () => {
 												return (
 													<View key={i} style={[styles.classBlock, { top, height, backgroundColor: colors[i % colors.length], width: '100%' }]}>
 														<Text style={styles.classTitle} numberOfLines={1}>{cls.class_info?.CourseCode || cls.class_info?.CourseName}</Text>
-														{/*<Text style={styles.classTime}>{format12Hour(cls.TimeFrom)} - {format12Hour(cls.TimeTo)}</Text>*/}
+														<Text style={styles.classTime}>{format12Hour(cls.TimeFrom)} - {format12Hour(cls.TimeTo)}</Text>
 														<Text style={styles.classTime}>{cls?.room?.RoomCode}</Text>
 														{cls.class_info?.teacher && (
-															<View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, backgroundColor: '#fff', borderRadius: 8, padding: 5 }}>
-																<Image source={{ uri: cls.class_info.teacher.avatar }} style={{ width: 20, height: 20, borderRadius: 15, marginRight: 4 }} />
+															<View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, margin:7, backgroundColor: '#fff', borderRadius: 50, padding: 5 }}>
+																<Image source={{ uri: cls.class_info.teacher.avatar }} style={{ width: 15, height: 15, borderRadius: 15, marginRight: 4 }} />
 																<CText fontSize={11} numberOfLines={1}>{cls.class_info.teacher.name}</CText>
 															</View>
 														)}
@@ -191,7 +198,7 @@ const styles = StyleSheet.create({
 	timeCell: { height: slotHeight, justifyContent: 'center', alignItems: 'center', borderBottomWidth: 1, borderColor: '#eee' },
 	timeText: { fontSize: 10, color: '#555' },
 	cell: { height: slotHeight, borderBottomWidth: 1, borderColor: '#eee' },
-	classBlock: { position: 'absolute', padding: 4, elevation: 1, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, justifyContent: 'center', alignItems: 'center' },
+	classBlock: { position: 'absolute', padding: 10, elevation: 1, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, justifyContent: 'center', alignItems: 'center' },
 	classTitle: { fontSize: 12, fontWeight: 'bold', color: '#000', textAlign: 'center' },
 	classTime: { fontSize: 11, color: '#333' },
 });

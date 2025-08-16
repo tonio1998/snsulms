@@ -16,6 +16,8 @@ import MaterialScreenFac from "../../screens/Faculty/Classes/ClassDetails/Materi
 import ClassSettingsScreen from "../../screens/Faculty/Classes/ClassDetails/ClassSettingsScreen.tsx";
 import ScanScreen from "../../Shared/Scanner/ScanScreen.tsx";
 import ClassScheduleScreen from "../../Shared/Schedule/ClassScheduleScreen.tsx";
+import OutlineListScreen from "../../screens/Faculty/Classes/Outline/OutlineListScreen.tsx";
+import FabMenu from "../../components/buttons/FabMenu.tsx";
 
 const Tab = createBottomTabNavigator();
 const ClassesDetailsStack = createNativeStackNavigator();
@@ -40,13 +42,14 @@ function InnerTabs({ ClassID }) {
 				tabBarIcon: ({ focused, color, size }) => {
 					let iconName = 'ellipse-outline';
 					switch (route.name) {
-						case 'Wall': iconName = focused ? 'home' : 'home-outline'; break;
+						case 'Wall': iconName = focused ? 'notifications' : 'notifications-outline'; break;
 						case 'Activities': iconName = focused ? 'reader' : 'reader-outline'; break;
 						case 'Materials': iconName = focused ? 'book' : 'book-outline'; break;
 						case 'People': iconName = focused ? 'people' : 'people-outline'; break;
 						case 'Scan': iconName = focused ? 'scan' : 'scan-outline'; break;
 						case 'Settings': iconName = focused ? 'settings' : 'settings-outline'; break;
 						case 'Schedule': iconName = focused ? 'calendar' : 'calendar-outline'; break;
+						case 'Outline': iconName = focused ? 'list' : 'list-outline'; break;
 						default: iconName = 'ellipse'; break;
 					}
 					return (
@@ -107,6 +110,7 @@ function InnerTabs({ ClassID }) {
 					{classes?.Attendance === 'Y' && (
 						<Tab.Screen name="Scan" component={ScanScreen} initialParams={{ ClassID }} />
 					)}
+					<Tab.Screen name="Outline" component={OutlineListScreen} initialParams={{ ClassID }} />
 				</>
 			)}
 

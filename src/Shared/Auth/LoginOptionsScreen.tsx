@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
 	View,
 	Text,
@@ -9,9 +9,9 @@ import {
 	SafeAreaView,
 	ImageBackground,
 	Alert,
-	Dimensions,
+	Dimensions, StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../theme';
@@ -26,6 +26,7 @@ import * as Keychain from 'react-native-keychain';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { APP_NAME, GOOGLE_CLIENT_ID, TAGLINE } from '../../../env.ts';
 import DeviceInfo from 'react-native-device-info';
+import LinearGradient from "react-native-linear-gradient";
 const { width } = Dimensions.get('window');
 
 GoogleSignin.configure({
@@ -36,16 +37,30 @@ GoogleSignin.configure({
 
 export default function LoginOptionsScreen() {
 	const navigation = useNavigation();
+	const { user } = useAuth();
 	const { loginAuth } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
 	const [loading, setLoading] = useState(false);
 	const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 	const [version, setVersion] = useState('');
 
+
 	useEffect(() => {
 		const appVersion = DeviceInfo.getVersion();
 		setVersion(appVersion);
+
 	}, []);
+
+	useFocusEffect(
+		useCallback(() => {
+			StatusBar.setBarStyle('light-content');
+			StatusBar.setBackgroundColor('#1e1e1e');
+			return () => {
+				StatusBar.setBarStyle('dark-content');
+				StatusBar.setBackgroundColor('#ffffff');
+			};
+		}, [])
+	);
 
 	useEffect(() => {
 		(async () => {
@@ -100,7 +115,6 @@ export default function LoginOptionsScreen() {
 				error?.response?.data?.message ||
 				error?.message ||
 				'Something went wrong during Google login.';
-			// Alert.alert('Login Failed', 'Something went wrong during Google login.');
 			handleApiError(error, 'Google Login');
 		} finally {
 			hideLoading();
@@ -109,20 +123,38 @@ export default function LoginOptionsScreen() {
 
 	return (
 		<SafeAreaView style={styles.container}>
+			<LinearGradient
+				colors={[theme.colors.light.primary, theme.colors.light.secondary]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}
+				style={StyleSheet.absoluteFill}
+			/>
+
 			<ImageBackground
 				source={require('../../../assets/img/bg2.png')}
 				style={styles.container}
+				imageStyle={{ opacity: 0.4 }}
 				resizeMode="cover"
 			>
 				<View style={styles.wrapper}>
+					{/* Header */}
 					<View style={styles.header}>
-						<Image source={require('../../../assets/img/ic_launcher.png')} style={styles.logo} />
-						<CText fontStyle="SB" fontSize={40} style={styles.appName}>{APP_NAME}</CText>
-						<CText fontStyle="R" fontSize={14} style={styles.tagline}>{TAGLINE}</CText>
+						<Image
+							source={require('../../../assets/img/ic_launcher.png')}
+							style={styles.logo}
+						/>
+						<CText fontStyle="SB" fontSize={40} style={styles.appName}>
+							{APP_NAME}
+						</CText>
+						<CText fontStyle="R" fontSize={14} style={styles.tagline}>
+							{TAGLINE}
+						</CText>
 					</View>
 
+					{/* Auth Section */}
 					<View style={styles.authSection}>
 						<CText style={styles.loginLabel}>Sign in to continue</CText>
+
 						<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
 							<Icon name="logo-google" size={22} color="#DB4437" />
 							<CText style={styles.authText}>Continue with Google</CText>
@@ -135,12 +167,13 @@ export default function LoginOptionsScreen() {
 
 						{isBiometricEnabled && (
 							<TouchableOpacity onPress={handleBiometricLogin} style={styles.fingerprint}>
-								<Icon name="finger-print-outline" size={40} color="#fff" />
+								<Icon name="finger-print-outline" size={40} color="#fff" style={{ textShadowColor: 'rgba(255,255,255,0.6)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 }} />
 								<CText style={styles.bioText}>Use Biometrics</CText>
 							</TouchableOpacity>
 						)}
 					</View>
 
+					{/* Footer */}
 					<View style={styles.footer}>
 						<CText fontSize={11} style={styles.footerText}>Developed by SNSU - ICT fgWorkz</CText>
 						<CText fontSize={11} style={styles.footerText}>Version {version} • © 2025 All rights reserved</CText>
@@ -148,13 +181,41 @@ export default function LoginOptionsScreen() {
 				</View>
 			</ImageBackground>
 		</SafeAreaView>
+
 	);
 }
 
 const styles = StyleSheet.create({
+	authButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		backgroundColor: '#fff',
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		borderRadius: theme.radius.md,
+		width: width * 0.8,
+		elevation: 4,
+		shadowColor: '#000',
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		shadowOffset: { width: 0, height: 3 },
+	},
+	authButtonOutline: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderColor: '#fff',
+		borderWidth: 1,
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		borderRadius: theme.radius.md,
+		width: width * 0.8,
+		backgroundColor: 'rgba(255,255,255,0.05)',
+	},
 	container: {
 		flex: 1,
-		backgroundColor: theme.colors.light.primary,
+		// backgroundColor: theme.colors.light.primary,
 	},
 	wrapper: {
 		flex: 1,

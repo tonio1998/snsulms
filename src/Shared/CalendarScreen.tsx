@@ -21,6 +21,8 @@ import { globalStyles } from "../theme/styles.ts";
 import CustomHeader from "../components/layout/CustomHeader.tsx";
 import { theme } from "../theme";
 import CustomHeader2 from "../components/layout/CustomHeader2.tsx";
+import ActivityIndicator2 from "../components/loaders/ActivityIndicator2.tsx";
+import {LastUpdatedBadge} from "../components/common/LastUpdatedBadge";
 
 LocaleConfig.locales['en'] = {
 	monthNames: [
@@ -81,6 +83,7 @@ const CalendarScreen = () => {
 	const [selectedDate, setSelectedDate] = useState(null);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [selectedEvent, setSelectedEvent] = useState(null);
+	const [lastFetched, setLastFetched] = useState(null);
 	const { user } = useAuth();
 	const email = user?.email;
 
@@ -101,6 +104,7 @@ const CalendarScreen = () => {
 			setEvents(calendarEvents);
 
 			await AsyncStorage.setItem(STORAGE_KEY_PREFIX + email, JSON.stringify(calendarEvents));
+			setLastFetched(new Date());
 		} catch (error) {
 			console.error(error);
 		} finally {
@@ -129,7 +133,7 @@ const CalendarScreen = () => {
 
 		acc[dateStr] = {
 			marked: true,
-			dotColor: '#FFD04C',
+			dotColor: theme.colors.light.secondary,
 			activeOpacity: 0,
 		};
 		return acc;
@@ -222,83 +226,85 @@ const CalendarScreen = () => {
 		<>
 			<CustomHeader2 />
 			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 120}]}>
-				{loading ? (
-					<ActivityIndicator size="large" color="#004D1A" style={{ marginTop: 40 }} />
-				) : (
+				<View style={{paddingHorizontal: 16}}>
+					<LastUpdatedBadge date={lastFetched} onReload={onRefresh} />
+				</View>
+				{loading && (
 					<>
-						<Calendar
-							style={styles.calendar}
-							markedDates={{
-								...markedDates,
-								...(selectedDate ? { [selectedDate]: { selected: true, selectedColor: '#FFD04C' } } : {}),
-							}}
-							onDayPress={(day) => setSelectedDate(day.dateString)}
-							theme={{
-								selectedDayBackgroundColor: '#FFD04C',
-								selectedDayTextColor: '#004D1A',
-								todayTextColor: '#FFD04C',
-								arrowColor: '#004D1A',
-								monthTextColor: '#004D1A',
-								textDayFontWeight: '600',
-								textMonthFontWeight: '700',
-								textDayHeaderFontWeight: '600',
-								textDayFontSize: 16,
-							}}
-						/>
-
-						{selectedDate && eventsForSelectedDate.length === 0 && (
-							<Text style={styles.noEventsText}>No events on this date</Text>
-						)}
-
-						<FlatList
-							data={eventsForSelectedDate}
-							keyExtractor={(item) => item.id}
-							renderItem={renderEventItem}
-							contentContainerStyle={{ paddingBottom: 140 }}
-							refreshControl={
-								<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#004D1A']} />
-							}
-						/>
-
-						<Modal
-							animationType="slide"
-							transparent={true}
-							visible={modalVisible}
-							onRequestClose={closeModal}
-						>
-							<View style={globalStyles.overlay}>
-								<View style={globalStyles.modalContainer}>
-									<Text style={styles.modalTitle}>{selectedEvent?.summary || '(No Title)'}</Text>
-									<ScrollView showsVerticalScrollIndicator={false}>
-										<Text style={styles.modalTime}>
-											{selectedEvent?.start?.dateTime
-												? format(parseISO(selectedEvent.start.dateTime), 'EEEE, MMMM d, yyyy hh:mm a')
-												: selectedEvent?.start?.date || 'All day'}
-										</Text>
-										{selectedEvent?.location && (
-											<Text style={styles.modalLocation}>📍 {selectedEvent.location}</Text>
-										)}
-										{selectedEvent?.description && (
-											<Text style={styles.modalDescription}>{selectedEvent.description}</Text>
-										)}
-									</ScrollView>
-									{meetingLink && (
-										<TouchableOpacity
-											style={styles.joinButton}
-											onPress={() => Linking.openURL(meetingLink)}
-											activeOpacity={0.8}
-										>
-											<Text style={styles.joinButtonText}>Join Meeting</Text>
-										</TouchableOpacity>
-									)}
-									<Pressable style={styles.closeButton} onPress={closeModal} android_ripple={{ color: '#ccc' }}>
-										<Text style={styles.closeButtonText}>Close</Text>
-									</Pressable>
-								</View>
-							</View>
-						</Modal>
+						<ActivityIndicator2 />
 					</>
 				)}
+				<Calendar
+					style={styles.calendar}
+					markedDates={{
+						...markedDates,
+						...(selectedDate ? { [selectedDate]: { selected: true, selectedColor: theme.colors.light.primary } } : {}),
+					}}
+					onDayPress={(day) => setSelectedDate(day.dateString)}
+					theme={{
+						selectedDayBackgroundColor: theme.colors.light.primary,
+						selectedDayTextColor: theme.colors.light.card,
+						todayTextColor: theme.colors.light.primary,
+						arrowColor: theme.colors.light.primary,
+						monthTextColor: theme.colors.light.primary,
+						textDayFontWeight: '600',
+						textMonthFontWeight: '700',
+						textDayHeaderFontWeight: '600',
+						textDayFontSize: 16,
+					}}
+				/>
+
+				{selectedDate && eventsForSelectedDate.length === 0 && (
+					<Text style={styles.noEventsText}>No events on this date</Text>
+				)}
+
+				<FlatList
+					data={eventsForSelectedDate}
+					keyExtractor={(item) => item.id}
+					renderItem={renderEventItem}
+					contentContainerStyle={{ paddingBottom: 140 }}
+					refreshControl={
+						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#004D1A']} />
+					}
+				/>
+
+				<Modal
+					animationType="slide"
+					transparent={true}
+					visible={modalVisible}
+					onRequestClose={closeModal}
+				>
+					<View style={globalStyles.overlay}>
+						<View style={globalStyles.modalContainer}>
+							<Text style={styles.modalTitle}>{selectedEvent?.summary || '(No Title)'}</Text>
+							<ScrollView showsVerticalScrollIndicator={false}>
+								<Text style={styles.modalTime}>
+									{selectedEvent?.start?.dateTime
+										? format(parseISO(selectedEvent.start.dateTime), 'EEEE, MMMM d, yyyy hh:mm a')
+										: selectedEvent?.start?.date || 'All day'}
+								</Text>
+								{selectedEvent?.location && (
+									<Text style={styles.modalLocation}>📍 {selectedEvent.location}</Text>
+								)}
+								{selectedEvent?.description && (
+									<Text style={styles.modalDescription}>{selectedEvent.description}</Text>
+								)}
+							</ScrollView>
+							{meetingLink && (
+								<TouchableOpacity
+									style={styles.joinButton}
+									onPress={() => Linking.openURL(meetingLink)}
+									activeOpacity={0.8}
+								>
+									<Text style={styles.joinButtonText}>Join Meeting</Text>
+								</TouchableOpacity>
+							)}
+							<Pressable style={styles.closeButton} onPress={closeModal} android_ripple={{ color: '#ccc' }}>
+								<Text style={styles.closeButtonText}>Close</Text>
+							</Pressable>
+						</View>
+					</View>
+				</Modal>
 			</SafeAreaView>
 		</>
 	);
@@ -356,13 +362,13 @@ const styles = StyleSheet.create({
 		maxWidth: '80%',
 	},
 	timeBadge: {
-		backgroundColor: '#FFD04C',
+		backgroundColor: theme.colors.light.primary,
 		borderRadius: 12,
 		paddingVertical: 2,
 		paddingHorizontal: 8,
 	},
 	timeBadgeText: {
-		color: '#004D1A',
+		color: theme.colors.light.card,
 		fontWeight: '700',
 		fontSize: 12,
 	},

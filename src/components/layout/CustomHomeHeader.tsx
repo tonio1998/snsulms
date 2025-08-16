@@ -21,7 +21,7 @@ import { formatAcad } from '../../utils/format';
 import Icon from "react-native-vector-icons/Ionicons";
 import {BlurView} from "@react-native-community/blur";
 
-const generateCircles = (count = 2) => {
+const generateCircles = (count = 5) => {
     const fixedPositions = [
         { top: 20, left: 20 },
         { top: 20, left: 100 },
@@ -72,36 +72,36 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
 
     return (
         <>
-            <View
-                colors={[theme.colors.light.primary, 'transparent']}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
+            <LinearGradient
+                colors={[theme.colors.light.secondary, theme.colors.light.primary]}
+                start={{ x: 1, y: 3 }}
+                end={{ x: 1.4, y: 1 }}
                 style={styles.gradientBg}
             >
-                {circles.map(({ key, size, top, left }) => (
-                    <Animated.View
-                        key={key}
-                        style={[
-                            styles.circle,
-                            {
-                                width: size,
-                                height: size,
-                                borderRadius: size / 2,
-                                top,
-                                left,
-                                opacity: fadeAnim,
-                                transform: [{ scale: scaleAnim }],
-                            },
-                        ]}
-                    />
-                ))}
-            </View>
+                {/*{circles.map(({ key, size, top, left }) => (*/}
+                {/*    <Animated.View*/}
+                {/*        key={key}*/}
+                {/*        style={[*/}
+                {/*            styles.circle,*/}
+                {/*            {*/}
+                {/*                width: size,*/}
+                {/*                height: size,*/}
+                {/*                borderRadius: size / 2,*/}
+                {/*                top,*/}
+                {/*                left,*/}
+                {/*                opacity: fadeAnim,*/}
+                {/*                transform: [{ scale: scaleAnim }],*/}
+                {/*            },*/}
+                {/*        ]}*/}
+                {/*    />*/}
+                {/*))}*/}
+            </LinearGradient>
 
             <View style={styles.headerWrapper}>
                 <BlurView
                     style={StyleSheet.absoluteFill}
                     blurType="light"
-                    blurAmount={1}
+                    blurAmount={2}
                     reducedTransparencyFallbackColor={theme.colors.light.card}
                 />
                 <View style={styles.headerContent}>
@@ -138,7 +138,7 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
                             style={styles.acadBtn}
                             activeOpacity={0.85}
                         >
-                            <Icon name={'school'} size={25} color={theme.colors.light.card} />
+                            <Icon name={'school'} size={25} color={theme.colors.light.primary} />
                         </TouchableOpacity>
                         {rightContent}
                     </View>
@@ -168,13 +168,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     gradientBg: {
-        height: 150,
+        height: 155,
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
         zIndex: -9,
-        backgroundColor: theme.colors.light.primary,
+        // backgroundColor: theme.colors.light.primary,
         // borderBottomLeftRadius: 20,
         // borderBottomRightRadius: 20
     },
@@ -216,11 +216,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 11,
         paddingVertical: 10,
         borderRadius: 100,
-        backgroundColor: theme.colors.light.primary,
+        backgroundColor: theme.colors.light.card,
         // marginRight: 12,
     },
     acadText: {
-        color: theme.colors.light.text,
+        color: theme.colors.light.primary,
     },
     avatarWrapper: {
         width: 42,

@@ -1,16 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { View, SafeAreaView, Switch, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { globalStyles } from "../../theme/styles.ts";
-import BackHeader from "../../components/layout/BackHeader.tsx";
-import { useLoading } from "../../context/LoadingContext.tsx";
-import { useAlert } from "../../components/CAlert.tsx";
-import { getSurveyData, updateSurveyData } from "../../api/testBuilder/testbuilderApi.ts";
-import { handleApiError } from "../../utils/errorHandler.ts";
-import { CText } from "../../components/common/CText.tsx";
-import { theme } from "../../theme";
+import {useLoading} from "../../../context/LoadingContext.tsx";
+import {useEffect, useState} from "react";
+import {getSurveyData, updateSurveyData} from "../../../api/testBuilder/testbuilderApi.ts";
+import {handleApiError} from "../../../utils/errorHandler.ts";
+import BackHeader from "../../../components/layout/BackHeader.tsx";
+import {SafeAreaView, ScrollView, StyleSheet, Switch, TouchableOpacity, View} from "react-native";
+import {globalStyles} from "../../../theme/styles.ts";
+import {CText} from "../../../components/common/CText.tsx";
+import {theme} from "../../../theme";
+import {useAlert} from "../../../components/CAlert.tsx";
+import {fetchSurveyData, localupdateSurveyDate} from "../../../utils/cache/Survey/localSurvey";
+import {useAuth} from "../../../context/AuthContext.tsx";
 
 export default function InfoScreen({ navigation, route }) {
     const { showLoading, hideLoading } = useLoading();
+    const { user } = useAuth();
     const { showAlert } = useAlert();
     const SurveyID = route.params.SurveyID;
 
@@ -18,19 +21,20 @@ export default function InfoScreen({ navigation, route }) {
     const [settings, setSettings] = useState({
         isPublished: 0,
         isShuffle: 0,
-        isCardView: 0,  // renamed from isGamified
+        isCardView: 0,
     });
     const [isSaving, setIsSaving] = useState(false);
 
     const fetchData = async () => {
         showLoading('Loading...');
         try {
-            const res = await getSurveyData({ SurveyID });
+            // const res = await getSurveyData({ SurveyID });
+            const res = await fetchSurveyData(user?.id, SurveyID);
             setData(res);
             setSettings({
-                isPublished: res.isPublished ? 1 : 0,
-                isShuffle: res.isShuffle ? 1 : 0,
-                isCardView: res.isCardView ? 1 : 0,  // make sure backend supports this key!
+                isPublished: res?.isPublished ? 1 : 0,
+                isShuffle: res?.isShuffle ? 1 : 0,
+                isCardView: res?.isCardView ? 1 : 0,
             });
         } catch (error) {
             handleApiError(error, 'Fetching data');
@@ -51,7 +55,9 @@ export default function InfoScreen({ navigation, route }) {
         setIsSaving(true);
         showLoading('Saving...');
         try {
-            await updateSurveyData(SurveyID, settings);
+            const data = await updateSurveyData(SurveyID, settings);
+            console.log('🔍 Updated survey data', data);
+            await localupdateSurveyDate(user?.id, SurveyID, data);
             showAlert('success', 'Success', 'Settings updated successfully.');
         } catch (error) {
             handleApiError(error, 'Updating data');
@@ -85,9 +91,9 @@ export default function InfoScreen({ navigation, route }) {
             <SafeAreaView style={globalStyles.safeArea}>
                 <View style={styles.cardHeader}>
                     <CText>Title</CText>
-                    <CText fontSize={17} fontStyle="B">{data.Title || 'Untitled Form'}</CText>
-                    {data.Description ? (
-                        <CText fontSize={15} style={styles.descText}>{data.Description}</CText>
+                    <CText fontSize={17} fontStyle="B">{data?.Title || 'Untitled Form'}</CText>
+                    {data?.Description ? (
+                        <CText fontSize={15} style={styles.descText}>{data?.Description}</CText>
                     ) : null}
                 </View>
                 <ScrollView contentContainerStyle={styles.container}>

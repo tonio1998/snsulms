@@ -37,6 +37,7 @@ import { formatDate } from '../../../utils/dateFormatter';
 import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
 import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
 import {useLoading} from "../../../context/LoadingContext.tsx";
+import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -69,7 +70,7 @@ const ClassesListScreen = ({ navigation }) => {
 	const loadClassesOnline = useCallback(async () => {
 		try {
 			setLoading(true);
-			showLoading2('Fetching classes...');
+			// showLoading2('Fetching classes...');
 			const filter = {
 				page: 1,
 				AcademicYear: acad,
@@ -85,7 +86,7 @@ const ClassesListScreen = ({ navigation }) => {
 			handleApiError(err);
 		} finally {
 			setLoading(false);
-			hideLoading2();
+			// hideLoading2();
 		}
 	}, [acad]);
 
@@ -286,6 +287,12 @@ const ClassesListScreen = ({ navigation }) => {
 							</TouchableOpacity>
 						)}
 					</View>
+
+					{loading && (
+						<>
+							<ActivityIndicator2 />
+						</>
+					)}
 
 					<ShimmerList
 						data={filteredClasses}

@@ -6,6 +6,20 @@ let WhiteColor = '#fff';
 let FontFamily = 'Poppins';
 let PrimaryColorHex = theme.colors.light.primary;
 export const globalStyles = StyleSheet.create({
+    button: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    button_lg: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 8,
+    },
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,.5)',
@@ -185,19 +199,19 @@ export const globalStyles = StyleSheet.create({
         borderRadius: 35,
         borderColor: theme.colors.light.primary
     },
-    button: {
-        paddingVertical: 14,
-        paddingHorizontal: 40,
-        marginBottom: 30,
-        borderRadius: theme.radius.sm,
-        alignItems: 'center',
-        backgroundColor: theme.colors.light.primary,
-        shadowColor: theme.colors.light.primary + '99',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 6,
-        elevation: 10,
-    },
+    // button: {
+    //     paddingVertical: 14,
+    //     paddingHorizontal: 40,
+    //     marginBottom: 30,
+    //     borderRadius: theme.radius.sm,
+    //     alignItems: 'center',
+    //     backgroundColor: theme.colors.light.primary,
+    //     shadowColor: theme.colors.light.primary + '99',
+    //     shadowOffset: { width: 0, height: 4 },
+    //     shadowOpacity: 1,
+    //     shadowRadius: 6,
+    //     elevation: 10,
+    // },
     buttonText: {
         color: '#fff',
         fontSize: 16,

@@ -1,5 +1,10 @@
 import api from "../api.ts";
 
+export const createTestForm = async (data) => {
+    const response = await api.post(`/survey/form`, data);
+    return response.data;
+};
+
 export const getTestBuilderData = async () => {
     const response = await api.get(`/survey`);
     return response.data;

@@ -70,7 +70,7 @@ export const getAddressFromCoords = async (latitude, longitude) => {
     const data = await response.json();
     
     if (data && data.display_name) {
-      return data.display_name; // Full formatted address
+      return data.display_name;
     } else {
       return 'Address not found';
     }
@@ -86,11 +86,11 @@ export const formatTime = (totalSeconds) => {
   const seconds = totalSeconds % 60;
 
   if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
+    return `${hours}h:${minutes.toString().padStart(2, "0")}m:${seconds
         .toString()
-        .padStart(2, "0")}`;
+        .padStart(2, "0")}s`;
   } else {
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    return `${minutes}m:${seconds.toString().padStart(2, "0")}s`;
   }
 };
 

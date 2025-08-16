@@ -31,6 +31,7 @@ import { viewFile } from '../../../../utils/viewFile.ts';
 import { useAlert } from '../../../../components/CAlert.tsx';
 import { useFacActivity } from '../../../../context/FacSharedActivityContext.tsx';
 import CButton from "../../../../components/buttons/CButton.tsx";
+import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
 
 const InstructionScreen = ({ navigation, route }) => {
 	const { activity, refreshFromOnline } = useFacActivity();
@@ -47,9 +48,7 @@ const InstructionScreen = ({ navigation, route }) => {
 	const loadSubmissions = async () => {
 		setLoading(true);
 		try {
-			setLoadingSubmissions(true);
 			const res = activity?.files || [];
-			setSubmissions(res);
 		} catch (err) {
 			handleApiError(err, 'Fetch');
 		} finally {
@@ -60,7 +59,7 @@ const InstructionScreen = ({ navigation, route }) => {
 
 	useEffect(() => {
 		if (activity?.ActivityID > 0) {
-			setActivityID(activity.ActivityID);
+			setActivityID(activity?.ActivityID);
 		}
 	}, [activity]);
 
@@ -71,12 +70,12 @@ const InstructionScreen = ({ navigation, route }) => {
 	}, [ActivityID]);
 
 	const handleRefresh = async () => {
-		setRefreshing(true);
+		setLoading(true);
 		await refreshFromOnline();
 		if (ActivityID) {
 			await loadSubmissions();
 		}
-		setRefreshing(false);
+		setLoading(false);
 	};
 
 	const renderItem = ({ item }) => {
@@ -172,6 +171,11 @@ const InstructionScreen = ({ navigation, route }) => {
 		<>
 			<BackHeader title="Instruction" />
 			<SafeAreaView style={globalStyles.safeArea}>
+				{loading && (
+					<>
+						<ActivityIndicator2 />
+					</>
+				)}
 				<FlatList
 					data={submissions}
 					keyExtractor={(item, i) => `${item.id}-${i}`}

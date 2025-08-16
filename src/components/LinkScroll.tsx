@@ -65,7 +65,7 @@ export default function LinkScroll({ buttons }) {
                                 onPress={() => openApp(url, fallbackUrl)}
                             >
                                 <View style={styles.icon_box}>
-                                    <IconComponent name={iconName} size={24} color="#004D1A" />
+                                    <IconComponent name={iconName} size={24} color={theme.colors.light.text} />
                                 </View>
                                 <Text numberOfLines={1} style={styles.link_button_text}>
                                     {name}
@@ -80,7 +80,7 @@ export default function LinkScroll({ buttons }) {
                         style={[styles.arrow_button, { left: 0 }]}
                         onPress={() => handleArrowPress(-1)}
                     >
-                        <Icon name="chevron-back" size={20} color="#004D1A" />
+                        <Icon name="chevron-back" size={20} color={theme.colors.light.primary} />
                     </TouchableOpacity>
                 )}
 
@@ -89,7 +89,7 @@ export default function LinkScroll({ buttons }) {
                         style={[styles.arrow_button, { right: 0 }]}
                         onPress={() => handleArrowPress(1)}
                     >
-                        <Icon name="chevron-forward" size={20} color="#004D1A" />
+                        <Icon name="chevron-forward" size={20} color={theme.colors.light.primary} />
                     </TouchableOpacity>
                 )}
             </View>
@@ -111,7 +111,7 @@ const styles = {
         backgroundColor: "#fff",
     },
     icon_box: {
-        backgroundColor: "#e0f0e5",
+        // backgroundColor: theme.colors.light.primary + '22',
         width: 40,
         height: 40,
         borderRadius: 12,
@@ -120,7 +120,7 @@ const styles = {
         marginBottom: 6,
     },
     link_button_text: {
-        color: "#004D1A",
+        color: theme.colors.light.text,
         fontSize: 13,
         fontWeight: "600",
         textAlign: "center",

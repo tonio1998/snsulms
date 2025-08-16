@@ -22,29 +22,52 @@ import {getTestBuilderData} from "../../api/testBuilder/testbuilderApi.ts";
 import {ShimmerList} from "../../components/loaders/ShimmerList.tsx";
 import {formatDate} from "../../utils/dateFormatter";
 import CustomHeader2 from "../../components/layout/CustomHeader2.tsx";
+import {loadSurveyToLocal, saveSurveyToLocal} from "../../utils/cache/Survey/localSurvey";
+import {useAuth} from "../../context/AuthContext.tsx";
+import {handleApiError} from "../../utils/errorHandler.ts";
+import {LastUpdatedBadge} from "../../components/common/LastUpdatedBadge";
 
 const { height } = Dimensions.get('window');
 
 const TestBuilderScreen = ({ navigation }) => {
+	const {user} = useAuth();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [showModal, setShowModal] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [data, setData] = useState([]);
 	const { showLoading, hideLoading } = useLoading();
 	const { showAlert } = useAlert();
+	const [lastFetch, setLastFetch] = useState(0);
 	const slideAnim = useRef(new Animated.Value(height)).current;
 
 	const handleClearSearch = () => setSearchQuery('');
 
+	const fetchLocalData = async () => {
+		try {
+			setLoading(true);
+			showLoading('Loading...');
+			const res = await loadSurveyToLocal(user?.id);
+			setLastFetch(res?.date)
+			setData(res?.data);
+		} catch (error) {
+			showAlert('error', 'Error', 'Something went wrong fetching the data.');
+		} finally {
+			hideLoading();
+			setLoading(false);
+		}
+	};
 
 	const fetchData = async () => {
 		try {
 			setLoading(true);
 			showLoading('Loading...');
 			const res = await getTestBuilderData();
+			const now = await saveSurveyToLocal(user?.id, res);
+			setLastFetch(now);
 			setData(res);
 		} catch (error) {
 			showAlert('error', 'Error', 'Something went wrong fetching the data.');
+			handleApiError(error, "dfdfd");
 		} finally {
 			setLoading(false);
 			hideLoading();
@@ -52,10 +75,10 @@ const TestBuilderScreen = ({ navigation }) => {
 	};
 
 	useEffect(() => {
-		// fetchData();
+		fetchLocalData();
 	}, []);
 
-	if (true) {
+	if (false) {
 		return (
 			<>
 				<View style={{
@@ -176,6 +199,8 @@ const TestBuilderScreen = ({ navigation }) => {
 							</TouchableOpacity>
 						)}
 					</View>
+
+					<LastUpdatedBadge date={lastFetch} onReload={fetchData} />
 
 					<ShimmerList
 						data={data}

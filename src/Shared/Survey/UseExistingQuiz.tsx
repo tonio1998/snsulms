@@ -23,10 +23,12 @@ import { formatDate } from "../../utils/dateFormatter";
 import { useAuth } from "../../context/AuthContext.tsx";
 import {getTestBuilderData} from "../../api/testBuilder/testbuilderApi.ts";
 import BackHeader from "../../components/layout/BackHeader.tsx";
+import {loadSurveyToLocal, saveSurveyToLocal} from "../../utils/cache/Survey/localSurvey";
+import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx";
 
 const { height } = Dimensions.get('window');
 
-const QuizBuilderScreen = ({ navigation, route }) => {
+const UseExistingQuiz = ({ navigation, route }) => {
 	const { user } = useAuth();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [showModal, setShowModal] = useState(false);
@@ -40,26 +42,37 @@ const QuizBuilderScreen = ({ navigation, route }) => {
 
 	const handleClearSearch = () => setSearchQuery('');
 
+	const fetchLocalData = async () => {
+		try {
+			setLoading(true);
+			const res = await loadSurveyToLocal(user?.id);
+			setData(res?.data);
+		} catch (error) {
+			showAlert('error', 'Error', 'Something went wrong fetching the data.');
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	// Fetch quizzes created by current user by passing user ID to API
 	const fetchData = async () => {
 		if (!user?.id) return;
 		try {
 			setLoading(true);
-			showLoading('Loading...');
 			// Pass user ID to API to fetch only their quizzes
-			const res = await getTestBuilderData(user?.id);
+			const res = await getTestBuilderData();
+			const now = await saveSurveyToLocal(user?.id, res);
 			console.log('res', res);
 			setData(res);
 		} catch (error) {
 			showAlert('error', 'Error', 'Something went wrong fetching the data.');
 		} finally {
 			setLoading(false);
-			hideLoading();
 		}
 	};
 
 	useEffect(() => {
-		fetchData();
+		fetchLocalData();
 	}, [user?.id]);
 
 	const openModal = () => {
@@ -89,13 +102,10 @@ const QuizBuilderScreen = ({ navigation, route }) => {
 		navigation.navigate('CreateTest');
 	};
 
-	// Now data should already contain only quizzes created by user,
-	// but let's keep a safety filter with user?.id in case.
 	const userQuizzes = useMemo(() => {
 		return data;
 	}, [data, user?.id]);
 
-	// Search filter (Title and Description)
 	const filteredQuizzes = useMemo(() => {
 		if (!searchQuery.trim()) return userQuizzes;
 		const q = searchQuery.toLowerCase();
@@ -159,7 +169,7 @@ const QuizBuilderScreen = ({ navigation, route }) => {
 	return (
 		<>
 			<BackHeader title="Test Builder" />
-			<SafeAreaView style={globalStyles.safeArea}>
+			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 100}]}>
 				<View style={styles.container}>
 					<View style={styles.searchBox}>
 						<Icon name="search-outline" size={18} color="#999" style={styles.searchIcon} />
@@ -178,7 +188,9 @@ const QuizBuilderScreen = ({ navigation, route }) => {
 							</TouchableOpacity>
 						)}
 					</View>
-
+					{loading && (
+						<ActivityIndicator2 />
+					)}
 					{loading ? (
 						<ShimmerList />
 					) : filteredQuizzes.length === 0 ? (
@@ -224,4 +236,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default QuizBuilderScreen;
+export default UseExistingQuiz;

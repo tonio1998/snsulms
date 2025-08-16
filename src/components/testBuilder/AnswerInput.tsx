@@ -30,7 +30,7 @@ const AnswerInput = React.memo(({ question, answer, onChange }) => {
         }
         debounceTimeout.current = setTimeout(() => {
             onChange(question.id, text);
-        }, 300);
+        }, 500);
     };
 
     switch (question?.AnswerType) {
