@@ -98,14 +98,14 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 		borderRadius: 8,
 		borderLeftWidth: 4,
-		borderLeftColor: '#004D1A',
+		borderLeftColor: theme.colors.light.secondary,
 		shadowColor: '#000',
 		shadowOpacity: 0.1,
 		shadowOffset: { width: 0, height: 1 },
 		shadowRadius: 2,
 		elevation: 2
 	},
-	day: { fontSize: 18, fontWeight: 'bold', color: '#004D1A' },
+	day: { fontSize: 18, fontWeight: 'bold', color: theme.colors.light.text },
 	time: { fontSize: 16, color: '#333', marginTop: 4 },
 	room: { fontSize: 14, color: '#666', marginTop: 2 },
 });

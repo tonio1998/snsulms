@@ -81,7 +81,7 @@ const JoinClassScreen = ({ navigation }) => {
                             onPress={handleJoinClass}
                             activeOpacity={0.85}
                         >
-                            <CText fontStyle="B" fontSize={16} style={styles.buttonText}>
+                            <CText fontStyle="SB" fontSize={16} style={styles.buttonText}>
                                 Join
                             </CText>
                         </TouchableOpacity>

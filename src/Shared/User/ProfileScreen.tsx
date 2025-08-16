@@ -31,6 +31,7 @@ import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
 import { getAcademicInfo } from '../../utils/getAcademicInfo.ts';
 import { useFocusEffect } from '@react-navigation/native';
+import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx";
 
 export default function ProfileScreen({ navigation }) {
 	const network = useContext(NetworkContext);
@@ -62,7 +63,7 @@ export default function ProfileScreen({ navigation }) {
 				setUserData(JSON.parse(cachedData));
 				console.log('[CACHE] Loaded user data');
 			} else {
-				console.warn('[CACHE] No cached user data found.');
+				await fetchOnline();
 			}
 		} catch (e) {
 			console.error('Error loading from cache:', e);
@@ -101,9 +102,9 @@ export default function ProfileScreen({ navigation }) {
 
 	// Pull-to-refresh → always fetch online
 	const onRefresh = useCallback(async () => {
-		setRefreshing(true);
+		setLoading(true);
 		await fetchOnline();
-		setRefreshing(false);
+		setLoading(false);
 	}, []);
 
 	const handleLogout = () => {
@@ -155,6 +156,11 @@ export default function ProfileScreen({ navigation }) {
 					contentContainerStyle={{ paddingBottom: 40 }}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 				>
+					{loading && (
+						<>
+							<ActivityIndicator2 />
+						</>
+					)}
 					<View style={{ alignItems: 'center', marginTop: 40 }}>
 						<TouchableOpacity
 							onPress={handleChangeProfilePic}

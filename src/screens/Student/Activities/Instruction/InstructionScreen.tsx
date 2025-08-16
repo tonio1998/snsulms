@@ -29,12 +29,13 @@ import { turninSubmission } from '../../../../api/modules/submissionApi.ts';
 import { useAlert } from '../../../../components/CAlert.tsx';
 import { useActivity } from '../../../../context/SharedActivityContext.tsx';
 import CButton from '../../../../components/buttons/CButton.tsx';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
 
 const InstructionScreen = ({ navigation }) => {
 	const { activity, refreshFromOnline } = useActivity();
 	const [ActivityID, setActivityID] = useState(0);
 	const StudentActivityID = activity?.StudentActivityID;
-	console.log("formData.append('StudentActivityID', StudentActivityID.toString());:", activity)
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
@@ -43,12 +44,19 @@ const InstructionScreen = ({ navigation }) => {
 	const [submissions, setSubmissions] = useState([]);
 	const { showAlert } = useAlert();
 	const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+	const [submissionState, setSubmissionState] = useState(null);
+
+	const SUBMISSION_KEY = 'submission_' + StudentActivityID;
 	const loadSubmissions = async () => {
 		setLoading(true);
 		try {
 			setLoadingSubmissions(true);
 			const res = activity?.files || [];
 			setSubmissions(res);
+
+			const submissionStat = await AsyncStorage.getItem(SUBMISSION_KEY);
+			console.log("submissionStar", submissionStat);
+			setSubmissionState(submissionStat);
 		} catch (err) {
 			handleApiError(err, 'Fetch');
 		} finally {
@@ -70,12 +78,12 @@ const InstructionScreen = ({ navigation }) => {
 	}, [ActivityID]);
 
 	const handleRefresh = async () => {
-		setRefreshing(true);
+		setLoading(true);
 		await refreshFromOnline();
 		if (ActivityID) {
 			await loadSubmissions();
 		}
-		setRefreshing(false);
+		setLoading(false);
 	};
 
 
@@ -86,6 +94,7 @@ const InstructionScreen = ({ navigation }) => {
 			const res = await turninSubmission({ StudentActivityID });
 
 			if (res.success) {
+				await AsyncStorage.setItem(SUBMISSION_KEY, isSubmitted ? 'Withdraw' : 'Submitted');
 				showAlert(
 					'success',
 					isSubmitted ? 'Withdrawn' : 'Submitted',
@@ -134,10 +143,10 @@ const InstructionScreen = ({ navigation }) => {
 						!activity?.Grade && (
 							<TouchableOpacity
 								style={[
-									styles.submitBtn,
+									globalStyles.button,
 									{
 										backgroundColor:
-											activity?.SubmissionType === 'Submitted'
+											submissionState === 'Submitted'
 												? theme.colors.light.danger
 												: theme.colors.light.primary,
 									},
@@ -145,13 +154,8 @@ const InstructionScreen = ({ navigation }) => {
 								onPress={handleConfirmAction}
 								activeOpacity={0.7}
 							>
-								<Icon
-									name={activity?.SubmissionType === 'Submitted' ? 'close-outline' : 'checkmark-circle'}
-									size={18}
-									color="#fff"
-								/>
 								<CText fontStyle="SB" fontSize={14} style={{ color: '#fff', marginLeft: 6 }}>
-									{activity?.SubmissionType === 'Submitted' ? 'Withdraw' : 'Turn In'}
+									{submissionState === 'Submitted' ? 'Withdraw' : 'Turn In'}
 								</CText>
 							</TouchableOpacity>
 						)
@@ -162,6 +166,11 @@ const InstructionScreen = ({ navigation }) => {
 					contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
 				>
+					{loading && (
+						<>
+							<ActivityIndicator2 />
+						</>
+					)}
 					<View style={styles.card}>
 						{activity?.activity?.topic?.Title && (
 							<CText fontSize={13} style={styles.topicLabel}>

@@ -5,12 +5,13 @@ import { updateSurveyTimer } from "../../api/testBuilder/testbuilderApi.ts";
 export function useSurveyTimer(response, endSurvey) {
     const [secondsLeft, setSecondsLeft] = useState(0);
     const secondsRef = useRef(secondsLeft);
-    secondsRef.current = secondsLeft; // keep ref synced with state
+    const [SurveyStatus, setSurveyStatus] = useState(false);
+    secondsRef.current = secondsLeft;
 
     const storageKey = `surveyTimer_${response?.id}`;
     const debounceTimeout = useRef(null);
 
-    // Format seconds into H:MM:SS or MM:SS
+
     const formatTime = (totalSeconds) => {
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -25,7 +26,6 @@ export function useSurveyTimer(response, endSurvey) {
         }
     };
 
-    // Debounced API call to update backend timer
     const debouncedUpdateTimer = (id, seconds) => {
         if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 
@@ -34,12 +34,14 @@ export function useSurveyTimer(response, endSurvey) {
         }, 2000);
     };
 
-    // Load initial timer from AsyncStorage or response.RemainingTime
     useEffect(() => {
         let mounted = true;
 
         (async () => {
             try {
+                const SurveyStatus = await AsyncStorage.getItem('SurveyStatus_'+response?.id)
+                console.log('🔍 Survey Status', SurveyStatus);
+                setSurveyStatus(SurveyStatus);
                 const saved = await AsyncStorage.getItem(storageKey);
                 const savedSeconds = saved ? parseInt(saved, 10) : NaN;
 
@@ -68,31 +70,29 @@ export function useSurveyTimer(response, endSurvey) {
         };
     }, [storageKey, response?.id, response?.RemainingTime]);
 
-    // Countdown interval — runs once, uses ref to get latest secondsLeft
     useEffect(() => {
-        if (secondsLeft <= 0) return;
+        // if (secondsLeft <= 0) return;
+        if(SurveyStatus === '1' && secondsLeft > 0){
+            const intervalId = setInterval(() => {
+                if (secondsRef.current <= 1) {
+                    clearInterval(intervalId);
+                    if (endSurvey) endSurvey(response?.id);
+                    setSecondsLeft(0);
+                } else {
+                    setSecondsLeft((prev) => prev - 1);
+                }
+            }, 1000);
 
-        const intervalId = setInterval(() => {
-            if (secondsRef.current <= 1) {
-                clearInterval(intervalId);
-                if (endSurvey) endSurvey(response?.id);
-                setSecondsLeft(0);
-            } else {
-                setSecondsLeft((prev) => prev - 1);
-            }
-        }, 1000);
-
-        return () => clearInterval(intervalId);
+            return () => clearInterval(intervalId);
+        }
     }, [secondsLeft, endSurvey, response?.id]);
 
-    // Save current secondsLeft to AsyncStorage
     useEffect(() => {
         AsyncStorage.setItem(storageKey, String(secondsLeft)).catch((err) =>
             console.error("Error saving timer:", err)
         );
     }, [secondsLeft, storageKey]);
 
-    // Call debounced API update whenever secondsLeft changes
     useEffect(() => {
         if (secondsLeft > 0 && response?.id) {
             debouncedUpdateTimer(response.id, secondsLeft);
@@ -101,7 +101,6 @@ export function useSurveyTimer(response, endSurvey) {
 
     const formattedTime = useMemo(() => formatTime(secondsLeft), [secondsLeft]);
 
-    // Memoize returned object to prevent unnecessary re-renders
     return useMemo(
         () => ({
             formattedTime,

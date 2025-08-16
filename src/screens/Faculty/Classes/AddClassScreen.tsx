@@ -61,7 +61,7 @@ const AddClassScreen = ({ navigation, route }) => {
         if (enrollment) {
             setForm({
                 CourseCode: enrollment?.course?.CourseCode || '',
-                CourseName: "Copy of " + enrollment?.course?.Description || '',
+                CourseName: enrollment?.course?.Description || '',
                 Section: enrollment?.SectionCode || '',
                 CampusID: enrollment?.CampusID || '5',
             });

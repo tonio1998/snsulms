@@ -17,6 +17,7 @@ import {
 } from "../../../utils/cache/Student/localstudentActivitiesCache.ts";
 import {useAuth} from "../../../context/AuthContext.tsx";
 import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
+import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
 
 const ActivityScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -47,10 +48,8 @@ const ActivityScreen = ({ navigation, route }) => {
 		if (loading || !ClassID) return;
 		try {
 			setLoading(true);
-			showLoading('Loading activities...');
 			const res = await getStudentActivities({ page: 1, search: '', ClassID });
 			const list = res?.data ?? [];
-			console.log('list', list);
 			setAllActivities(list);
 			filterActivities(actType, list);
 			const date = await saveStudentClassActivitiesCache(ClassID, user?.id, list);
@@ -68,7 +67,6 @@ const ActivityScreen = ({ navigation, route }) => {
 		try {
 			const { data, date } = await loadStudentClassActivitiesCache(ClassID, user?.id);
 			if (data && data.length > 0) {
-				console.log('data', data);
 				setAllActivities(data);
 				filterActivities(actType, data);
 			}
@@ -85,9 +83,9 @@ const ActivityScreen = ({ navigation, route }) => {
 	}, [ClassID]);
 
 	const handleRefresh = async () => {
-		setRefreshing(true);
+		setLoading(true);
 		await fetchActivities();
-		setRefreshing(false);
+		setLoading(false);
 	};
 
 	const toggleExpand = (id) => {
@@ -168,6 +166,11 @@ const ActivityScreen = ({ navigation, route }) => {
 				date={lastFetched}
 				onReload={fetchActivities}
 			/>
+			{loading && (
+				<>
+					<ActivityIndicator2 />
+				</>
+			)}
 		</View>
 	);
 

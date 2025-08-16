@@ -25,6 +25,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useClass } from '../../../../context/SharedClassContext.tsx';
 import { useLoading2 } from '../../../../context/Loading2Context.tsx';
 import ProgressBar from "../../../../components/common/ProgressBar.tsx";
+import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
+import FabMenu from "../../../../components/buttons/FabMenu.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -67,10 +69,9 @@ const ActivityScreen = ({ navigation }) => {
 	], []);
 
 	const fetchActivities = useCallback(async () => {
-		if (loading || !network?.isOnline) return;
+		setLoading(true);
 		try {
-			setLoading(true);
-			showLoading2('Loading activities...');
+			// showLoading2('Loading activities...');
 			const res = classes?.activities || [];
 			const enriched = res.map(item => {
 				const total = item.student_activity?.length || 0;
@@ -82,7 +83,7 @@ const ActivityScreen = ({ navigation }) => {
 			handleApiError(err, 'Failed to fetch activities');
 		} finally {
 			setLoading(false);
-			hideLoading2();
+			// hideLoading2();
 		}
 	}, [classes?.activities, loading, network?.isOnline, showLoading2, hideLoading2]);
 
@@ -97,10 +98,8 @@ const ActivityScreen = ({ navigation }) => {
 	}, [activities, actType]);
 
 	const handleRefresh = async () => {
-		setRefreshing(true);
 		refresh();
 		await fetchActivities();
-		setRefreshing(false);
 	};
 
 	const handleViewAct = (Title, ActivityID) => navigation.navigate('FacActivityDetails', { Title, ActivityID });
@@ -116,34 +115,53 @@ const ActivityScreen = ({ navigation }) => {
 
 	const handleOption = type => {
 		closeModal();
-		if (type === '2') navigation.navigate('AddActivity', { ClassID, ActivityTypeID: type, onAdded: fetchActivities });
-		if (type === '3') navigation.navigate('QuizBuilder', { ClassID, ActivityTypeID: type, onAdded: fetchActivities });
+		if (type === '2') navigation.navigate('AddActivity', {
+			ClassID,
+			ActivityTypeID: type,
+			ClassInfo: classes,
+			onAdded: fetchActivities
+		});
+		if (type === '3') navigation.navigate('QuizBuilder', {
+			ClassID,
+			ActivityTypeID: type,
+			ClassInfo: classes,
+			onAdded: fetchActivities
+		});
+		if (type === '4') navigation.navigate('OutlineList', { ClassID });
 	};
 
 	const renderFilterHeader = () => (
-		<ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginBottom: 14 }}>
-			<View style={{ flexDirection: 'row', gap: 10 }}>
-				{activityTypes.map((type, idx) => {
-					const isActive = actType === type.value;
-					return (
-						<TouchableOpacity
-							key={idx}
-							onPress={() => setActType(type.value)}
-							style={[styles.filterBtn, isActive && styles.activeFilterBtn]}
-						>
-							<CText style={{ color: isActive ? '#fff' : '#111', fontSize: 13 }} fontStyle="SB">{type.label}</CText>
-						</TouchableOpacity>
-					);
-				})}
+		<>
+			<ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+				<View style={{ flexDirection: 'row', gap: 10 }}>
+					{activityTypes.map((type, idx) => {
+						const isActive = actType === type.value;
+						return (
+							<TouchableOpacity
+								key={idx}
+								onPress={() => setActType(type.value)}
+								style={[styles.filterBtn, isActive && styles.activeFilterBtn]}
+							>
+								<CText style={{ color: isActive ? '#fff' : '#111', fontSize: 13 }} fontStyle="SB">{type.label}</CText>
+							</TouchableOpacity>
+						);
+					})}
+				</View>
+			</ScrollView>
+			<View>
+				{loading && (
+					<>
+						<ActivityIndicator2 />
+					</>
+				)}
 			</View>
-		</ScrollView>
+		</>
 	);
 
 	return (
 		<>
 			<BackHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
 			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
-				{loading && <ActivityIndicator style={{ margin: 20 }} size="large" color={theme.colors.light.primary} />}
 				<FlatList
 					data={filteredActivities}
 					keyExtractor={item => item.ActivityID.toString()}
@@ -162,30 +180,69 @@ const ActivityScreen = ({ navigation }) => {
 					)}
 				/>
 
-				<TouchableOpacity style={styles.fab} onPress={openModal}>
-					<Icon name="add" size={28} color="#fff" />
-				</TouchableOpacity>
+				<FabMenu
+					fabColor={theme.colors.light.primary}
+					fabIcon="add"
+					iconColor="#fff"
+					iconSize={28}
+					radius={80}
+					startAngle={200}
+					spacingAngle={60}
+					fabSize={55}
+					options={[
+						{
+							label: "Assignment",
+							color: theme.colors.light.primary,
+							icon: "document-text",
+							onPress: () => handleOption("2"),
+						},
+						{
+							label: "Quiz/Exam",
+							color: theme.colors.light.primary,
+							icon: "clipboard",
+							onPress: () => handleOption("3"),
+						},
+					]}
 
-				<Modal transparent visible={showModal} animationType="none">
-					<TouchableOpacity style={globalStyles.overlay} activeOpacity={1} onPress={closeModal} />
-					<Animated.View style={[globalStyles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
-						<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('2')}>
-							<CText fontStyle="SB" fontSize={15}>Assignment</CText>
-						</TouchableOpacity>
-						<TouchableOpacity style={globalStyles.option} onPress={() => handleOption('3')}>
-							<CText fontStyle="SB" fontSize={15}>Quiz/Exam</CText>
-						</TouchableOpacity>
-					</Animated.View>
-				</Modal>
+				/>
+
+
+
 			</SafeAreaView>
 		</>
 	);
 };
 
 const styles = StyleSheet.create({
-	overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-	modalContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingVertical: 24, paddingHorizontal: 20, elevation: 10 },
-	option: { paddingVertical: 18, borderBottomWidth: 1, borderColor: '#e5e7eb' },
+	overlay: {
+		flex: 1,
+		backgroundColor: 'transparent', // no dark dim
+	},
+	modalContainerNearFab: {
+		position: 'absolute',
+		right: 20, // adjust to match FAB horizontal position
+		bottom: 90, // pop above FAB height
+		alignItems: 'center',
+		gap: 10,
+	},
+	option: {
+		height: 60,
+		width: 120,
+		borderRadius: 10,
+		backgroundColor: '#fff',
+		justifyContent: 'center',
+		alignItems: 'center',
+		elevation: 4,
+	},
+	circleOption: {
+		width: 70,
+		height: 70,
+		borderRadius: 35,
+		backgroundColor: '#4a90e2',
+		justifyContent: 'center',
+		alignItems: 'center',
+		elevation: 6,
+	},
 	card: { backgroundColor: '#fff', borderRadius: theme.radius.md, padding: 16, marginBottom: 14, shadowColor: '#000', shadowOpacity: 0.08, shadowOffset: { width: 0, height: 2 }, shadowRadius: 4, elevation: 2 },
 	cardInner: {},
 	cardTitle: { fontSize: 17, color: '#111', marginBottom: 6 },

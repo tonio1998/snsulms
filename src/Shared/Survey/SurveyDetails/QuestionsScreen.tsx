@@ -10,39 +10,58 @@ import {
     Alert,
     TextInput,
     Modal,
-    Platform,
     Switch,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import BackHeader from "../../components/layout/BackHeader.tsx";
-import { globalStyles } from "../../theme/styles.ts";
+
+// Layout & UI Components
+import BackHeader from "../../../components/layout/BackHeader.tsx";
+import CButton from "../../../components/buttons/CButton.tsx";
+
+// Theme & Styles
+import { globalStyles } from "../../../theme/styles.ts";
+import { theme } from "../../../theme";
+
+// API
 import {
     addSection,
     deleteQuestion,
     getSurveyData,
-    updateQuestionRequired /*, updateQuestionRequired*/
-} from "../../api/testBuilder/testbuilderApi.ts";
-import { theme } from "../../theme";
-import CButton from "../../components/buttons/CButton.tsx";
-import QuizScreen from "./QuizScreen.tsx";
-import {RenderAnswerPreview} from "../../components/testBuilder/renderAnswerPreview.tsx";
+    updateQuestionRequired,
+} from "../../../api/testBuilder/testbuilderApi.ts";
+import {RenderAnswerPreview} from "../../../components/testBuilder/RenderAnswerPreview.tsx";
+import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
+import {fetchSurveyData, localupdateSurveyDate} from "../../../utils/cache/Survey/localSurvey";
+import {useAuth} from "../../../context/AuthContext.tsx";
+import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
+import {useFocusEffect} from "@react-navigation/native";
 
 export default function QuestionsScreen({ navigation, route }) {
     const [sections, setSections] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const { user } = useAuth();
+    const [form, setForm] = useState({});
+
+    // Section modal state
     const [modalVisible, setModalVisible] = useState(false);
     const [newSectionTitle, setNewSectionTitle] = useState("");
     const [newSectionDesc, setNewSectionDesc] = useState("");
     const [savingSection, setSavingSection] = useState(false);
+    const [lastFetched, setLastFetched] = useState(null);
 
     const SurveyID = route.params.SurveyID;
 
+    /** Load all sections from server */
     const loadSections = async () => {
         try {
             setLoading(true);
-            const data = await getSurveyData({ SurveyID });
+            // const data = await getSurveyData({ SurveyID });
+            const data = await fetchSurveyData(user?.id, SurveyID);
+            console.log('from cache: ', data);
             setSections(data?.sections || []);
+            setForm(data);
+            setLastFetched(data?.date);
         } catch (error) {
             console.error("Failed to load sections:", error);
             Alert.alert("Error", "Failed to load sections from server.");
@@ -51,56 +70,62 @@ export default function QuestionsScreen({ navigation, route }) {
         }
     };
 
+    /** Pull-to-refresh handler */
     const onRefresh = useCallback(async () => {
-        setRefreshing(true);
+        setLoading(true);
         try {
             const data = await getSurveyData({ SurveyID });
+            await localupdateSurveyDate(user?.id, SurveyID, data);
+            setLastFetched(new Date());
             setSections(data?.sections || []);
         } catch (error) {
             Alert.alert("Error", "Failed to refresh sections.");
         } finally {
-            setRefreshing(false);
+            setLoading(false);
         }
     }, [SurveyID]);
 
-    useEffect(() => {
-        loadSections();
-    }, [SurveyID]);
 
+    useFocusEffect(
+        useCallback(() => {
+            loadSections();
+            return () => {
+            };
+        }, [SurveyID])
+    );
+
+    /** Delete a question */
     const handleDeleteQuestion = (questionId) => {
-        Alert.alert(
-            "Confirm Delete",
-            "Are you sure you want to delete this question?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            setSections((prevSections) =>
-                                prevSections.map((section) => ({
-                                    ...section,
-                                    questions: section.questions.filter((q) => q.id !== questionId),
-                                }))
-                            );
-
-                            await deleteQuestion(questionId);
-                        } catch (error) {
-                            Alert.alert("Error", "Failed to delete question. Please try again.");
-                            console.error("Delete question error:", error);
-                        }
-                    },
+        Alert.alert("Confirm Delete", "Are you sure you want to delete this question?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Delete",
+                style: "destructive",
+                onPress: async () => {
+                    try {
+                        // Optimistic update
+                        setSections((prev) =>
+                            prev.map((section) => ({
+                                ...section,
+                                questions: section.questions.filter((q) => q.id !== questionId),
+                            }))
+                        );
+                        await deleteQuestion(questionId);
+                    } catch (error) {
+                        Alert.alert("Error", "Failed to delete question. Please try again.");
+                        console.error("Delete question error:", error);
+                    }
                 },
-            ]
-        );
+            },
+        ]);
     };
 
+    /** Toggle required status */
     const handleToggleRequired = async (questionId, currentValue) => {
         try {
             // Optimistic UI update
-            setSections((prevSections) =>
-                prevSections.map((section) => ({
+            setSections((prev) =>
+                prev.map((section) => ({
                     ...section,
                     questions: section.questions.map((q) =>
                         q.id === questionId ? { ...q, isRequired: !currentValue } : q
@@ -115,29 +140,17 @@ export default function QuestionsScreen({ navigation, route }) {
         }
     };
 
+    /** Render single question */
     const renderQuestion = ({ item }) => (
-        <View style={[styles.questionItem, { padding: 0, borderBottomWidth: 1, borderColor: "#eee" }]}>
-            <View style={[styles.questionTextContainer, { padding: 10 }]}>
+        <View style={styles.questionItem}>
+            <View style={styles.questionTextContainer}>
                 <Text style={styles.questionText}>{item.Question}</Text>
                 <RenderAnswerPreview type={item.AnswerType} choices={item.Options} items={item} />
             </View>
 
-            <View
-                style={[
-                    styles.actionIcons,
-                    {
-                        borderTopWidth: 1,
-                        borderColor: "#eee",
-                        paddingHorizontal: 14,
-                        paddingVertical: 8,
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexDirection: "row",
-                    },
-                ]}
-            >
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Text style={{ marginRight: 8, color: "#555" }}>Required</Text>
+            <View style={styles.actionRow}>
+                <View style={styles.requiredRow}>
+                    <Text style={styles.requiredLabel}>Required</Text>
                     <Switch
                         value={!!item.isRequired}
                         onValueChange={() => handleToggleRequired(item.id, !!item.isRequired)}
@@ -146,13 +159,19 @@ export default function QuestionsScreen({ navigation, route }) {
                     />
                 </View>
 
-                <View style={{ flexDirection: "row" }}>
+                <View style={styles.actionsRight}>
                     <TouchableOpacity
-                        onPress={() => navigation.navigate("AddQuestionScreen", { questionId: item.id, sectionId: item.SectionID })}
+                        onPress={() =>
+                            navigation.navigate("AddQuestionScreen", {
+                                questionId: item.id,
+                                sectionId: item.SectionID,
+                            })
+                        }
                         style={styles.iconBtn}
                     >
                         <Icon name="pencil" size={20} color={theme.colors.light.primary} />
                     </TouchableOpacity>
+
                     <TouchableOpacity onPress={() => handleDeleteQuestion(item.id)} style={styles.iconBtn}>
                         <Icon name="trash-outline" size={20} color="#FF3B30" />
                     </TouchableOpacity>
@@ -195,12 +214,17 @@ export default function QuestionsScreen({ navigation, route }) {
                         title="Preview"
                         icon={"eye-outline"}
                         style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 }}
-                        onPress={() => navigation.navigate("QuizStartScreen", { SurveyID: SurveyID })}
+                        onPress={() => navigation.navigate("QuizStartScreen", { SurveyID, FormStatus: 'test' })}
                     />
                 }
             />
+
             <SafeAreaView style={globalStyles.safeArea}>
-                {loading ? <ActivityIndicator size="large" color={theme.colors.light.primary} /> : null}
+                <View style={{paddingHorizontal: 16}}>
+                    <LastUpdatedBadge date={lastFetched} onReload={onRefresh} />
+                </View>
+                {loading ? <ActivityIndicator2 /> : null}
+
                 {sections.length === 0 ? (
                     <View style={styles.emptyContainer}>
                         <Text style={styles.emptyText}>No sections found.</Text>
@@ -208,7 +232,8 @@ export default function QuestionsScreen({ navigation, route }) {
                 ) : (
                     <FlatList
                         data={sections}
-                        keyExtractor={(s) => s.id.toString()}
+                        keyExtractor={(s, index) => (s?.id ? s.id.toString() : index.toString())}
+
                         renderItem={({ item }) => (
                             <View style={styles.sectionContainer}>
                                 <Text style={styles.sectionTitle}>{item.SectionTitle}</Text>
@@ -219,18 +244,20 @@ export default function QuestionsScreen({ navigation, route }) {
                                         keyExtractor={(q) => q.id.toString()}
                                         renderItem={renderQuestion}
                                         scrollEnabled={false}
-                                        nestedScrollEnabled
                                     />
                                 ) : (
                                     <Text style={styles.noQuestionsText}>No questions yet.</Text>
                                 )}
 
-                                <TouchableOpacity
-                                    style={styles.addQuestionBtn}
-                                    onPress={() => navigation.navigate("AddQuestionScreen", { sectionId: item.id })}
-                                >
-                                    <Text style={styles.addQuestionBtnText}>Add Question</Text>
-                                </TouchableOpacity>
+                                <View>
+                                    <TouchableOpacity
+                                        style={styles.addQuestionBtn}
+                                        onPress={() => navigation.navigate("AddQuestionScreen", { sectionId: item.id, SurveyID })}
+                                    >
+                                        <Icon name="add" size={20} color="#fff" />
+                                        <Text style={styles.addQuestionBtnText}>Add</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         )}
                         contentContainerStyle={{ padding: 14, paddingBottom: 80 }}
@@ -243,12 +270,7 @@ export default function QuestionsScreen({ navigation, route }) {
                     <Icon name="add" size={28} color="#fff" />
                 </TouchableOpacity>
 
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={modalVisible}
-                    onRequestClose={() => setModalVisible(false)}
-                >
+                <Modal animationType="slide" transparent visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
                     <View style={globalStyles.overlay}>
                         <View style={globalStyles.modalContainer}>
                             <Text style={globalStyles.modalTitle}>Add New Section</Text>
@@ -300,7 +322,6 @@ export default function QuestionsScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
     sectionContainer: {
         marginBottom: 40,
         borderBottomWidth: 1,
@@ -326,6 +347,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     questionTextContainer: {
+        padding: 10,
         marginBottom: 8,
     },
     questionText: {
@@ -334,9 +356,18 @@ const styles = StyleSheet.create({
         flex: 1,
         marginRight: 12,
     },
-    actionIcons: {
+    actionRow: {
+        borderTopWidth: 1,
+        borderColor: "#eee",
+        paddingHorizontal: 14,
+        paddingVertical: 8,
         flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
     },
+    requiredRow: { flexDirection: "row", alignItems: "center" },
+    requiredLabel: { marginRight: 8, color: "#555" },
+    actionsRight: { flexDirection: "row" },
     iconBtn: {
         padding: 8,
         borderRadius: 8,
@@ -345,79 +376,23 @@ const styles = StyleSheet.create({
         borderColor: "#eee",
         margin: 5,
     },
-    shortInput: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 6,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        height: 38,
-        color: "#666",
-        backgroundColor: "#f9f9f9",
-    },
-    paragraphInput: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 6,
-        paddingHorizontal: 10,
-        paddingVertical: 10,
-        minHeight: 70,
-        textAlignVertical: "top",
-        color: "#666",
-        backgroundColor: "#f9f9f9",
-    },
     addQuestionBtn: {
-        alignItems: "center",
         marginTop: 14,
-        backgroundColor: "#fff",
-        width: "40%",
-        padding: 10,
-        borderWidth: 1,
-        borderColor: "#ccc",
+        backgroundColor: theme.colors.light.primary,
+        width: "23%",
+        padding: 8,
         borderRadius: 8,
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
     },
     addQuestionBtnText: {
-        color: "#007AFF",
+        color: '#fff',
         fontSize: 16,
-        marginLeft: 6,
         fontWeight: "600",
     },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    emptyText: {
-        fontSize: 18,
-        color: "#999",
-    },
-    noQuestionsText: {
-        fontStyle: "italic",
-        color: "#999",
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    modalContent: {
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 20,
-        width: "85%",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: "700",
-        marginBottom: 15,
-        color: "#222",
-    },
+    emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+    emptyText: { fontSize: 18, color: "#999" },
+    noQuestionsText: { fontStyle: "italic", color: "#999" },
     input: {
         borderWidth: 1,
         borderColor: "#ccc",
@@ -428,18 +403,7 @@ const styles = StyleSheet.create({
         marginBottom: 14,
         backgroundColor: "#f9f9f9",
     },
-    modalButtons: {
-        flexDirection: "row",
-        justifyContent: "flex-end",
-    },
-    modalBtn: {
-        paddingVertical: 10,
-        paddingHorizontal: 18,
-        borderRadius: 6,
-        marginLeft: 12,
-    },
-    modalBtnText: {
-        fontSize: 16,
-        fontWeight: "600",
-    },
+    modalButtons: { flexDirection: "row", justifyContent: "flex-end" },
+    modalBtn: { paddingVertical: 10, paddingHorizontal: 18, borderRadius: 6, marginLeft: 12 },
+    modalBtnText: { fontSize: 16, fontWeight: "600" },
 });

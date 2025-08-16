@@ -1,188 +1,143 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, { useState } from 'react';
 import {
 	View,
 	TextInput,
 	TouchableOpacity,
 	SafeAreaView,
 	StyleSheet,
-	Dimensions,
-	Modal,
-	Animated,
-	Easing,
+	ScrollView,
+	Switch
 } from 'react-native';
-import CustomHeader from "../../components/layout/CustomHeader.tsx";
-import {globalStyles} from "../../theme/styles.ts";
-import Icon from "react-native-vector-icons/Ionicons";
-import {CText} from "../../components/common/CText.tsx";
-import {theme} from "../../theme";
-import {useLoading} from "../../context/LoadingContext.tsx";
-import {useAlert} from "../../components/CAlert.tsx";
-import {getTestBuilderData} from "../../api/testBuilder/testbuilderApi.ts";
-import {ShimmerList} from "../../components/loaders/ShimmerList.tsx";
-import {formatDate} from "../../utils/dateFormatter";
+import { CText } from "../../components/common/CText.tsx";
+import BackHeader from "../../components/layout/BackHeader.tsx";
+import { theme } from "../../theme";
+import { useLoading } from "../../context/LoadingContext.tsx";
+import { useAlert } from "../../components/CAlert.tsx";
+import { createTestForm } from "../../api/testBuilder/testbuilderApi.ts";
+import {globalStyles} from "../../theme/styles.ts"; // 👈 create API
 
-const { height } = Dimensions.get('window');
-
-const CreateTestScreen = ({ navigation }) => {
-	const [searchQuery, setSearchQuery] = useState('');
-	const [showModal, setShowModal] = useState(false);
-	const [loading, setLoading] = useState(false);
-	const [data, setData] = useState([]);
+const CreateTestFormScreen = ({ navigation }) => {
 	const { showLoading, hideLoading } = useLoading();
 	const { showAlert } = useAlert();
-	const slideAnim = useRef(new Animated.Value(height)).current;
 
-	const handleClearSearch = () => setSearchQuery('');
+	const [title, setTitle] = useState('');
+	const [description, setDescription] = useState('');
+	const [duration, setDuration] = useState('');
+	const [isPublished, setisPublished] = useState(false);
+	const [isShuffle, setIsShuffle] = useState(false);
+	const [isCardView, setIsCardView] = useState(false);
 
-	const fetchData = async () => {
-		try {
-			setLoading(true);
-			showLoading('Loading...');
-			const res = await getTestBuilderData();
-			console.log('res', res);
-			setData(res);
-		} catch (error) {
-			showAlert('error', 'Error', 'Something went wrong fetching the data.');
-		} finally {
-			setLoading(false);
-			hideLoading();
+	const handleSave = async () => {
+		if (!title.trim()) {
+			showAlert("warning", "Validation", "Title is required.");
+			return;
 		}
-	};
 
-	useEffect(() => {
-		fetchData();
-	}, []);
-
-	const openModal = () => {
-		setShowModal(true);
-		Animated.timing(slideAnim, {
-			toValue: 0,
-			duration: 300,
-			easing: Easing.out(Easing.ease),
-			useNativeDriver: true,
-		}).start();
-	};
-
-	const closeModal = () => {
-		Animated.timing(slideAnim, {
-			toValue: height,
-			duration: 250,
-			useNativeDriver: true,
-		}).start(() => setShowModal(false));
-	};
-
-	const handleOption = () => {
-		closeModal();
-		navigation.navigate('CreateTest');
-	};
-
-	const renderItem = ({ item }) => {
-		return (
-			<TouchableOpacity
-				style={[globalStyles.card, globalStyles.cardSpacing, { padding: 0, borderWidth: 1, borderColor: '#ccc' }]}
-			>
-				<View style={[globalStyles.p_2]}>
-					<CText fontSize={17} fontStyle="SB" style={{ color: '#000' }}>
-						{item.Title}
-					</CText>
-					<CText fontSize={14} style={{ color: '#444', marginTop: 4 }}>
-						{item.Description}
-					</CText>
-					<View style={[globalStyles.cardRow, { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }]}>
-						<CText fontSize={12} style={{ color: '#777' }}>
-							Created {formatDate(item.created_at, 'relative')}
-						</CText>
-						<CText fontSize={12} style={{ color: '#777' }}>
-							Items: {item.questions.length}
-						</CText>
-					</View>
-				</View>
-			</TouchableOpacity>
-		);
-	};
-
-	const loadData = () => {
-		fetchData();
+		try {
+			showLoading("Saving...");
+			await createTestForm({
+				Title: title,
+				Description: description,
+				Duration: parseInt(duration) || 0,
+				isPublished: isPublished ? 1 : 0,
+				isShuffle: isShuffle ? 1 : 0,
+				isCardView: isCardView ? 1 : 0,
+			});
+			hideLoading();
+			showAlert("success", "Success", "Test created successfully!");
+			navigation.goBack();
+		} catch (error) {
+			hideLoading();
+			showAlert("error", "Error", error.message || "Something went wrong.");
+		}
 	};
 
 	return (
 		<>
-			<CustomHeader title="Test Builder" />
+			<BackHeader title="New Test" />
 			<SafeAreaView style={globalStyles.safeArea}>
-				<View style={styles.container}>
-					{/* Search Box */}
-					<View style={styles.searchBox}>
-						<Icon name="search-outline" size={18} color="#999" style={styles.searchIcon} />
-						<TextInput
-							placeholder="Search tests..."
-							value={searchQuery}
-							onChangeText={setSearchQuery}
-							style={styles.searchInput}
-							placeholderTextColor="#aaa"
+				<ScrollView contentContainerStyle={styles.container}>
+					<CText fontSize={15} fontStyle="SB">Title</CText>
+					<TextInput
+						style={styles.input}
+						placeholder="Enter test title"
+						value={title}
+						onChangeText={setTitle}
+					/>
+
+					<CText fontSize={15} fontStyle="SB" style={styles.label}>Description</CText>
+					<TextInput
+						style={[styles.input, { height: 80 }]}
+						placeholder="Enter description"
+						multiline
+						value={description}
+						onChangeText={setDescription}
+					/>
+
+					<CText fontSize={15} fontStyle="SB" style={styles.label}>Duration (minutes)</CText>
+					<TextInput
+						style={styles.input}
+						placeholder="e.g. 30"
+						keyboardType="numeric"
+						value={duration}
+						onChangeText={setDuration}
+					/>
+
+					<View style={styles.switchRow}>
+						<CText fontStyle={'SB'} fontSize={15}>Publish this Form</CText>
+						<Switch value={isPublished} onValueChange={setisPublished} trackColor={{ false: "#ccc", true: theme.colors.light.primary }}
+								thumbColor={isCardView ? "#fff" : "#f4f3f4"}/>
+					</View>
+					<View style={styles.switchRow}>
+						<CText fontStyle={'SB'} fontSize={15}>Shuffle Questions</CText>
+						<Switch value={isShuffle} onValueChange={setIsShuffle} trackColor={{ false: "#ccc", true: theme.colors.light.primary }}
+								thumbColor={isCardView ? "#fff" : "#f4f3f4"}/>
+					</View>
+					<View style={styles.switchRow}>
+						<CText fontStyle={'SB'} fontSize={15}>Enable Card View</CText>
+						<Switch
+							value={isCardView}
+							onValueChange={setIsCardView}
+							trackColor={{ false: "#ccc", true: theme.colors.light.primary }}
+							thumbColor={isCardView ? "#fff" : "#f4f3f4"}
 						/>
-						{searchQuery !== '' && (
-							<TouchableOpacity onPress={handleClearSearch} style={styles.clearIcon}>
-								<Icon name="close-circle" size={18} color="#aaa" />
-							</TouchableOpacity>
-						)}
 					</View>
 
-					<ShimmerList
-						data={data}
-						loading={loading}
-						renderItem={renderItem}
-						keyExtractor={(item) =>
-							item.id?.toString() ?? `${item.id}-${Math.random()}`
-						}
-						onRefresh={loadData}
-					/>
-				</View>
-
-				{/* FAB */}
-				<TouchableOpacity style={globalStyles.fab} activeOpacity={0.7} onPress={openModal}>
-					<Icon name="add" size={28} color="#fff" />
-				</TouchableOpacity>
-
-				{/* Modal */}
-				{showModal && (
-					<Modal transparent visible={showModal} animationType="fade">
-						<TouchableOpacity style={globalStyles.overlay} activeOpacity={1} onPress={closeModal} />
-						<Animated.View style={[globalStyles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
-							<TouchableOpacity style={globalStyles.option} onPress={handleOption}>
-								<CText fontStyle="SB" fontSize={16}>Create Test</CText>
-							</TouchableOpacity>
-							<TouchableOpacity style={globalStyles.cancel} onPress={closeModal}>
-								<CText fontStyle="SB" fontSize={15} style={{ color: '#ff5555' }}>Cancel</CText>
-							</TouchableOpacity>
-						</Animated.View>
-					</Modal>
-				)}
+					<TouchableOpacity style={styles.button} onPress={handleSave}>
+						<CText fontSize={16} fontStyle="SB" style={{ color: "#fff" }}>Save Test</CText>
+					</TouchableOpacity>
+				</ScrollView>
 			</SafeAreaView>
 		</>
 	);
 };
 
 const styles = StyleSheet.create({
-	container: { flex: 1, padding: 16 },
-	searchBox: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 12,
+	safeArea: { flex: 1, backgroundColor: "#fff" },
+	container: { padding: 16 },
+	label: { marginTop: 12 },
+	input: {
 		borderWidth: 1,
-		borderColor: '#ccc',
-		borderRadius: theme.radius.sm,
-		paddingHorizontal: 15,
-		height: 45,
-		backgroundColor: '#f9f9f9',
+		borderColor: "#ccc",
+		borderRadius: theme.radius.xs,
+		padding: 10,
+		marginTop: 6,
+		fontSize: 15,
+		backgroundColor: "#f9f9f9",
 	},
-	searchInput: { flex: 1, height: 40, fontSize: 15, color: '#000' },
-	searchIcon: { marginRight: 6 },
-	clearIcon: { marginLeft: 6 },
-	emptyState: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
+	switchRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginTop: 15,
+	},
+	button: {
+		backgroundColor: theme.colors.light.primary,
+		padding: 14,
+		borderRadius: theme.radius.sm,
+		alignItems: "center",
+		marginTop: 24,
 	},
 });
 
-export default CreateTestScreen;
+export default CreateTestFormScreen;

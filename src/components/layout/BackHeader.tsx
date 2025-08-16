@@ -4,7 +4,7 @@ import {
 	StyleSheet,
 	TouchableOpacity,
 	View,
-	StatusBar,
+	StatusBar, Dimensions,
 } from 'react-native';
 import { theme } from '../../theme';
 import { CText } from '../common/CText.tsx';
@@ -63,13 +63,12 @@ const BackHeader = ({
 		}
 	};
 
-	// Create an empty gesture to intercept touches and block swipe-back here
 	const blockSwipeGesture = Gesture.Pan()
 		.onTouchesMove(() => {
-			// Do nothing, just block swipe gestures on this area
 		})
 		.enabled(true);
 
+	const width = Dimensions.get('window').width;
 	return (
 		<>
 			<StatusBar barStyle="dark-content" />
@@ -83,7 +82,7 @@ const BackHeader = ({
 						<View style={styles.titleContainer}>
 							<CText
 								fontStyle="SB"
-								fontSize={18}
+								fontSize={17}
 								style={{ color: '#000' }}
 								numberOfLines={1}
 							>

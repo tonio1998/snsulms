@@ -39,6 +39,7 @@ import {
 } from "../../../../utils/cache/Student/localStudentActivity";
 import {LastUpdatedBadge} from "../../../../components/common/LastUpdatedBadge";
 import {useLoading2} from "../../../../context/Loading2Context.tsx";
+import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
 
 export default function SubmissionScreen({ navigation, route }) {
 	const { activity, refreshFromOnline } = useActivity();
@@ -56,10 +57,10 @@ export default function SubmissionScreen({ navigation, route }) {
 	const [uploading, setUploading] = useState(false);
 	const [lastFetched, setLastFetched] = useState(null);
 	const { showLoading2, hideLoading2 } = useLoading2();
+	const [loading, setLoading] = useState(false);
 	const loadLocalSubmissions = async () => {
 		showLoading2('Loading submissions...');
 		try {
-			setLoadingSubmissions(true);
 			const { data, date } = await loadStudentActivityToLocal(StudentActivityID);
 			if (data?.student_info) {
 				console.log("data", data);
@@ -70,19 +71,18 @@ export default function SubmissionScreen({ navigation, route }) {
 			}
 		} catch (error) {
 		} finally {
-			setLoadingSubmissions(false);
 			hideLoading2();
 		}
 	};
 
 	const loadSubmissions = async () => {
+		setLoading(true);
 		try {
-			setLoadingSubmissions(true);
 			refreshFromOnline();
 		} catch (err) {
 			handleApiError(err, 'Fetch');
 		} finally {
-			setLoadingSubmissions(false);
+			setLoading(false);
 		}
 	};
 
@@ -243,6 +243,11 @@ export default function SubmissionScreen({ navigation, route }) {
 						onReload={loadSubmissions}
 					/>
 				</View>
+				{loading && (
+					<>
+						<ActivityIndicator2 />
+					</>
+				)}
 				<FlatList
 					data={submissions}
 					keyExtractor={(item, index) => `${item.id}-${index}`}

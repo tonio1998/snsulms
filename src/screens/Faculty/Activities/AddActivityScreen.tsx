@@ -21,12 +21,18 @@ import { globalStyles } from '../../../theme/styles.ts';
 import { CText } from '../../../components/common/CText.tsx';
 import { theme } from '../../../theme';
 import { addActivity } from '../../../api/modules/activitiesApi.ts';
-import {getSurveyData} from "../../../api/testBuilder/testbuilderApi.ts"; // <-- your real API path
+import {getSurveyData} from "../../../api/testBuilder/testbuilderApi.ts";
+import {useClass} from "../../../context/SharedClassContext.tsx";
+import SmartSelectPicker from "../../../components/pickers/SmartSelectPicker.tsx";
+import DropDownPicker from "react-native-dropdown-picker";
 
 const AddActivityScreen = ({ navigation, route }) => {
     const ClassID = route.params.ClassID;
     const FormID = route.params?.FormID;
     const ActivityTypeID = route.params.ActivityTypeID;
+    const ClassInfo = route.params.ClassInfo;
+
+    console.log("🔍 Fetching classes from API", ClassInfo);
 
     const { showLoading, hideLoading } = useLoading();
     const { showAlert } = useAlert();
@@ -43,6 +49,7 @@ const AddActivityScreen = ({ navigation, route }) => {
         DueDate: new Date(),
         StrictLate: 0,
         Duration: 0,
+        ClassTopicID: 0 || '',
     });
 
     const getForm = async () => {
@@ -156,12 +163,34 @@ const AddActivityScreen = ({ navigation, route }) => {
         }
     };
 
+    const items = [
+        ...(ClassInfo?.modules?.map(mod => ({
+            label: mod.Title,
+            value: mod.ClassTopicID
+        })) || [])
+    ];
+
+    console.log("🔍 Fetching items", items);
+
     return (
         <>
             <BackHeader title="Add Activity" />
             <SafeAreaView style={globalStyles.safeArea}>
                 <ScrollView>
                     <View style={styles.container}>
+                        <View>
+                            <CText fontStyle="SB" style={styles.label}>Topic</CText>
+                            <SmartSelectPicker
+                                items={items}
+                                placeholder="Select Outline"
+                                value={form.ClassTopicID}
+                                onValueChange={(value) => {
+                                    handleChange('ClassTopicID', value || '');
+                                }}
+                                labelKey="label"
+                                valueKey="value"
+                            />
+                        </View>
                         <CText fontStyle="SB" style={styles.label}>Title</CText>
                         <TextInput
                             style={styles.input}
@@ -312,7 +341,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 20,
-        paddingTop: 30,
     },
     label: {
         marginBottom: 6,

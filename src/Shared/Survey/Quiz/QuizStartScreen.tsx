@@ -1,17 +1,17 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, SafeAreaView, StyleSheet, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import BackHeader from "../../components/layout/BackHeader";
-import { globalStyles } from "../../theme/styles";
-import {endSurvey, getSurveyData, initSurvey, startSurvey} from "../../api/testBuilder/testbuilderApi";
-import { theme } from "../../theme";
-import CButton from "../../components/buttons/CButton";
-import { CText } from "../../components/common/CText";
-import SurveyTimer, {useSurveyTimer} from "../../components/testBuilder/SurveyTimer";
-import { useLoading } from "../../context/LoadingContext";
-import { handleApiError } from "../../utils/errorHandler";
-import { useAlert } from "../../components/CAlert";
-import {formatTime} from "../../utils/format.ts";
+import BackHeader from "../../../components/layout/BackHeader.tsx";
+import { globalStyles } from "../../../theme/styles.ts";
+import {endSurvey, getSurveyData, initSurvey, startSurvey} from "../../../api/testBuilder/testbuilderApi.ts";
+import { theme } from "../../../theme";
+import CButton from "../../../components/buttons/CButton.tsx";
+import { CText } from "../../../components/common/CText.tsx";
+import SurveyTimer, {useSurveyTimer} from "../../../components/testBuilder/SurveyTimer.tsx";
+import { useLoading } from "../../../context/LoadingContext.tsx";
+import { handleApiError } from "../../../utils/errorHandler.ts";
+import { useAlert } from "../../../components/CAlert.tsx";
+import {formatTime} from "../../../utils/format.ts";
 
 export default function QuizStartScreen({ navigation, route }) {
     const [form, setForm] = useState(null);
@@ -19,11 +19,23 @@ export default function QuizStartScreen({ navigation, route }) {
     const [loading, setLoading] = useState(true);
     const { showLoading, hideLoading } = useLoading();
     const { showAlert } = useAlert();
-    const { formattedTime, seconds } = useSurveyTimer(response, endSurvey);
     const Duration = route.params?.Duration || 0;
     const ActivityID = route.params?.ActivityID || 0;
 
+    console.log("FormStatus: ", route.params);
+
     const SurveyID = route.params.SurveyID;
+
+    const loadLocal = async () => {
+        try {
+            const data = await getSurveyData({ SurveyID });
+            setForm(data);
+        } catch (error) {
+            handleApiError(error, 'Failed to load survey');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const loadSurvey = useCallback(async () => {
         try {
@@ -32,6 +44,7 @@ export default function QuizStartScreen({ navigation, route }) {
             setForm(data);
 
             const init = await initSurvey(SurveyID, Duration, ActivityID);
+            console.log('🔍 Fetched survey', data);
             if (init) setResponse(init);
         } catch (error) {
             handleApiError(error, "Failed to load survey");
@@ -49,8 +62,9 @@ export default function QuizStartScreen({ navigation, route }) {
         try {
             const res = await startSurvey(response?.id);
             if (res) {
-                const startSeconds = Math.max(res?.RemainingTime || 0, 0) * 60;
+                const startSeconds = Math.max(res?.RemainingTime || 0, 0);
                 await AsyncStorage.setItem(`surveyTimer_${response?.id}`, startSeconds.toString());
+                await AsyncStorage.setItem('SurveyStatus_'+response?.id, '1');
 
                 navigation.navigate("QuizScreen", { SurveyID, response: res, form });
             }
@@ -120,18 +134,17 @@ export default function QuizStartScreen({ navigation, route }) {
                                 Duration
                             </CText>
                             <CText fontStyle={"SB"} fontSize={16} style={{ color: "#000" }}>
-                                {formatTime(Duration) || form?.Duration}
+                                {formatTime(form?.Duration)}
                             </CText>
                         </View>
-
-                        {response?.TimeStarted && (
-                            <View style={styles.infoRow}>
-                                <CText fontSize={16} style={{ color: textColor }}>
-                                    Remaining Time
-                                </CText>
-                                <CText fontStyle="SB" fontSize={18}>{formattedTime}</CText>
-                            </View>
-                        )}
+                        <View style={styles.infoRow}>
+                            <CText fontSize={16} style={{ color: textColor }}>
+                                Remaining Time
+                            </CText>
+                            <CText fontStyle={"SB"} fontSize={16} style={{ color: "#000" }}>
+                                {formatTime(response?.RemainingTime)}
+                            </CText>
+                        </View>
                     </View>
 
                     <CButton

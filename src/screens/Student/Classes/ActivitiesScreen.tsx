@@ -26,6 +26,7 @@ import {
 } from "../../../utils/cache/Student/localStudentActivitiesGroup";
 import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
 import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
+import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
 
 const ActivitiesScreen = ({ navigation }) => {
 	const { showLoading, hideLoading } = useLoading();
@@ -141,9 +142,9 @@ const ActivitiesScreen = ({ navigation }) => {
 	};
 
 	const handleRefresh = async () => {
-		setRefreshing(true);
+		setLoading(true);
 		await fetchActivities(acad, acadRaw, '', true);
-		setRefreshing(false);
+		setLoading(false);
 	};
 
 	const handleViewAct = (StudentActivityID, Title, ActivityID) => {
@@ -155,7 +156,7 @@ const ActivitiesScreen = ({ navigation }) => {
 			style={styles.activityItem}
 			onPress={() => handleViewAct(item.StudentActivityID, item.Title, item.ActivityID)}
 		>
-			<CText fontStyle="B" fontSize={16} style={{ marginBottom: 6 }}>{item.Title}</CText>
+			<CText fontStyle="B" fontSize={14} style={{ marginBottom: 6 }}>{item.Title}</CText>
 			{item.Description && <CText fontSize={14} color="#666">{item.Description}</CText>}
 			{item.Deadline && (
 				<CText fontSize={15} style={{ marginBottom: 4 }}>
@@ -163,7 +164,7 @@ const ActivitiesScreen = ({ navigation }) => {
 				</CText>
 			)}
 			<CText
-				fontSize={16}
+				fontSize={13}
 				fontStyle="SB"
 				style={{
 					color: item.SubmissionType === 'Submitted'
@@ -204,7 +205,7 @@ const ActivitiesScreen = ({ navigation }) => {
 
 		return (
 			<View style={{ marginBottom: 20 }}>
-				<CText fontStyle="B" fontSize={17} style={{ marginBottom: 8 }}>
+				<CText fontStyle="B" fontSize={15} style={{ marginBottom: 8 }}>
 					{item.CourseCode} - {item.CourseName}
 				</CText>
 				{filtered.map((act, idx) => (
@@ -264,7 +265,11 @@ const ActivitiesScreen = ({ navigation }) => {
 							))}
 						</View>
 					)}
-
+					{loading && (
+						<>
+							<ActivityIndicator2 />
+						</>
+					)}
 					<FlatList
 						data={data}
 						keyExtractor={(item, index) => item.ClassID?.toString() ?? index.toString()}

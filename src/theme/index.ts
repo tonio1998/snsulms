@@ -1,25 +1,48 @@
+// BLUE AND VIOLET
+// primary: '#3E13DA',
+//         primary_soft: '#5314E4',
+//         secondary: '#921BFD',
+//         secondary_soft: '#02801C',
+
+// DARK BLUE AND VIOLET
+// primary: '#3E13DA',
+//         primary_soft: '#5314E4',
+//         secondary: '#921BFD',
+//         secondary_soft: '#02801C',
+
 const colors = {
     light: {
-        background: '#FAFAFA',
-        surface: '#E0E8F3',
-        text: '#1C1C1E',
-        inputBackground: '#FFF',
-        border: '#DADADA',
-        primary: '#008001',
-        primary_soft: '#008001',
-        secondary: '#007DFE',
-        secondary_soft: '#DCECC7',
-        success: '#34C759',
-        success_soft: '#C8E6C9',
-        danger: '#FF3B30',
-        danger_soft: '#FFCDD2',
-        warning: '#FCBE02',
-        warning_soft: '#FFF3CD',
-        info: '#5AC8FA',
-        info_soft: '#B3E5FC',
-        muted: '#F8F8F8',
-        muted_soft: '#E0E0E0',
-        card: "#FFF"
+        // Backgrounds
+        background: '#FAFAFA',        // main app background
+        surface: '#E6EDF7',           // cards, panels (slightly softer)
+        card: '#FFFFFF',               // card background
+        muted: '#F8F8F8',             // disabled / low-priority areas
+        muted_soft: '#E6E6E6',        // secondary muted elements
+
+        // Text & Borders
+        text: '#1C1C1E',              // main readable text
+        border: '#DADADA',            // subtle borders
+        inputBackground: '#FFFFFF',   // form inputs
+
+        // Primary / Secondary (for buttons, headers, highlights)
+        primary: '#125D11',           // darker green for main actions
+        primary_soft: '#43cea2',       // softer gradient variant for hover / cards
+        secondary: '#8DB600',          // deep blue for secondary actions
+        secondary_soft: '#0288D1',     // softer secondary gradient
+
+        // Status Colors
+        success: '#34C759',           // confirmation / positive actions
+        success_soft: '#BDF5C7',      // lighter success for backgrounds
+        danger: '#FF3B30',            // errors / critical alerts
+        danger_soft: '#FFBFB8',       // softer danger background
+        warning: '#FCBE02',           // caution / pending alerts
+        warning_soft: '#FFF3CD',      // soft warning background
+        info: '#5AC8FA',              // informational messages
+        info_soft: '#B3E5FC',         // soft info background
+
+        // Additional UX-friendly accents
+        link: '#007AFF',               // tappable links
+        highlight: '#FFD700',          // highlights / badges
     },
     dark: {
         background: '#000000',

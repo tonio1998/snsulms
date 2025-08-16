@@ -103,8 +103,8 @@ export default function AcademicYearScreen({ navigation }) {
 						))}
 					</View>
 
-					<TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-						<CText fontSize={16} fontStyle="B" style={styles.saveButtonText}>
+					<TouchableOpacity onPress={handleSave} style={[styles.saveButton]}>
+						<CText fontSize={16} fontStyle="SB" style={styles.saveButtonText}>
 							Save
 						</CText>
 					</TouchableOpacity>
@@ -144,8 +144,8 @@ const styles = StyleSheet.create({
 	},
 	saveButton: {
 		backgroundColor: theme.colors.light.primary,
-		borderRadius: 12,
-		paddingVertical: 10,
+		borderRadius: theme.radius.sm,
+		paddingVertical: 12,
 		paddingHorizontal: 30,
 		marginTop: 30,
 		position: 'absolute',

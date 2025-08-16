@@ -11,23 +11,21 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import BackHeader from "../../components/layout/BackHeader.tsx";
-import { globalStyles } from "../../theme/styles.ts";
+import { globalStyles } from "../../../theme/styles.ts";
 import {
     endSurvey,
     getSurveyData,
-    initSurvey,
-} from "../../api/testBuilder/testbuilderApi.ts";
-import { theme } from "../../theme";
-import CButton from "../../components/buttons/CButton.tsx";
-import { CText } from "../../components/common/CText.tsx";
-import { useLoading } from "../../context/LoadingContext.tsx";
-import { handleApiError } from "../../utils/errorHandler.ts";
-import { useAlert } from "../../components/CAlert.tsx";
-import AnswerInput from "../../components/testBuilder/AnswerInput.tsx";
-import { useSurveyTimer } from "../../components/testBuilder/SurveyTimer.tsx";
-import {useAuth} from "../../context/AuthContext.tsx";
+} from "../../../api/testBuilder/testbuilderApi.ts";
+import { theme } from "../../../theme";
+import CButton from "../../../components/buttons/CButton.tsx";
+import { CText } from "../../../components/common/CText.tsx";
+import { useLoading } from "../../../context/LoadingContext.tsx";
+import { handleApiError } from "../../../utils/errorHandler.ts";
+import { useAlert } from "../../../components/CAlert.tsx";
+import AnswerInput from "../../../components/testBuilder/AnswerInput.tsx";
+import {useAuth} from "../../../context/AuthContext.tsx";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {formatTime} from "../../../utils/format.ts";
 
 function shuffleArray(array) {
     const arr = [...array];
@@ -38,11 +36,32 @@ function shuffleArray(array) {
     return arr;
 }
 
+function Countdown({ start = 60, id, onTimeUp }) {
+    const [time, setTime] = useState(() => parseInt(start, 10) || 0);
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setTime((prev) => {
+                const next = prev > 0 ? prev - 1 : 0;
+                AsyncStorage.setItem(`surveyTimer_${id}`, String(next));
+                if (next === 0) {
+                    clearInterval(intervalId);
+                    onTimeUp?.();
+                }
+                return next;
+            });
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    }, [id, onTimeUp]);
+
+    return <Text>{formatTime(time)}</Text>;
+}
+
 export default function QuizScreen({ navigation, route }) {
     const {user} = useAuth();
     const [sections, setSections] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isStarted, setIsStarted] = useState(false);
     const [form, setForm] = useState({});
     const { showLoading, hideLoading } = useLoading();
     const { showAlert } = useAlert();
@@ -53,11 +72,41 @@ export default function QuizScreen({ navigation, route }) {
     const [shuffledQuestions, setShuffledQuestions] = useState([]);
     const SurveyID = route.params?.SurveyID;
     const RESPONSE = route.params?.response;
+    const [timer, setTimer] = useState(0);
+
+    const loadTimer = async () => {
+        const timerRemaining = await AsyncStorage.getItem(`surveyTimer_${RESPONSE?.id}`);
+        setTimer(timerRemaining);
+    };
+
+    const syncPendingResponses = async () => {
+        const keys = await AsyncStorage.getAllKeys();
+        const responseKeys = keys.filter((k) => k.startsWith("surveyResponse_"));
+
+        for (const key of responseKeys) {
+            const saved = await AsyncStorage.getItem(key);
+            if (!saved) continue;
+
+            const data = JSON.parse(saved);
+
+            try {
+                await endSurvey(data.surveyId, data);
+                await AsyncStorage.removeItem(key);
+            } catch (e) {
+                console.log("Still offline or upload failed, will retry later", e);
+            }
+        }
+    };
 
     const loadSections = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getSurveyData({ SurveyID });
+            loadTimer();
+
+            if(timer == 0){
+                await syncPendingResponses();
+            }
             setForm(data);
             setGamified(data?.isCardView);
             if(RESPONSE?.TimeEnded){
@@ -66,7 +115,6 @@ export default function QuizScreen({ navigation, route }) {
                     userID: user?.id,
                 });
             }
-
             if (data?.isShuffle) {
                 const allQs = data.sections.flatMap((sec) => {
                     const shuffledQs = sec.questions.map((q) => {
@@ -102,7 +150,7 @@ export default function QuizScreen({ navigation, route }) {
                 setShuffledQuestions(allQs);
             }
         } catch (error) {
-            handleApiError(error, "dfdf");
+            handleApiError(error, "Failed to load survey");
             Alert.alert("Error", "Failed to load sections from server.");
         } finally {
             setLoading(false);
@@ -123,7 +171,7 @@ export default function QuizScreen({ navigation, route }) {
 
     const handleSubmitForm = useCallback(async () => {
         const requiredQuestions = sections.flatMap((section) =>
-            section.questions.filter((q) => q.isRequired),
+            section?.questions.filter((q) => q.isRequired),
         );
         const missing = requiredQuestions
             .filter((q) => {
@@ -142,17 +190,44 @@ export default function QuizScreen({ navigation, route }) {
             setMissingRequired([]);
         }
 
+        const submissionData = {
+            formId: SurveyID,
+            userId: user?.id,
+            surveyId: RESPONSE?.id,
+            answers,
+            submittedAt: new Date().toISOString(),
+        };
+
         try {
-            showLoading("Submitting the form...");
-            await endSurvey(RESPONSE?.id, answers);
-            showAlert("success", "Success", "Form has been submitted.");
-            setIsStarted(false);
+            showLoading("Saving your response...");
+            await AsyncStorage.setItem(
+                `surveyResponse_${RESPONSE?.id}`,
+                JSON.stringify(submissionData)
+            );
+            await AsyncStorage.removeItem(`surveyTimer_${RESPONSE?.id}`);
+
+            try {
+                await endSurvey(RESPONSE?.id, submissionData);
+                await AsyncStorage.removeItem(`surveyResponse_${RESPONSE?.id}`);
+                showAlert("success", "Success", "Form has been submitted.");
+                navigation.replace('ResponsePreview', {
+                    formId: SurveyID,
+                    userID: user?.id,
+                });
+            } catch (uploadError) {
+                showAlert("info", "Offline", "Your response was saved and will be uploaded when online.");
+            }
         } catch (error) {
-            handleApiError(error, "Submission failed");
+            handleApiError(error, "Failed to save response locally");
         } finally {
             hideLoading();
         }
-    }, [answers, RESPONSE, sections, showAlert, showLoading, hideLoading]);
+    }, [answers, RESPONSE, sections, SurveyID, user, showAlert, showLoading, hideLoading, navigation]);
+
+    const handleTimeUp = useCallback(() => {
+        Alert.alert("Time's up", "You've reached the time limit. This form will be submitted automatically.");
+        handleSubmitForm();
+    }, [handleSubmitForm]);
 
     const QuestionItem = memo(
         ({ question, answer, onChange, isMissing }) => (
@@ -212,12 +287,9 @@ export default function QuizScreen({ navigation, route }) {
 
     const GamifiedQuestion = () => {
         if (!currentQuestion) return <Text>No questions available</Text>;
-
         const isMissing = missingRequired.includes(currentQuestion.id);
-
         const disableNext = currentQuestion.isRequired && !isQuestionAnswered(currentQuestion);
         const disableSubmit = disableNext;
-
         return (
             <View
                 style={[
@@ -233,20 +305,17 @@ export default function QuizScreen({ navigation, route }) {
                 ]}
             >
                 <Text style={[styles.questionText, { fontSize: 20, marginBottom: 20 }]}>
-                    {currentQuestion.Question}
-                    {currentQuestion.isRequired && <Text style={{ color: "red" }}> *</Text>}
+                    {currentQuestion?.Question}
+                    {currentQuestion?.isRequired && <Text style={{ color: "red" }}> *</Text>}
                 </Text>
-
                 <AnswerInput
                     question={currentQuestion}
-                    answer={answers[currentQuestion.id]}
+                    answer={answers[currentQuestion?.id]}
                     onChange={handleAnswerChange}
                 />
-
                 {isMissing && (
                     <Text style={{ color: "red", marginTop: 10 }}>This question is required.</Text>
                 )}
-
                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 30 }}>
                     <TouchableOpacity
                         disabled={currentQuestionIndex === 0}
@@ -255,7 +324,6 @@ export default function QuizScreen({ navigation, route }) {
                     >
                         <Text style={styles.navButtonText}>Previous</Text>
                     </TouchableOpacity>
-
                     {currentQuestionIndex < shuffledQuestions.length - 1 ? (
                         <TouchableOpacity
                             disabled={disableNext}
@@ -281,7 +349,6 @@ export default function QuizScreen({ navigation, route }) {
                         </TouchableOpacity>
                     )}
                 </View>
-
                 <View style={{ height: 5, backgroundColor: "#eee", marginTop: 20, borderRadius: 3 }}>
                     <View
                         style={{
@@ -296,18 +363,16 @@ export default function QuizScreen({ navigation, route }) {
         );
     };
 
-    // if (loading) {
-    //     return (
-    //         <SafeAreaView style={[globalStyles.container, { justifyContent: "center", alignItems: "center" }]}>
-    //             <ActivityIndicator size="large" color={theme.colors.light.primary} />
-    //         </SafeAreaView>
-    //     );
-    // }
+    if (!timer) {
+        return (
+            <SafeAreaView style={[globalStyles.container, { justifyContent: "center", alignItems: "center" }]}>
+                <ActivityIndicator size="large" color={theme.colors.light.primary} />
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={[globalStyles.container, {backgroundColor: theme.colors.light.card}]}>
-            {/*<BackHeader title={form?.title || "Quiz"} navigation={navigation} />*/}
-
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -317,10 +382,13 @@ export default function QuizScreen({ navigation, route }) {
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "center",
-                    marginBottom: 20
+                    marginBottom: 20,
+                    marginTop: 50
                 }}>
                     <CText fontSize={20} style={{ marginRight: 10 }}>Time:</CText>
-                    <CText fontSize={20} fontStyle={'SB'}>0</CText>
+                    <CText fontSize={20} fontStyle={'SB'}>
+                        <Countdown start={timer} id={RESPONSE?.id} onTimeUp={handleTimeUp}/>
+                    </CText>
                 </View>
                 {!gamified ? (
                     <ScrollView
@@ -329,11 +397,11 @@ export default function QuizScreen({ navigation, route }) {
                     >
                         {shuffledQuestions.map((question) => (
                             <QuestionItem
-                                key={question.id}
+                                key={question?.id}
                                 question={question}
-                                answer={answers[question.id]}
-                                onChange={(value) => handleAnswerChange(question.id, value)}
-                                isMissing={missingRequired.includes(question.id)}
+                                answer={answers[question?.id]}
+                                onChange={(value) => handleAnswerChange(question?.id, value)}
+                                isMissing={missingRequired.includes(question?.id)}
                             />
                         ))}
                         <View style={{ padding: 20 }}>

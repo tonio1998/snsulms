@@ -36,6 +36,7 @@ import CustomHomeHeader from '../components/layout/CustomHomeHeader.tsx';
 import LinkScroll from "../components/LinkScroll.tsx";
 import TextTicker from "react-native-text-ticker";
 import {loadDashboardCache, saveDashboardCache} from "../utils/cache/dashboardCache.ts";
+import ActivityIndicator2 from "../components/loaders/ActivityIndicator2.tsx";
 
 const HomeScreen = () => {
 	const network = useContext(NetworkContext);
@@ -133,11 +134,11 @@ const HomeScreen = () => {
 	);
 
 	const onRefresh = useCallback(async () => {
-		setRefreshing(true);
+		// setRefreshing(true);
 		const acadInfo = acad ? acadRaw : await getAcademicInfo();
 		const acadStr = acad ? acad : `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
 		await getDashboardData(acadStr, true);
-		setRefreshing(false);
+		// setRefreshing(false);
 	}, [acad, acadRaw]);
 
 	const renderStudentDashboard = () => {
@@ -165,7 +166,7 @@ const HomeScreen = () => {
 								{ label: 'Due Today', value: stats.dueToday },
 								{ label: 'Completed', value: stats.completed },
 							]}
-							gradientColors={[theme.colors.light.primary, theme.colors.light.primary]}
+							gradientColors={[theme.colors.light.primary, theme.colors.light.secondary]}
 							textColor={theme.colors.light.card}
 							cardStyle={[styles.summaryCardSmall, {width: Dimensions.get('window').width * 0.9}]}
 						/>
@@ -242,7 +243,7 @@ const HomeScreen = () => {
 							formatNumber={formatNumber}
 							CText={CText}
 							stats={[{ label: '', value: stats.classesHandled }]}
-							gradientColors={[theme.colors.light.primary, '#fff']}
+							gradientColors={[theme.colors.light.primary, theme.colors.light.secondary]}
 							textColor={theme.colors.light.card}
 							cardStyle={styles.summaryCardSmall}
 						/>
@@ -326,10 +327,15 @@ const HomeScreen = () => {
 							</View>
 						)}
 						<View style={{ flex: 1, paddingTop: 10 }}>
+							{loading && (
+								<>
+									<ActivityIndicator2 />
+								</>
+							)}
 							<LinkScroll buttons={buttons} />
 						</View>
 						<TextTicker
-							style={{ fontSize: 18, color: '#004D1A' }}
+							style={{ fontSize: 18, color: theme.colors.light.primary, fontWeight: 'semibold' }}
 							duration={12000}
 							loop
 							bounce={false}
@@ -399,13 +405,13 @@ const styles = StyleSheet.create({
 	},
 	noDataContainer: {
 		alignItems: 'center',
-		backgroundColor: '#f9f9f9',
+		// backgroundColor: theme.colors.light.primary + '11',
 		padding: 16,
 		borderRadius: 8,
 		marginTop: 16,
 	},
 	noDataIconWrapper: {
-		backgroundColor: theme.colors.light.primary_soft + '22',
+		backgroundColor: theme.colors.light.primary + '22',
 		padding: 12,
 		borderRadius: 50,
 	},
@@ -431,7 +437,7 @@ const styles = StyleSheet.create({
 		width: 40,
 		height: 40,
 		borderRadius: 20,
-		backgroundColor: theme.colors.light.primary_soft + '55',
+		backgroundColor: theme.colors.light.primary + '22',
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
@@ -473,6 +479,7 @@ const styles = StyleSheet.create({
 	},
 	shimmerPlaceholder: {
 		height: 70,
+		width: Dimensions.get('window').width * 0.9,
 		borderRadius: 8,
 		marginBottom: 12,
 	},

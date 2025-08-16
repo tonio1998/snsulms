@@ -21,8 +21,9 @@ import { useAlert } from "../../components/CAlert.tsx";
 import { useLoading } from "../../context/LoadingContext.tsx";
 import { CText } from "../../components/common/CText.tsx";
 import DropDownPicker from "react-native-dropdown-picker";
+import {localupdateSurveyDate, saveQuestionToLocal, syncSurveysToServer} from "../../utils/cache/Survey/localSurvey";
+import {useAuth} from "../../context/AuthContext.tsx";
 
-// Dummy fetch for sections - replace with your real API call
 async function fetchYourSectionsApi() {
     return [
         { id: 1, name: "Section A" },
@@ -44,16 +45,17 @@ const questionTypes = [
 export default function AddQuestionScreen({ route, navigation }) {
     const SectionID = route.params?.sectionId;
     const QuestionID = route.params?.questionId;
+    const SurveyID = route.params?.SurveyID;
 
     const { showAlert } = useAlert();
     const { showLoading, hideLoading } = useLoading();
-
+    const { user } = useAuth();
     const [openSectionPicker, setOpenSectionPicker] = useState(false);
     const [sections, setSections] = useState([]);
     const [selectedSection, setSelectedSection] = useState(SectionID || null);
     const [sectionItems, setSectionItems] = useState([]);
 
-    const [AnswerType, setAnswerType] = useState("");
+    const [AnswerType, setAnswerType] = useState("short");
     const [Question, setQuestion] = useState("");
     const [Options, setOptions] = useState([""]);
     const [GridRows, setGridRows] = useState([""]);
@@ -61,7 +63,7 @@ export default function AddQuestionScreen({ route, navigation }) {
     const [ScaleMin, setScaleMin] = useState("");
     const [ScaleMax, setScaleMax] = useState("");
     const [isRequired, setIsRequired] = useState(false);
-    const [Points, setPoints] = useState("1"); // Default score is 1
+    const [Points, setPoints] = useState("1");
 
     const fetchSections = async () => {
         try {
@@ -137,6 +139,8 @@ export default function AddQuestionScreen({ route, navigation }) {
         setPoints("1"); // Reset score to 1 by default
     };
 
+
+
     const saveQuestion = async () => {
         if (!AnswerType) {
             Alert.alert("Error", "Please select a question type");
@@ -203,7 +207,12 @@ export default function AddQuestionScreen({ route, navigation }) {
 
         showLoading("Saving question...");
         try {
-            await addQuestion(selectedSection, payload);
+            // await saveQuestionToLocal(user?.id, SurveyID, SectionID, payload);
+            // console.log("Question saved locally:", payload);
+            const data = await addQuestion(selectedSection, payload);
+            console.log("data from addQuestion", data);
+            // await syncSurveysToServer(user?.id, payload);
+            await localupdateSurveyDate(user?.id, SurveyID, data);
             showAlert("success", "Success", "Question saved successfully.");
             navigation.goBack();
         } catch (error) {

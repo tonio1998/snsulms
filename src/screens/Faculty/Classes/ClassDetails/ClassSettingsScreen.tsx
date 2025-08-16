@@ -18,7 +18,7 @@ import {useLoading2} from "../../../../context/Loading2Context.tsx";
 import {useClass} from "../../../../context/SharedClassContext.tsx";
 
 const ClassSettingsScreen = ({ route }) => {
-	const { classes } = useClass();
+	const { classes, refresh } = useClass();
 	const ClassID = classes?.ClassID;
 	const { showLoading2, hideLoading2 } = useLoading2();
 	const network = useContext(NetworkContext);
@@ -62,6 +62,7 @@ const ClassSettingsScreen = ({ route }) => {
 
 			const valueToSave = newValue ? 'Y' : 'N';
 			const res = await updateClassSetting(ClassID, key, valueToSave);
+			refresh()
 		} catch (err) {
 			handleApiError(err, `Failed to toggle ${key}`);
 		}

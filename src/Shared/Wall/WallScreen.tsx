@@ -27,6 +27,7 @@ import { theme } from "../../theme";
 import BackHeader from "../../components/layout/BackHeader.tsx";
 import { useLoading } from "../../context/LoadingContext.tsx";
 import { useClass } from "../../context/SharedClassContext.tsx";
+import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx";
 
 const PAGE_SIZE = 10;
 
@@ -49,7 +50,7 @@ const WallScreen = ({ navigation }) => {
 	const loadCache = async () => {
 		if (!ClassID) return;
 		const { data, date } = await loadClassWallFromLocal(ClassID);
-		if (data && data.length) {
+		if (data) {
 			setWall(data);
 			setLastFetched(date);
 			setPage(Math.ceil(data.length / PAGE_SIZE));
@@ -65,7 +66,7 @@ const WallScreen = ({ navigation }) => {
 	const fetchWall = async (pageToLoad = 1, overwrite = false) => {
 		if (loading) return;
 		setLoading(true);
-		if (overwrite) showLoading('Please wait...');
+		// if (overwrite) showLoading('Please wait...');
 
 		try {
 			const filter = { page: pageToLoad, ClassID };
@@ -90,13 +91,13 @@ const WallScreen = ({ navigation }) => {
 			console.error(err);
 		} finally {
 			setLoading(false);
-			hideLoading();
+			// hideLoading();
 			setRefreshing(false);
 		}
 	};
 
 	const handleRefresh = () => {
-		setRefreshing(true);
+		setLoading(true);
 		fetchWall(1, true);
 	};
 
@@ -120,9 +121,11 @@ const WallScreen = ({ navigation }) => {
 	const handleReaction = async (postId) => {
 		const scale = getHeartScale(postId);
 		Animated.sequence([
-			Animated.timing(scale, { toValue: 1.8, duration: 100, useNativeDriver: true }),
+			Animated.timing(scale, { toValue: 2, duration: 100, useNativeDriver: true }),
 			Animated.timing(scale, { toValue: 1, duration: 100, useNativeDriver: true }),
 		]).start();
+
+		Vibration.vibrate(100);
 
 		setWall(prev =>
 			prev.map(item =>
@@ -138,7 +141,6 @@ const WallScreen = ({ navigation }) => {
 			)
 		);
 		await reactPost(postId);
-		Vibration.vibrate(100);
 	};
 
 	const getHeartScale = (postId) => {
@@ -226,13 +228,19 @@ const WallScreen = ({ navigation }) => {
 							<CText fontSize={14} color="#888">No wall posts found</CText>
 						</View>
 					}
-					ListHeaderComponent={
-						lastFetched && (
-							<View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
-								<CText fontSize={12}>Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}</CText>
-							</View>
-						)
-					}
+					ListHeaderComponent={() => (
+						<View>
+							{lastFetched && (
+								<View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
+									<CText fontSize={12}>
+										Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}
+									</CText>
+								</View>
+							)}
+							{loading && <ActivityIndicator2 />}
+						</View>
+					)}
+
 				/>
 
 				<TouchableOpacity style={styles.floatingButton} onPress={openModal}>
@@ -298,7 +306,7 @@ const styles = StyleSheet.create({
 		color: '#999',
 	},
 	gmeetJoinButton: {
-		backgroundColor: '#e1f0db',
+		backgroundColor: theme.colors.light.primary + '18',
 		padding: 6,
 		borderRadius: 10,
 	},

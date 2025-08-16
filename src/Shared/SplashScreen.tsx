@@ -12,10 +12,17 @@ import { FontFamily, theme } from '../theme';
 import { CText } from '../components/common/CText.tsx';
 import { globalStyles } from '../theme/styles.ts';
 import { APP_NAME, TAGLINE } from '../../env.ts';
+import LinearGradient from "react-native-linear-gradient";
 
 export default function SplashScreen() {
 	return (
 		<SafeAreaView style={styles.safeArea}>
+			<LinearGradient
+				colors={[theme.colors.light.primary, theme.colors.light.secondary]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}
+				style={StyleSheet.absoluteFill}
+			/>
 			<ImageBackground
 				source={require('../../assets/img/bg2.png')}
 				style={styles.bg}
