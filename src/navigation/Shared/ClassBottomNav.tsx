@@ -87,6 +87,8 @@ function ClassTopTabs({ route }) {
 							shadowOffset: { width: 0, height: -2 },
 							borderBottomWidth: 1,
 							borderBottomColor: '#ccc',
+							// height:55,
+							// padding: 0
 							// padding: 1
 						},
 						tabBarIcon: ({ focused, color }) => {
