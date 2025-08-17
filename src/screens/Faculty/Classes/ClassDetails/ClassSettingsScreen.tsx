@@ -16,6 +16,7 @@ import { NetworkContext } from '../../../../context/NetworkContext.tsx';
 import { getClassInfo, updateClassSetting } from '../../../../api/modules/classesApi.ts';
 import {useLoading2} from "../../../../context/Loading2Context.tsx";
 import {useClass} from "../../../../context/SharedClassContext.tsx";
+import HomeHeader from "../../../../components/layout/HomeHeader.tsx";
 
 const ClassSettingsScreen = ({ route }) => {
 	const { classes, refresh } = useClass();
@@ -83,8 +84,9 @@ const ClassSettingsScreen = ({ route }) => {
 
 	return (
 		<>
-			<BackHeader title="Class Settings" />
-			<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
+			{/*<BackHeader title="Class Settings" />*/}
+			{/*<HomeHeader title="Class Settings" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+			<SafeAreaView style={[globalStyles.safeArea2]}>
 				<ScrollView contentContainerStyle={styles.container}>
 					{settingCards.map(({ label, key, description }) => (
 						<View key={key} style={styles.card}>

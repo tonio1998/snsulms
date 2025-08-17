@@ -38,3 +38,49 @@ export const loadStudentActivityToLocal = async (StudentActivityID) => {
         return { data: null, date: null };
     }
 };
+
+export const updateStudentActivitySubmission = async (StudentActivityID, newSubmission) => {
+    if (!StudentActivityID) {
+        console.warn("Missing StudentActivityID");
+        return null;
+    }
+
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(StudentActivityID);
+
+    try {
+        const dataStr = await AsyncStorage.getItem(CACHE_KEY);
+        let activities = dataStr ? JSON.parse(dataStr) : [];
+
+        if (!Array.isArray(activities)) {
+            activities = [activities];
+        }
+
+        const index = activities.findIndex((a) => a.id === newSubmission.id);
+
+        if (index !== -1) {
+            activities[index] = {
+                ...activities[index],
+                ...newSubmission,
+                updatedAt: new Date().toISOString(),
+            };
+        } else {
+            activities.push({
+                ...newSubmission,
+                updatedAt: new Date().toISOString(),
+            });
+        }
+
+        const now = new Date();
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(activities));
+        await AsyncStorage.setItem(CACHE_DATE_KEY, now.toISOString());
+
+        return {
+            data: activities,
+            date: now,
+        };
+    } catch (err) {
+        console.error("Error updating student activity submission:", err);
+        handleApiError(err, "Update student activity submission");
+        return null;
+    }
+};

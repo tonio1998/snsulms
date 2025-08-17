@@ -80,7 +80,7 @@ const ClassesListScreen = ({ navigation }) => {
 			setAllClasses(data);
 			setFilteredClasses(data);
 
-			const now = await saveFacClassesToLocal(user?.id, data);
+			const now = await saveFacClassesToLocal(user?.id, data, acad);
 			setLastFetched(now);
 		} catch (err) {
 			handleApiError(err);
@@ -94,7 +94,7 @@ const ClassesListScreen = ({ navigation }) => {
 		try {
 			setLoading(true);
 			showLoading2('Loading classes...');
-			const { data, date } = await loadFacClassesFromLocal(user?.id);
+			const { data, date } = await loadFacClassesFromLocal(user?.id, acad);
 			if (data) {
 				setAllClasses(data);
 				setFilteredClasses(data);

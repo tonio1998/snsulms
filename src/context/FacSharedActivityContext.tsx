@@ -37,6 +37,7 @@ export const FacActivityProvider = ({ children, ActivityID }) => {
         try {
             setLoading(true);
             const cachedData = await loadActivityToLocal(ActivityID);
+            console.log('🔍 Fetching activity from cache', cachedData);
             if (cachedData?.data) {
                 setActivity(cachedData.data);
             } else {

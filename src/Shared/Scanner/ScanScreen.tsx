@@ -202,8 +202,8 @@ export default function ClassAttendanceScanScreen() {
 
     return (
         <>
-            <BackHeader title="Scan QR Code" />
-            <SafeAreaView style={globalStyles.safeArea}>
+            {/*<BackHeader title="Scan QR Code" />*/}
+            <SafeAreaView style={[globalStyles.safeArea2, {paddingTop: 20}]}>
                 {/* STATIC CAMERA */}
                 <View style={styles.cameraWrapper}>
                     <View style={styles.cameraContainer}>
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     cameraWrapper: {
         justifyContent: 'center',
         alignItems: 'center',
-        marginVertical: 20,
+        marginBottom: 20
     },
     cameraContainer: {
         width: 250,

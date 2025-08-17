@@ -25,10 +25,10 @@ const colors = {
         inputBackground: '#FFFFFF',   // form inputs
 
         // Primary / Secondary (for buttons, headers, highlights)
-        primary: '#125D11',           // darker green for main actions
-        primary_soft: '#43cea2',       // softer gradient variant for hover / cards
-        secondary: '#8DB600',          // deep blue for secondary actions
-        secondary_soft: '#0288D1',     // softer secondary gradient
+        primary: '#138808',           // darker green for main actions
+        primary_soft: '#005C29',       // softer gradient variant for hover / cards
+        secondary: '#004225',          // deep blue for secondary actions
+        secondary_soft: '#228C22',     // softer secondary gradient
 
         // Status Colors
         success: '#34C759',           // confirmation / positive actions

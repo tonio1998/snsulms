@@ -98,12 +98,12 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
             </LinearGradient>
 
             <View style={styles.headerWrapper}>
-                <BlurView
-                    style={StyleSheet.absoluteFill}
-                    blurType="light"
-                    blurAmount={2}
-                    reducedTransparencyFallbackColor={theme.colors.light.card}
-                />
+                {/*<BlurView*/}
+                {/*    style={StyleSheet.absoluteFill}*/}
+                {/*    blurType="light"*/}
+                {/*    blurAmount={2}*/}
+                {/*    reducedTransparencyFallbackColor={theme.colors.light.card}*/}
+                {/*/>*/}
                 <View style={styles.headerContent}>
                     <View style={styles.leftSection}>
                         <TouchableOpacity
@@ -138,7 +138,7 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
                             style={styles.acadBtn}
                             activeOpacity={0.85}
                         >
-                            <Icon name={'school'} size={25} color={theme.colors.light.primary} />
+                            <Icon name={'school'} size={25} color={theme.colors.light.card} />
                         </TouchableOpacity>
                         {rightContent}
                     </View>
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
         borderRadius: 100,
         overflow: 'hidden',
         zIndex: 1,
-        backgroundColor: theme.colors.light.primary + '55'
+        // backgroundColor: theme.colors.light.primary + '55'
     },
     headerContent: {
         paddingHorizontal: 10,
@@ -216,11 +216,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 11,
         paddingVertical: 10,
         borderRadius: 100,
-        backgroundColor: theme.colors.light.card,
+        borderWidth: 1,
+        borderColor: theme.colors.light.card + '55',
         // marginRight: 12,
     },
     acadText: {
-        color: theme.colors.light.primary,
+        color: theme.colors.light.card,
     },
     avatarWrapper: {
         width: 42,

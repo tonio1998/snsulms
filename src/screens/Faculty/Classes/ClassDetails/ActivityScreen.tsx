@@ -27,6 +27,7 @@ import { useLoading2 } from '../../../../context/Loading2Context.tsx';
 import ProgressBar from "../../../../components/common/ProgressBar.tsx";
 import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
 import FabMenu from "../../../../components/buttons/FabMenu.tsx";
+import HomeHeader from "../../../../components/layout/HomeHeader.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -78,7 +79,9 @@ const ActivityScreen = ({ navigation }) => {
 				const submitted = item.student_activity?.filter(stu => stu.DateSubmitted)?.length || 0;
 				return { ...item, CompletedPercent: total ? Math.round((submitted / total) * 100) : 0 };
 			});
+
 			setActivities(enriched);
+			setLoading(false);
 		} catch (err) {
 			handleApiError(err, 'Failed to fetch activities');
 		} finally {
@@ -160,11 +163,17 @@ const ActivityScreen = ({ navigation }) => {
 
 	return (
 		<>
-			<BackHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
+			{/*<BackHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+			{/*<HomeHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+			<SafeAreaView style={[globalStyles.safeArea2]}>
+				{loading && (
+					<>
+						<ActivityIndicator2 />
+					</>
+				)}
 				<FlatList
 					data={filteredActivities}
-					keyExtractor={item => item.ActivityID.toString()}
+					keyExtractor={item => item?.ActivityID.toString()}
 					renderItem={({ item }) => <ActivityCard item={item} onPress={handleViewAct} />}
 					ListHeaderComponent={renderFilterHeader}
 					contentContainerStyle={{ padding: 10, paddingBottom: 120 }}

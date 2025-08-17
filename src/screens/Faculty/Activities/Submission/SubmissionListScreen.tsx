@@ -60,6 +60,7 @@ const SubmissionListScreen = ({ navigation }) => {
 		setLoading(true);
 		try {
 			const res = await getActivityResponses({ ActivityID: activity.ActivityID });
+			console.log(res.data)
 			setSubmissions(res.data);
 			const savedTime = await saveActivitySubmissionToLocal(activity.ActivityID, res.data);
 			if (savedTime) setLastFetched(savedTime);

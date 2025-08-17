@@ -19,6 +19,7 @@ import {handleApiError} from "../../../../utils/errorHandler.ts";
 import {getOutline} from "../../../../api/modules/outlineApi.ts";
 import {formatDate} from "date-fns";
 import Icon from "react-native-vector-icons/Ionicons";
+import HomeHeader from "../../../../components/layout/HomeHeader.tsx";
 
 const OutlineListScreen = ({ navigation, route }) => {
 	const { user } = useAuth();
@@ -87,8 +88,9 @@ const OutlineListScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<BackHeader title="Class Outline" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
+			{/*<BackHeader title="Class Outline" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+			{/*<HomeHeader title="Class Outline" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+			<SafeAreaView style={[globalStyles.safeArea2]}>
 				<View style={{ flex: 1, paddingHorizontal: 16 }}>.
 					{loading && (
 						<>
@@ -158,7 +160,6 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.05,
 		shadowOffset: { width: 0, height: 1 },
 		shadowRadius: 2,
-		elevation: 2,
 	},
 	fab: {
 		position: "absolute",

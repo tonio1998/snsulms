@@ -39,9 +39,9 @@ const generateCircles = (count = 4) => {
 	});
 };
 
-const BackHeader = ({
+const HomeHeader = ({
 						label = 'Back',
-						icon = 'arrow-back',
+						icon = 'home-outline',
 						title,
 						goTo = null,
 						rightButton = null,
@@ -71,11 +71,11 @@ const BackHeader = ({
 	const width = Dimensions.get('window').width;
 	return (
 		<>
-			<StatusBar barStyle="dark-content" />
+			{/*<StatusBar barStyle="dark-content" />*/}
 			<GestureDetector gesture={blockSwipeGesture}>
 				<View style={styles.headerWrapper}>
 					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-						<Icon name={icon} size={25} color="#000" />
+						<Icon name={icon} size={22} color="#000" />
 					</TouchableOpacity>
 
 					{title && (
@@ -83,9 +83,8 @@ const BackHeader = ({
 							<CText
 								fontStyle="SB"
 								fontSize={17}
-								style={{ color: '#000', width: '65%', textAlign: 'center' }}
+								style={{ color: '#000' }}
 								numberOfLines={1}
-								ellipsizeMode="middle"
 							>
 								{title}
 							</CText>
@@ -143,7 +142,6 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 		pointerEvents: 'none',
-		textAlign: 'center',
 	},
 
 	rightButtonContainer: {
@@ -159,4 +157,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default BackHeader;
+export default HomeHeader;

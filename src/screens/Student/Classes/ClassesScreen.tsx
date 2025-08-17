@@ -63,7 +63,7 @@ const ClassesScreen = ({ navigation, route }) => {
 
 	const loadFromCache = useCallback(async () => {
 		if (!user?.id) return;
-		const { data, date } = await loadClassesFromLocal(user.id);
+		const { data, date } = await loadClassesFromLocal(user.id, acad);
 		if (data) {
 			console.log("classes", data);
 			setAllClasses(data);
@@ -94,7 +94,7 @@ const ClassesScreen = ({ navigation, route }) => {
 
 			setAllClasses(sortedClasses);
 			setClasses(sortedClasses);
-			const savedTime = await saveClassesToLocal(user.id, sortedClasses);
+			const savedTime = await saveClassesToLocal(user.id, sortedClasses, acad);
 			if (savedTime) setLastFetched(savedTime);
 		} catch (err) {
 			handleApiError(err);
@@ -120,7 +120,7 @@ const ClassesScreen = ({ navigation, route }) => {
 	useEffect(() => {
 		const loadData = async () => {
 			await loadFromCache();
-			const { data } = await loadClassesFromLocal(user?.id);
+			const { data } = await loadClassesFromLocal(user?.id, acad);
 			if (!data) {
 				fetchFromApi();
 			}

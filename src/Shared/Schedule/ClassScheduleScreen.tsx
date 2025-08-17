@@ -6,6 +6,7 @@ import { theme } from "../../theme";
 import { useClass } from "../../context/SharedClassContext.tsx";
 import BackHeader from "../../components/layout/BackHeader.tsx";
 import {CText} from "../../components/common/CText.tsx";
+import HomeHeader from "../../components/layout/HomeHeader.tsx";
 
 const dayLabels = { M: 'Monday', T: 'Tuesday', W: 'Wednesday', Th: 'Thursday', F: 'Friday', S: 'Saturday', Su: 'Sunday' };
 
@@ -51,8 +52,9 @@ const ClassScheduleScreen = () => {
 
 	return (
 		<>
-			<BackHeader title="Class Schedule" />
-			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
+			{/*<BackHeader title="Class Schedule" />*/}
+			{/*<HomeHeader title="Class Schedule" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+			<SafeAreaView style={[globalStyles.safeArea2]}>
 				<ScrollView
 					contentContainerStyle={styles.container}
 					refreshControl={

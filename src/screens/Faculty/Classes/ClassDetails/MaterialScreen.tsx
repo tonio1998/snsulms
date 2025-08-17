@@ -24,6 +24,7 @@ import BackgroundWrapper from "../../../../utils/BackgroundWrapper";
 import { NetworkContext } from "../../../../context/NetworkContext.tsx";
 import { getOfflineActivities, saveActivitiesOffline } from "../../../../utils/sqlite/offlineActivityService.ts";
 import {useClass} from "../../../../context/SharedClassContext.tsx";
+import HomeHeader from "../../../../components/layout/HomeHeader.tsx";
 
 const MaterialsScreen = ({ navigation, route }) => {
 	const { classes } = useClass();
@@ -45,6 +46,20 @@ const MaterialsScreen = ({ navigation, route }) => {
 		// { label: 'Exam', value: 4 }
 	];
 
+	const fetchLocalActivities = async () => {
+		try {
+			setLoading(true);
+			const list = await getOfflineActivities({ ClassID });
+			setAllActivities(list);
+			setActivities(list);
+			handleActTypeFilter(actType, list);
+		} catch (err) {
+			handleApiError(err, 'Failed to fetch activities');
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	const fetchActivities = async () => {
 		try {
 			setLoading(true);
@@ -57,8 +72,6 @@ const MaterialsScreen = ({ navigation, route }) => {
 				const res = await getStudentActivities(filter);
 				list = res?.data || [];
 				await saveActivitiesOffline(list, ClassID);
-			} else {
-				list = await getOfflineActivities({ ClassID });
 			}
 
 			setAllActivities(list);
@@ -75,7 +88,7 @@ const MaterialsScreen = ({ navigation, route }) => {
 
 	useFocusEffect(
 		useCallback(() => {
-			if (ClassID) fetchActivities();
+			if (ClassID) fetchLocalActivities();
 		}, [ClassID])
 	);
 
@@ -152,8 +165,9 @@ const MaterialsScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<BackHeader title="Materials" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-				<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
+			{/*<BackHeader title="Materials" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+			{/*<HomeHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+				<SafeAreaView style={[globalStyles.safeArea2]}>
 					<FlatList
 						data={activities}
 						keyExtractor={(item) => item.StudentActivityID.toString()}

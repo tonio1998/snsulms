@@ -65,6 +65,7 @@ import OutlineDetailsScreen from "./src/screens/Faculty/Classes/Outline/OutlineD
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {endSurvey} from "./src/api/testBuilder/testbuilderApi.ts";
 import CreateTestScreen from "./src/Shared/Survey/CreateTestScreen.tsx";
+import QRCodeScreen from "./src/Shared/User/QRCodeScreen.tsx";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -171,6 +172,7 @@ const AppNavigator = () => {
                             <Stack.Screen name="MainTabs" component={BottomTabNav} />
                             <Stack.Screen name="SurveyTest" component={SurveyBottomTabNav} />
                             <Stack.Screen name="CreateTest" component={CreateTestScreen} />
+                            <Stack.Screen name="myQR" component={QRCodeScreen} />
                             {/*<Stack.Screen name="OutlineList" component={OutlineListScreen} options={{ headerShown: false }} />*/}
                             <Stack.Screen name="AddOutline" component={AddOutlineScreen} options={{ headerShown: false }} />
                             <Stack.Screen name="OutlineDetails" component={OutlineDetailsScreen} options={{ headerShown: false }} />
