@@ -28,6 +28,7 @@ import BackHeader from "../../components/layout/BackHeader.tsx";
 import { useLoading } from "../../context/LoadingContext.tsx";
 import { useClass } from "../../context/SharedClassContext.tsx";
 import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx";
+import HomeHeader from "../../components/layout/HomeHeader.tsx";
 
 const PAGE_SIZE = 10;
 
@@ -66,8 +67,6 @@ const WallScreen = ({ navigation }) => {
 	const fetchWall = async (pageToLoad = 1, overwrite = false) => {
 		if (loading) return;
 		setLoading(true);
-		// if (overwrite) showLoading('Please wait...');
-
 		try {
 			const filter = { page: pageToLoad, ClassID };
 			const response = await getWall(filter);
@@ -91,8 +90,6 @@ const WallScreen = ({ navigation }) => {
 			console.error(err);
 		} finally {
 			setLoading(false);
-			// hideLoading();
-			setRefreshing(false);
 		}
 	};
 
@@ -212,7 +209,7 @@ const WallScreen = ({ navigation }) => {
 
 	return (
 		<>
-			<BackHeader title="Wall" />
+			<HomeHeader title="Wall" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
 			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
 				<FlatList
 					data={wall}
@@ -223,11 +220,6 @@ const WallScreen = ({ navigation }) => {
 					}
 					onEndReached={handleEndReached}
 					onEndReachedThreshold={0.5}
-					ListEmptyComponent={
-						<View style={{ padding: 20, alignItems: 'center' }}>
-							<CText fontSize={14} color="#888">No wall posts found</CText>
-						</View>
-					}
 					ListHeaderComponent={() => (
 						<View>
 							{lastFetched && (

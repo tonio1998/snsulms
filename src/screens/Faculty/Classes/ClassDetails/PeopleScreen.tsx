@@ -20,6 +20,7 @@ import { useLoading } from '../../../../context/LoadingContext.tsx';
 import { handleApiError } from '../../../../utils/errorHandler.ts';
 import { useClass } from '../../../../context/SharedClassContext.tsx';
 import {useLoading2} from "../../../../context/Loading2Context.tsx";
+import HomeHeader from "../../../../components/layout/HomeHeader.tsx";
 
 const PeopleScreen = () => {
 	const { classes } = useClass();
@@ -101,8 +102,9 @@ const PeopleScreen = () => {
 
 	return (
 		<>
-			<BackHeader title="People" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-			<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
+			{/*<BackHeader title="People" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+			<HomeHeader title="People" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
+			<SafeAreaView style={[globalStyles.safeArea]}>
 				<View style={{ flex: 1, paddingHorizontal: 16 }}>
 					<View style={{ marginBottom: 10, position: 'relative' }}>
 						<TextInput

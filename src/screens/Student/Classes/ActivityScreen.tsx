@@ -176,8 +176,8 @@ const ActivityScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<BackHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-			<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
+			{/*<BackHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
+			<SafeAreaView style={[globalStyles.safeArea2]}>
 				<FlatList
 					data={activities}
 					keyExtractor={(item, index) => `${item.StudentActivityID}-${index}`}

@@ -104,7 +104,7 @@ export default function BottomTabs() {
 			{hasRole('STUD') && (
 				<>
 					<Tab.Screen name="Classes" component={ClassesStackScreen} />
-					<Tab.Screen name="myQR" component={QRCodeScreen} />
+					{/*<Tab.Screen name="myQR" component={QRCodeScreen} />*/}
 					<Tab.Screen name="Activities" component={ActivitiesScreen} />
 				</>
 			)}

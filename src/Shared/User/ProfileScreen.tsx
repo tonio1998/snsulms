@@ -32,6 +32,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { getAcademicInfo } from '../../utils/getAcademicInfo.ts';
 import { useFocusEffect } from '@react-navigation/native';
 import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx";
+import CButton from "../../components/buttons/CButton.tsx";
 
 export default function ProfileScreen({ navigation }) {
 	const network = useContext(NetworkContext);
@@ -147,9 +148,21 @@ export default function ProfileScreen({ navigation }) {
 		});
 	};
 
+	const handleShowQR = () => {
+		navigation.navigate('myQR');
+	};
+
 	return (
 		<>
-			<BackHeader />
+			<BackHeader rightButton={
+				<CButton
+					type="danger"
+					title="Logout"
+					icon={"log-out-outline"}
+					style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 }}
+					onPress={handleLogout}
+				/>
+			}/>
 			<SafeAreaView style={[globalStyles.safeArea, { flex: 1, padding: 15 }]}>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
@@ -216,34 +229,19 @@ export default function ProfileScreen({ navigation }) {
 									</CText>
 								</>
 							)}
+
+							<View style={{ alignItems: 'center', marginVertical: 10 }}>
+								<CButton
+									title={"Show Digital QR"}
+									icon={"image-outline"}
+									onPress={handleShowQR}
+									type="success"
+								/>
+							</View>
 						</View>
 					</View>
 
-					{/* Logout Button */}
-					<View style={{ alignItems: 'center', marginVertical: 20 }}>
-						{loading ? (
-							<ShimmerPlaceHolder
-								LinearGradient={LinearGradient}
-								style={{ width: 140, height: 40, borderRadius: 20 }}
-								autoRun
-							/>
-						) : (
-							<TouchableOpacity
-								style={styles.logoutButton}
-								onPress={handleLogout}
-								activeOpacity={0.8}
-							>
-								<Icon name="log-out-outline" size={20} color="#fff" />
-								<CText fontSize={16} style={{ marginLeft: 8, color: '#fff' }}>
-									Logout
-								</CText>
-							</TouchableOpacity>
-						)}
-					</View>
-
-					{/* Info Card */}
 					<View style={styles.infoCard}>
-						{/* Academic Year */}
 						<View style={styles.rowSpaceBetween}>
 							<CText fontSize={15} style={styles.label}>
 								Academic Year
@@ -258,7 +256,6 @@ export default function ProfileScreen({ navigation }) {
 							</View>
 						</View>
 
-						{/* Roles */}
 						<View style={styles.rowSpaceBetween}>
 							<CText fontSize={15} style={styles.label}>
 								Roles
@@ -268,7 +265,7 @@ export default function ProfileScreen({ navigation }) {
 							</CText>
 						</View>
 
-						{/* Biometric */}
+
 						{isBiometricSupported && (
 							<View style={styles.rowSpaceBetween}>
 								<CText fontSize={15} style={styles.label}>

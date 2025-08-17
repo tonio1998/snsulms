@@ -99,8 +99,6 @@ const HomeScreen = () => {
 					setDashData(data);
 					setLastUpdated(date);
 					setIsCachedData(true);
-					setLoading(false);
-					return;
 				}
 			}
 			const filter = { AcademicYear: acadStr };
@@ -134,11 +132,9 @@ const HomeScreen = () => {
 	);
 
 	const onRefresh = useCallback(async () => {
-		// setRefreshing(true);
 		const acadInfo = acad ? acadRaw : await getAcademicInfo();
 		const acadStr = acad ? acad : `${acadInfo.semester}@${acadInfo.from}@${acadInfo.to}`;
 		await getDashboardData(acadStr, true);
-		// setRefreshing(false);
 	}, [acad, acadRaw]);
 
 	const renderStudentDashboard = () => {
@@ -290,7 +286,6 @@ const HomeScreen = () => {
 		);
 	};
 
-
 	const buttons = [
 		{ url: 'org.nativescript.snsu://', fallbackUrl: 'https://play.google.com/store/apps/details?id=org.nativescript.snsu', iconSet: 'Ionicons', iconName: 'link-outline', name: 'SNSU' },
 		{ url: 'https://www.snsu.edu.ph/', iconSet: 'Ionicons', iconName: 'globe-outline', name: 'Website' },
@@ -298,7 +293,6 @@ const HomeScreen = () => {
 		{ url: 'https://www.facebook.com/SNSUOfficial', iconSet: 'FontAwesome', iconName: 'facebook', name: 'Facebook' },
 		{ url: 'worklinker://', fallbackUrl: 'https://worklinker.snsu.edu.ph/', iconSet: 'Ionicons', iconName: 'link-outline', name: 'Worklinker' },
 	];
-
 
 	return (
 		<>
@@ -405,7 +399,6 @@ const styles = StyleSheet.create({
 	},
 	noDataContainer: {
 		alignItems: 'center',
-		// backgroundColor: theme.colors.light.primary + '11',
 		padding: 16,
 		borderRadius: 8,
 		marginTop: 16,
@@ -431,7 +424,6 @@ const styles = StyleSheet.create({
 		shadowColor: '#000',
 		shadowOpacity: 0.05,
 		shadowRadius: 5,
-		// elevation: 2,
 	},
 	iconCircle: {
 		width: 40,
@@ -467,7 +459,6 @@ const styles = StyleSheet.create({
 	},
 	summaryCardSmall: {
 		width: Dimensions.get('window').width * 0.60,
-		// padding: 5,
 		borderRadius: 8,
 	},
 	section: {

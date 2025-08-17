@@ -108,6 +108,7 @@ const styles = StyleSheet.create({
     wrapper: {
         justifyContent: 'center',
         alignItems: 'center',
+        paddingVertical: 10,
     },
     container: {
         width: 50,

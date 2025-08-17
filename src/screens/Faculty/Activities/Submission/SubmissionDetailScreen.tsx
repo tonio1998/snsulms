@@ -32,10 +32,12 @@ import {
 	fetchStudentSubmissions,
 	saveStudentGrade
 } from '../../../../api/modules/submissionApi.ts';
-import {fetchStudentActivitySubmissions} from "../../../../utils/cache/Faculty/localActivitySubmission";
+import {
+	fetchStudentActivitySubmissions,
+} from "../../../../utils/cache/Faculty/localActivitySubmission";
 import {
 	loadStudentActivityToLocal,
-	saveStudentActivityToLocal
+	saveStudentActivityToLocal, updateStudentActivitySubmission
 } from "../../../../utils/cache/Student/localStudentActivity";
 import {LastUpdatedBadge} from "../../../../components/common/LastUpdatedBadge";
 import {getStudenActivityDetails} from "../../../../api/modules/activitiesApi.ts";
@@ -57,13 +59,13 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 	const [lastFetched, setLastFetched] = useState(null);
 
 	const fetchLocal = async () => {
-		const local = await loadStudentActivityToLocal(StudentActivityID);
-		if (local?.data) {
-			console.log('local?.data: ',local?.data)
-			setSubmission(local?.data);
-			setAttachment(local?.data?.st_attachments || []);
-			setLastFetched(local?.date);
-			setGradeInput(local?.data.Grade ? local?.data.Grade.toString() : '');
+		const local = await fetchStudentActivitySubmissions(ActivityID, StudentActivityID);
+		console.log('local?.data: ',local)
+		if (local) {
+			console.log('local?.data: ',local)
+			setSubmission(local);
+			setAttachment(local?.st_attachments || []);
+			setGradeInput(local?.Grade ? local.Grade.toString() : '');
 		}else{
 			await fetchData();
 		}
@@ -78,7 +80,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 				...res,
 				activities: Array.isArray(res.activities) ? res.activities : [],
 			};
-			console.log('res: ', res)
+			// console.log('res: ', res)
 			setSubmission(normalized);
 			setGradeInput(res?.Grade ? res.Grade.toString() : '');
 			const now = await saveStudentActivityToLocal(StudentActivityID, res);
@@ -222,50 +224,38 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 								</View>
 							</ScrollView>
 
-							{submission?.SubmissionType === 'Submitted' ? (
-								<View style={styles.fixedGradeInput}>
-									<View style={globalStyles.cardRow}>
-										<CText fontStyle="SB" fontSize={16} style={{ marginBottom: 8 }}>
-											Enter Score
-										</CText>
-										<CText fontStyle="SB" fontSize={16} style={{ marginBottom: 8 }}>
-											Point: {submission?.activity?.Points}
-										</CText>
-									</View>
-
-									<View style={styles.inputRow}>
-										<TextInput
-											style={styles.flexGradeInput}
-											value={gradeInput}
-											keyboardType="numeric"
-											onChangeText={setGradeInput}
-											placeholder="e.g. 100"
-											placeholderTextColor="#999"
-										/>
-										<TouchableOpacity
-											style={styles.iconButton}
-											onPress={handleSubmitGrade}
-											disabled={submitting}
-										>
-											<Icon
-												name={submitting ? 'cloud-upload-outline' : 'checkmark-circle-outline'}
-												size={24}
-												color="#fff"
-											/>
-										</TouchableOpacity>
-									</View>
+							<View style={styles.fixedGradeInput}>
+								<View style={globalStyles.cardRow}>
+									<CText fontStyle="SB" fontSize={16} style={{ marginBottom: 8 }}>
+										Enter Score
+									</CText>
+									<CText fontStyle="SB" fontSize={16} style={{ marginBottom: 8 }}>
+										Point: {submission?.activity?.Points}
+									</CText>
 								</View>
-							) : (
-								<>
-									<View style={styles.fixedGradeInput}>
-										<View>
-											<CText fontStyle="SB" fontSize={16} style={{ marginBottom: 8, textAlign: 'center', color: theme.colors.light.danger }}>
-												No submissions yet.
-											</CText>
-										</View>
-									</View>
-								</>
-							)}
+
+								<View style={styles.inputRow}>
+									<TextInput
+										style={styles.flexGradeInput}
+										value={gradeInput}
+										keyboardType="numeric"
+										onChangeText={setGradeInput}
+										placeholder="e.g. 100"
+										placeholderTextColor="#999"
+									/>
+									<TouchableOpacity
+										style={styles.iconButton}
+										onPress={handleSubmitGrade}
+										disabled={submitting}
+									>
+										<Icon
+											name={submitting ? 'cloud-upload-outline' : 'checkmark-circle-outline'}
+											size={24}
+											color="#fff"
+										/>
+									</TouchableOpacity>
+								</View>
+							</View>
 						</SafeAreaView>
 					</View>
 				</TouchableWithoutFeedback>

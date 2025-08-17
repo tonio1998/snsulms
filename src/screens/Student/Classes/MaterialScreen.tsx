@@ -1,95 +1,91 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-	View,
-	FlatList,
-	Text,
-	ActivityIndicator,
-	TouchableOpacity,
-	RefreshControl,
-	SafeAreaView,
-	Image,
-	StyleSheet,
-	ScrollView,
+	View, FlatList, RefreshControl, SafeAreaView,
+	ScrollView, TouchableOpacity, StyleSheet, Text,
 } from 'react-native';
 import { globalStyles } from '../../../theme/styles.ts';
 import { theme } from '../../../theme';
-import { handleApiError } from '../../../utils/errorHandler.ts';
 import { useLoading } from '../../../context/LoadingContext.tsx';
-import { useFocusEffect } from '@react-navigation/native';
 import { CText } from '../../../components/common/CText.tsx';
-import { getStudentActivities } from "../../../api/modules/activitiesApi.ts";
-import { formatDate } from "../../../utils/dateFormatter";
-import BackHeader from "../../../components/layout/BackHeader.tsx";
-import BackgroundWrapper from "../../../utils/BackgroundWrapper";
-import { NetworkContext } from "../../../context/NetworkContext.tsx";
-import { getOfflineActivities, saveActivitiesOffline } from "../../../utils/sqlite/offlineActivityService.ts";
+import { getStudentActivities } from '../../../api/modules/activitiesApi.ts';
+import { formatDate } from '../../../utils/dateFormatter';
+import BackHeader from '../../../components/layout/BackHeader.tsx';
+import Icon from "react-native-vector-icons/Ionicons";
+import {
+	loadStudentClassActivitiesCache,
+	saveStudentClassActivitiesCache
+} from "../../../utils/cache/Student/localstudentActivitiesCache.ts";
+import {useAuth} from "../../../context/AuthContext.tsx";
+import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
+import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
 
-const MaterialsScreen = ({ navigation, route }) => {
+const StudentMaterialScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
-	const Type = route.params.type;
-	const network = useContext(NetworkContext);
+	const { user } = useAuth();
+	const [allActivities, setAllActivities] = useState([]);
 	const [activities, setActivities] = useState([]);
+	const [actType, setActType] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
+	const [expandedId, setExpandedId] = useState(null);
 	const { showLoading, hideLoading } = useLoading();
-	const [actType, setActType] = useState(1);
-	const [allActivities, setAllActivities] = useState([]);
+	const [lastFetched, setLastFetched] = useState(null);
 
-	const activityTypes = [
-		// { label: 'All', value: '' },
-		{ label: 'Resource', value: 1 },
-		// { label: 'Assignment', value: 2 },
-		// { label: 'Quiz', value: 3 },
-		// { label: 'Exam', value: 4 }
+	const types = [
+		{ label: 'Materials', value: 1 },
 	];
 
+	const filterActivities = (type, list = allActivities) => {
+		setActivities(list.filter(item => item.activity.ActivityTypeID === 1));
+	};
+
 	const fetchActivities = async () => {
+		if (loading || !ClassID) return;
 		try {
 			setLoading(true);
-			showLoading('Loading activities...');
-
-			let list = [];
-			const filter = { page: 1, search: '', ClassID };
-
-			if (network?.isOnline) {
-				const res = await getStudentActivities(filter);
-				list = res?.data || [];
-				await saveActivitiesOffline(list, ClassID);
-			} else {
-				list = await getOfflineActivities({ ClassID });
-			}
-
+			const res = await getStudentActivities({ page: 1, search: '', ClassID });
+			const list = res?.data ?? [];
+			console.log("🔍 Fetched activities", list);
 			setAllActivities(list);
-			setActivities(list);
-			handleActTypeFilter(actType, list);
-
+			filterActivities(actType, list);
+			const date = await saveStudentClassActivitiesCache(ClassID, user?.id, list);
+			if (date) setLastFetched(date);
 		} catch (err) {
-			handleApiError(err, 'Failed to fetch activities');
+			console.error('❌ Error loading activities:', err);
 		} finally {
 			setLoading(false);
 			hideLoading();
 		}
 	};
 
-	useFocusEffect(
-		useCallback(() => {
-			if (ClassID) fetchActivities();
-		}, [ClassID])
-	);
+	const loadCachedActivities = async () => {
+		if (!ClassID) return;
+		try {
+			const { data, date } = await loadStudentClassActivitiesCache(ClassID, user?.id);
+			if (data && data.length > 0) {
+				setAllActivities(data);
+				filterActivities(actType, data);
+			}
 
-	const handleRefresh = async () => {
-		setRefreshing(true);
-		await fetchActivities();
-		setRefreshing(false);
+			if (date) setLastFetched(date);
+		} catch (err) {
+			console.error('Error loading cached activities:', err);
+			fetchActivities();
+		}
 	};
 
-	const handleActTypeFilter = (type, list = allActivities) => {
-		setActType(type);
-		if (!type) {
-			setActivities(list);
-		} else {
-			setActivities(list.filter(item => item.activity.ActivityTypeID === type));
-		}
+	useEffect(() => {
+		loadCachedActivities();
+	}, [ClassID]);
+
+	const handleRefresh = async () => {
+		setLoading(true);
+		await fetchActivities();
+		setLoading(false);
+	};
+
+	const toggleExpand = (id) => {
+		setExpandedId(prev => (prev === id ? null : id));
 	};
 
 	const handleViewAct = (StudentActivityID, Title) => {
@@ -100,76 +96,67 @@ const MaterialsScreen = ({ navigation, route }) => {
 		});
 	};
 
-	const renderItem = ({ item }) => (
-		<TouchableOpacity style={styles.card}
-						  onPress={() => handleViewAct(item.StudentActivityID, item.activity.Title)}
-		>
-			<View style={{ padding: 16 }}>
-				<CText fontSize={16} fontStyle="SB" style={{ color: '#000' }}>
-					{item?.activity?.Title}
-				</CText>
-				<CText fontSize={14} style={{ color: '#444', marginTop: 4 }}>
-					{item?.activity?.Description}
-				</CText>
-				<View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-					<CText fontSize={12} style={{ color: '#777' }}>
-						Due: {formatDate(item?.activity?.DueDate)}
-					</CText>
-					<CText fontSize={12} style={{ color: '#777' }}>
-						Created: {formatDate(item?.activity?.created_at, 'relative')}
-					</CText>
-				</View>
-			</View>
-		</TouchableOpacity>
-	);
+	const renderItem = ({ item }) => {
+		const act = item.activity;
+		const isExpanded = expandedId === item.StudentActivityID;
+		const submitted = item?.SubmissionType === 'Submitted';
+		const submissionText = item?.SubmissionType ?? 'Not Submitted';
+		const submittedDate = item?.DateSubmitted ? ` • ${formatDate(item.DateSubmitted)}` : '';
 
-	const renderFilterHeader = () => (
-		<ScrollView
-			horizontal
-			showsHorizontalScrollIndicator={false}
-			style={{ paddingHorizontal: 10, marginBottom: 10 }}
-		>
-			<View style={{ flexDirection: 'row', gap: 8, marginHorizontal: 20 }}>
-				{activityTypes.map((type, idx) => (
-					<TouchableOpacity
-						key={idx}
-						onPress={() => handleActTypeFilter(type.value)}
-						style={[
-							styles.filterBtn,
-							actType === type.value && styles.activeFilterBtn
-						]}
-					>
-						<CText style={{ color: actType === type.value ? '#fff' : '#000' }} fontStyle="SB">
-							{type.label}
-						</CText>
-					</TouchableOpacity>
-				))}
-			</View>
-		</ScrollView>
-	);
+		return (
+			<TouchableOpacity
+				style={styles.card}
+				onPress={() => toggleExpand(item.StudentActivityID)}
+				activeOpacity={0.9}
+			>
+				<View style={styles.cardInner}>
+					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+						<CText fontSize={16} fontStyle="SB">{act?.Title}</CText>
+					</View>
+					{act?.Description && (
+						<CText fontSize={14} style={styles.desc}>{act?.Description}</CText>
+					)}
+					{isExpanded && (
+						<>
+							<View style={[styles.dateRow, { marginTop: 6 }]}>
+								<CText fontSize={13} fontStyle={'SB'} style={{ color: submitted ? theme.colors.light.success : theme.colors.light.danger }}>
+									{submissionText}{submittedDate}
+								</CText>
+							</View>
+							<View style={styles.dateRow}>
+								{act?.DueDate && <CText fontSize={12} style={styles.date}>Due: {formatDate(act?.DueDate)}</CText>}
+								{act?.created_at && <CText fontSize={12} style={styles.date}>Created: {formatDate(act?.created_at, 'relative')}</CText>}
+							</View>
+							<TouchableOpacity
+								style={styles.viewBtn}
+								onPress={() => handleViewAct(item.StudentActivityID, item.activity.Title)}
+							>
+								<CText fontStyle="SB" style={{ color: theme.colors.light.primary }}>View</CText>
+							</TouchableOpacity>
+						</>
+					)}
+				</View>
+			</TouchableOpacity>
+		);
+	};
 
 	return (
 		<>
-			<BackHeader title="Materials" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
-				<SafeAreaView style={[globalStyles.safeArea, { flex: 1 }]}>
-					<FlatList
-						data={activities}
-						keyExtractor={(item) => item.StudentActivityID.toString()}
-						renderItem={renderItem}
-						// ListHeaderComponent={renderFilterHeader}
-						contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
-						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-						ListEmptyComponent={
-							!loading && (
-								<View style={{ padding: 20, alignItems: 'center' }}>
-									<CText fontSize={14} style={{ color: '#888' }}>
-										No materials found
-									</CText>
-								</View>
-							)
-						}
-					/>
-				</SafeAreaView>
+			<SafeAreaView style={[globalStyles.safeArea2]}>
+
+				<FlatList
+					data={activities}
+					keyExtractor={(item, index) => `${item.StudentActivityID}-${index}`}
+					renderItem={renderItem}
+					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+					contentContainerStyle={styles.listContent}
+					ListEmptyComponent={!loading && (
+						<View style={styles.empty}>
+							<CText fontSize={14} style={styles.emptyText}>No activities found</CText>
+						</View>
+					)}
+				/>
+			</SafeAreaView>
 		</>
 	);
 };
@@ -177,22 +164,69 @@ const MaterialsScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
 	card: {
 		backgroundColor: theme.colors.light.card,
-		borderRadius: 8,
-		marginBottom: 12,
+		borderRadius: theme.radius.sm,
+		marginBottom: 14,
 		borderWidth: 1,
-		borderColor: '#ddd'
+		borderColor: '#e2e2e2',
+		elevation: 1,
+	},
+	cardInner: {
+		padding: 16,
+	},
+	desc: {
+		color: '#444',
+		marginTop: 6,
+	},
+	dateRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		marginTop: 12,
+	},
+	date: {
+		color: '#777',
+	},
+	filterScroll: {
+		paddingHorizontal: 10,
+		marginBottom: 10,
+	},
+	filterRow: {
+		flexDirection: 'row',
+		gap: 8,
+		marginHorizontal: 20,
 	},
 	filterBtn: {
-		backgroundColor: '#ccc',
+		backgroundColor: '#F8F8F8',
+		borderWidth: 1,
+		borderColor: '#e1e1e1',
 		paddingHorizontal: 14,
 		paddingVertical: 8,
 		borderRadius: 20,
 		minHeight: 35,
 		justifyContent: 'center',
 	},
-	activeFilterBtn: {
+	activeBtn: {
 		backgroundColor: theme.colors.light.primary,
+	},
+	empty: {
+		padding: 20,
+		alignItems: 'center',
+	},
+	emptyText: {
+		color: '#888',
+	},
+	listContent: {
+		padding: 10,
+		paddingBottom: 100,
+	},
+	viewBtn: {
+		marginTop: 10,
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+		borderRadius: theme.radius.xs,
+		borderWidth: 1,
+		borderColor: theme.colors.light.primary,
+		alignSelf: 'flex-start',
 	},
 });
 
-export default MaterialsScreen;
+export default StudentMaterialScreen;

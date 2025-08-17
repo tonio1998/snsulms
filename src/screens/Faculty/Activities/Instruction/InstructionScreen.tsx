@@ -104,8 +104,14 @@ const InstructionScreen = ({ navigation, route }) => {
 					<CText fontSize={12} style={styles.label}>Topic: {activity?.topic?.Title}</CText>
 				)}
 				<CText fontSize={16} fontStyle="SB" style={styles.title}>{activity?.Title}</CText>
-				<CText fontSize={12} style={styles.label}>Instruction:</CText>
-				<CText style={styles.text}>{activity?.Description}</CText>
+				{activity?.Description && (
+					<>
+						<CText fontSize={12} style={styles.label}>
+							Instruction:
+						</CText>
+						<CText style={styles.text}>{activity?.Description}</CText>
+					</>
+				)}
 				{activity?.DueDate && (
 					<>
 						<CText fontSize={12} style={styles.label}>Due Date:</CText>

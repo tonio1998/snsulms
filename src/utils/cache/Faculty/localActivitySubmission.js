@@ -21,7 +21,6 @@ export const saveActivitySubmissionToLocal = async (ActivityID, data) => {
     }
 };
 
-
 export const saveStudentActivitySubmissionToLocal = async (ActivityID, data) => {
     if (!ActivityID) return null;
     const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(ActivityID);

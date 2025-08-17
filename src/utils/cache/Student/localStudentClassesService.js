@@ -1,12 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const getCacheKeys = (userId) => ({
-    CACHE_KEY: `classes_cache_${userId}`,
-    CACHE_DATE_KEY: `classes_cache_date_${userId}`,
+const getCacheKeys = (userId, acad) => ({
+    CACHE_KEY: `classes_cache_${userId}_${acad}`,
+    CACHE_DATE_KEY: `classes_cache_date_${userId}_${acad}`,
 });
 
-export const saveClassesToLocal = async (userId, data) => {
+export const saveClassesToLocal = async (userId, data, acad) => {
     if (!userId) return null;
-    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(userId);
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(userId, acad);
 
     try {
         const now = new Date();
@@ -19,9 +19,9 @@ export const saveClassesToLocal = async (userId, data) => {
     }
 };
 
-export const loadClassesFromLocal = async (userId) => {
+export const loadClassesFromLocal = async (userId, acad) => {
     if (!userId) return { data: null, date: null };
-    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(userId);
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(userId, acad);
 
     try {
         const dataStr = await AsyncStorage.getItem(CACHE_KEY);

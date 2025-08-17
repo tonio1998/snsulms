@@ -312,6 +312,16 @@ export const globalStyles = StyleSheet.create({
         paddingTop: 110,
         zIndex: -1,
     },
+    safeArea2: {
+        flex: 1,
+        // paddingBottom: 50,
+        // paddingHorizontal: 15,
+        // position: 'relative',
+        // marginTop: 90,
+        backgroundColor: theme.colors.light.background,
+        paddingTop: 0,
+        zIndex: -1,
+    },
     picker: {
         height: 50,
         borderWidth: 1,
