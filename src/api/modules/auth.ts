@@ -42,3 +42,4 @@ export const fetchGenericData = async (endpoint: string) => {
     const res = await api.get(`/background/${endpoint}?AYFrom=${AYFrom}&AYTo=${AYTo}&Semester=${Semester}`);
     return res.data;
 };
+

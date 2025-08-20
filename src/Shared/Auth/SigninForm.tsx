@@ -18,7 +18,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAuth } from '../../context/AuthContext.tsx';
 import { useLoading } from '../../context/LoadingContext.tsx';
-import { useAlert } from '../../components/CAlert.tsx';
 import { loginWithBiometric } from '../../hooks/useBiometrics.ts';
 import { authLogin, loginWithGoogle } from '../../api/modules/auth.ts';
 import { globalStyles } from '../../theme/styles.ts';
@@ -29,11 +28,10 @@ import { GOOGLE_CLIENT_ID } from '../../../env.ts';
 import { handleApiError } from '../../utils/errorHandler.ts';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import * as Keychain from 'react-native-keychain';
-import NetInfo from '@react-native-community/netinfo';
-import BackHeader from '../../components/layout/BackHeader.tsx';
 import { NetworkContext } from '../../context/NetworkContext.tsx';
 import bcrypt from 'bcryptjs';
 import checkBiometricSupport from '../../services/checkBiometricSupport.ts';
+import BackHeader from '../../components/layout/BackHeader.tsx';
 
 GoogleSignin.configure({
 	webClientId: GOOGLE_CLIENT_ID,
@@ -43,7 +41,7 @@ GoogleSignin.configure({
 
 const SigninForm = ({ navigation }: any) => {
 	const { isOnline } = useContext(NetworkContext);
-	const isDarkMode = useColorScheme() === 'light';
+	const isDarkMode = useColorScheme() === 'dark';
 	const colors = theme.colors[isDarkMode ? 'dark' : 'light'];
 
 	const { showLoading, hideLoading } = useLoading();
@@ -58,8 +56,8 @@ const SigninForm = ({ navigation }: any) => {
 
 	useEffect(() => {
 		(async () => {
-			await initBiometric();
-			await checkSession();
+			// await initBiometric();
+			// await checkSession();
 		})();
 	}, []);
 
@@ -153,8 +151,8 @@ const SigninForm = ({ navigation }: any) => {
 			const userInfo = await GoogleSignin.signIn();
 			const tokens = await GoogleSignin.getTokens();
 			const accessToken = tokens.accessToken;
-			const user = userInfo?.data?.user;
-			const idToken = userInfo?.data?.idToken;
+			const user = userInfo?.user;
+			const idToken = userInfo?.idToken;
 
 			showLoading('Logging in...');
 			await AsyncStorage.setItem(`googleAccessToken${user?.email}`, accessToken);
@@ -167,10 +165,6 @@ const SigninForm = ({ navigation }: any) => {
 			});
 			await loginAuth(response.data);
 		} catch (error) {
-			const message =
-				error?.response?.data?.message ||
-				error?.message ||
-				'Something went wrong during Google login.';
 			Alert.alert('Login Failed', 'Something went wrong during Google login.');
 			handleApiError(error, 'Google Login');
 		} finally {
@@ -191,7 +185,7 @@ const SigninForm = ({ navigation }: any) => {
 	};
 
 	return (
-		<SafeAreaView style={{ flex: 1, backgroundColor: colors.card }}>
+		<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 0}]}>
 			<KeyboardAvoidingView
 				style={{ flex: 1 }}
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -204,93 +198,80 @@ const SigninForm = ({ navigation }: any) => {
 				>
 					<BackHeader />
 					<View style={styles.topSection}>
-						<CText fontSize={38} fontStyle="B" style={{ color: colors.primary }}>
+						<CText fontSize={40} fontStyle="B" style={{ color: colors.primary }}>
 							Sign In
 						</CText>
-						<CText style={{ color: '#000' }}>Sign in to continue</CText>
+						<CText fontSize={16} style={{ color: '#000', marginTop: 6 }}>
+							Access your account
+						</CText>
 					</View>
 
-					<View style={{ padding: 24 }}>
+					<View style={{ paddingHorizontal: 24, marginTop: 40 }}>
 						{/* Email */}
-						<CText fontSize={16} style={styles.label}>
-							Email
+						<CText fontSize={14} style={styles.label}>
+							Email or Phone
 						</CText>
 						<TextInput
 							placeholder="Enter email or phone"
-							placeholderTextColor="#888"
+							placeholderTextColor="#AAA"
 							value={email}
-							onChangeText={(text) => {
-								setEmailOrPhone(text);
-								setEmailError('');
-							}}
+							onChangeText={(text) => { setEmailOrPhone(text); setEmailError(''); }}
 							style={[styles.input, emailError && styles.inputError]}
 							keyboardType="email-address"
 							autoCapitalize="none"
 						/>
-						{emailError ? <CText style={styles.errorText}>{emailError}</CText> : null}
+						{emailError && <CText style={styles.errorText}>{emailError}</CText>}
 
 						{/* Password */}
-						<CText fontSize={16} style={styles.label}>
+						<CText fontSize={14} style={styles.label}>
 							Password
 						</CText>
 						<TextInput
 							placeholder="Enter password"
-							placeholderTextColor="#888"
+							placeholderTextColor="#AAA"
 							secureTextEntry
 							value={password}
-							onChangeText={(text) => {
-								setPassword(text);
-								setPasswordError('');
-							}}
+							onChangeText={(text) => { setPassword(text); setPasswordError(''); }}
 							style={[styles.input, passwordError && styles.inputError]}
 							autoCapitalize="none"
 						/>
-						{passwordError ? <CText style={styles.errorText}>{passwordError}</CText> : null}
+						{passwordError && <CText style={styles.errorText}>{passwordError}</CText>}
 
-						{/* Submit */}
+						{/* Sign In Button */}
 						<TouchableOpacity
 							style={[styles.button, globalStyles.shadowBtn]}
 							onPress={handleLogin}
 							activeOpacity={0.8}
 							disabled={loading}
 						>
-							{loading ? (
-								<ActivityIndicator color={colors.primary} />
-							) : (
-								<CText fontSize={16} style={styles.buttonText}>
-									Sign In
-								</CText>
-							)}
+							{loading ? <ActivityIndicator color="#fff" /> : <CText fontSize={16} style={styles.buttonText}>Sign In</CText>}
 						</TouchableOpacity>
 
 						{/* Divider */}
 						<View style={styles.dividerContainer}>
 							<View style={styles.divider} />
-							<Text style={styles.dividerText}>or with</Text>
+							<CText fontSize={12} style={styles.dividerText}>
+								OR
+							</CText>
 							<View style={styles.divider} />
 						</View>
 
-						{/* Social Login */}
+						{/* Social & Biometric */}
 						<View style={styles.socialButtons}>
-							<TouchableOpacity
-								onPress={handleGoogleLogin}
-								style={[globalStyles.socialButton, styles.socialBtn]}
-							>
-								<Icon name="logo-google" size={24} color="#DB4437" />
+							<TouchableOpacity onPress={handleGoogleLogin} style={[styles.socialBtn]}>
+								<Icon name="logo-google" size={28} color="#DB4437" />
 								<CText style={styles.socialLabel}>Google</CText>
 							</TouchableOpacity>
 
 							{isBiometricEnabled && (
-								<TouchableOpacity
-									onPress={handleBiometricLogin}
-									style={[globalStyles.socialButton, styles.socialBtn]}
-								>
-									<Icon name="finger-print" size={36} color={colors.primary} />
+								<TouchableOpacity onPress={handleBiometricLogin} style={[styles.socialBtn]}>
+									<Icon name="finger-print" size={32} color={colors.primary} />
 								</TouchableOpacity>
 							)}
 						</View>
 					</View>
 				</ImageBackground>
+
 			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
@@ -303,11 +284,22 @@ const styles = StyleSheet.create({
 	topSection: {
 		alignItems: 'center',
 		marginTop: 120,
+		marginBottom: 20,
+	},
+	formContainer: {
+		marginHorizontal: 20,
+		padding: 24,
+		borderRadius: 20,
+		elevation: 5,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.15,
+		shadowRadius: 8,
 	},
 	input: {
 		height: 50,
 		backgroundColor: '#F5F5F5',
-		borderRadius: 10,
+		borderRadius: 12,
 		paddingHorizontal: 16,
 		fontSize: 16,
 		marginBottom: 14,
@@ -319,7 +311,7 @@ const styles = StyleSheet.create({
 		backgroundColor: '#FFF0F0',
 	},
 	label: {
-		color: '#000',
+		color: '#333',
 		fontWeight: '600',
 		marginBottom: 6,
 	},
@@ -332,9 +324,8 @@ const styles = StyleSheet.create({
 	button: {
 		backgroundColor: theme.colors.light.primary,
 		paddingVertical: 14,
-		borderRadius: theme.radius.sm,
+		borderRadius: 12,
 		marginBottom: 20,
-		width: '100%',
 		alignItems: 'center',
 	},
 	buttonText: {
@@ -345,7 +336,7 @@ const styles = StyleSheet.create({
 	dividerContainer: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginVertical: 30,
+		marginVertical: 20,
 	},
 	divider: {
 		flex: 1,
@@ -355,7 +346,7 @@ const styles = StyleSheet.create({
 	dividerText: {
 		marginHorizontal: 10,
 		color: '#aaa',
-		fontSize: 13,
+		fontWeight: '500',
 	},
 	socialButtons: {
 		flexDirection: 'row',
@@ -365,9 +356,13 @@ const styles = StyleSheet.create({
 	socialBtn: {
 		borderWidth: 1,
 		borderColor: '#ccc',
+		padding: 12,
+		borderRadius: 12,
+		alignItems: 'center',
+		width: 100,
 	},
 	socialLabel: {
-		color: '#DB4437',
+		color: '#333',
 		fontSize: 12,
 		fontWeight: 'bold',
 		marginTop: 5,

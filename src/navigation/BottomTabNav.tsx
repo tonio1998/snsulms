@@ -18,6 +18,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TestBuilderScreen from "../Shared/Survey/TestBuilderScreen.tsx";
 import CalendarScreen from "../Shared/CalendarScreen.tsx";
 import SchedulesScreen from "../Shared/Schedule/SchedulesScreen.tsx";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 const ClassesStack = createNativeStackNavigator();
 const FacClassesStack = createNativeStackNavigator();
@@ -29,6 +30,7 @@ const currentColors = theme.colors.light;
 export default function BottomTabs() {
 	const { hasRole } = useAccess();
 	const { user } = useAuth();
+	const insets = useSafeAreaInsets();
 
 	return (
 		<Tab.Navigator
@@ -41,8 +43,8 @@ export default function BottomTabs() {
 				tabBarInactiveTintColor: '#9F9F9F',
 				tabBarStyle: {
 					backgroundColor: currentColors.card,
-					height: 65,
-					paddingBottom: 10,
+					paddingBottom: insets.bottom,
+					height: 60 + insets.bottom,
 					paddingTop: 4,
 					borderTopColor: '#ccc',
 					borderTopWidth: 1,

@@ -155,13 +155,10 @@ export default function ProfileScreen({ navigation }) {
 	return (
 		<>
 			<BackHeader rightButton={
-				<CButton
-					type="danger"
-					title="Logout"
-					icon={"log-out-outline"}
-					style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 }}
-					onPress={handleLogout}
-				/>
+				<TouchableOpacity onPress={handleLogout} style={{ borderRadius: 8, flexDirection: 'row', alignItems: 'center' }}>
+					<Icon name="log-out-outline" size={23} color={theme.colors.light.danger} />
+					<CText fontSize={17} style={{ marginLeft: 5, color: theme.colors.light.danger }}>Logout</CText>
+				</TouchableOpacity>
 			}/>
 			<SafeAreaView style={[globalStyles.safeArea, { flex: 1, padding: 15 }]}>
 				<ScrollView
@@ -232,7 +229,7 @@ export default function ProfileScreen({ navigation }) {
 
 							<View style={{ alignItems: 'center', marginVertical: 10 }}>
 								<CButton
-									title={"Show Digital QR"}
+									title={"Generate QR Code"}
 									icon={"image-outline"}
 									onPress={handleShowQR}
 									type="success"
@@ -261,7 +258,7 @@ export default function ProfileScreen({ navigation }) {
 								Roles
 							</CText>
 							<CText fontSize={15} style={{ fontWeight: 'bold', color: '#444' }}>
-								{roles?.map((r) => r.toUpperCase()).join(', ')}
+								{roles?.map((r) => r?.toUpperCase()).join(', ')}
 							</CText>
 						</View>
 

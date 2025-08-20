@@ -11,7 +11,7 @@ import {
 	Animated,
 	Easing,
 	Dimensions,
-	ActivityIndicator,
+	ActivityIndicator, Alert,
 } from 'react-native';
 import { globalStyles } from '../../../../theme/styles.ts';
 import { theme } from '../../../../theme';
@@ -28,22 +28,38 @@ import ProgressBar from "../../../../components/common/ProgressBar.tsx";
 import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
 import FabMenu from "../../../../components/buttons/FabMenu.tsx";
 import HomeHeader from "../../../../components/layout/HomeHeader.tsx";
+import DonutProgress from "../../../../components/common/DonutProgress.tsx";
 
 const { height } = Dimensions.get('window');
 
 const ActivityCard = React.memo(({ item, onPress }) => (
-	<TouchableOpacity style={styles.card} onPress={() => onPress(item.Title, item.ActivityID)} activeOpacity={0.5}>
-		<View style={styles.cardInner}>
-			<CText fontSize={17} fontStyle="SB" style={styles.cardTitle}>{item?.Title}</CText>
+	<TouchableOpacity
+		style={globalStyles.card}
+		onPress={() => onPress(item.Title, item.ActivityID)}
+		activeOpacity={0.5}
+		onLongPress={() => Alert.alert("Long Press!", "You held the button")}
+		delayLongPress={800}
+	>
+		<View style={globalStyles.cardInner}>
+			<CText fontSize={17} fontStyle="SB" style={globalStyles.cardTitle}>{item?.Title}</CText>
 			{item?.Description?.trim() !== '' && (
-				<CText fontSize={14} style={styles.cardDesc} numberOfLines={2}>{item?.Description}</CText>
+				<CText fontSize={14} style={globalStyles.cardDesc} numberOfLines={2}>{item?.Description}</CText>
 			)}
-			<ProgressBar percent={item?.CompletedPercent || 0} />
-			<View style={styles.cardFooter}>
+			<View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
+				<DonutProgress
+					percentage={item?.CompletedPercent}
+					radius={16}
+					strokeWidth={4}
+					percentTextSize={10}
+					strokeColor={theme.colors.light.warning}
+				/>
+				<CText fontSize={12} style={globalStyles.cardMeta}>have submitted</CText>
+			</View>
+			<View style={globalStyles.cardFooter}>
 				{item?.DueDate && (
-					<CText fontSize={12} style={styles.cardMeta}>Due: {formatDate(item?.DueDate)}</CText>
+					<CText fontSize={12} style={globalStyles.cardMeta}>Due: {formatDate(item?.DueDate)}</CText>
 				)}
-				<CText fontSize={12} style={styles.cardMeta}>Created: {formatDate(item?.created_at, 'relative')}</CText>
+				<CText fontSize={12} style={globalStyles.cardMeta}>Created: {formatDate(item?.created_at, 'relative')}</CText>
 			</View>
 		</View>
 	</TouchableOpacity>
@@ -151,20 +167,11 @@ const ActivityScreen = ({ navigation }) => {
 					})}
 				</View>
 			</ScrollView>
-			<View>
-				{loading && (
-					<>
-						<ActivityIndicator2 />
-					</>
-				)}
-			</View>
 		</>
 	);
 
 	return (
 		<>
-			{/*<BackHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
-			{/*<HomeHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
 			<SafeAreaView style={[globalStyles.safeArea2]}>
 				{loading && (
 					<>
@@ -190,7 +197,7 @@ const ActivityScreen = ({ navigation }) => {
 				/>
 
 				<FabMenu
-					fabColor={theme.colors.light.primary}
+					fabColor={theme.colors.light.warning}
 					fabIcon="add"
 					iconColor="#fff"
 					iconSize={28}
@@ -252,12 +259,6 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		elevation: 6,
 	},
-	card: { backgroundColor: '#fff', borderRadius: theme.radius.md, padding: 16, marginBottom: 14, shadowColor: '#000', shadowOpacity: 0.08, shadowOffset: { width: 0, height: 2 }, shadowRadius: 4, elevation: 2 },
-	cardInner: {},
-	cardTitle: { fontSize: 17, color: '#111', marginBottom: 6 },
-	cardDesc: { fontSize: 14, color: '#555', lineHeight: 20 },
-	cardFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
-	cardMeta: { fontSize: 12, color: '#888' },
 	filterBtn: { borderRadius: 20, paddingVertical: 8, paddingHorizontal: 20, backgroundColor: '#f3f4f6' },
 	activeFilterBtn: { backgroundColor: theme.colors.light.primary },
 	fab: { position: 'absolute', bottom: 30, right: 20, backgroundColor: theme.colors.light.primary, width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowOffset: { width: 0, height: 4 }, shadowRadius: 6, elevation: 5 },

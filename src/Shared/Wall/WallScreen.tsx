@@ -29,6 +29,8 @@ import { useLoading } from "../../context/LoadingContext.tsx";
 import { useClass } from "../../context/SharedClassContext.tsx";
 import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx";
 import HomeHeader from "../../components/layout/HomeHeader.tsx";
+import SNSULogoDraw from "../../components/loaders/SNSULogoDraw.tsx";
+import {LastUpdatedBadge} from "../../components/common/LastUpdatedBadge";
 
 const PAGE_SIZE = 10;
 
@@ -200,7 +202,7 @@ const WallScreen = ({ navigation }) => {
 
 				{item.MeetLink && (
 					<TouchableOpacity style={styles.gmeetJoinButton} onPress={() => Linking.openURL(item.MeetLink)}>
-						<Icon name="videocam" size={18} color="#188038" />
+						<Icon name="videocam" size={18} color={theme.colors.light.primary} />
 					</TouchableOpacity>
 				)}
 			</View>
@@ -213,7 +215,7 @@ const WallScreen = ({ navigation }) => {
 			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
 				<FlatList
 					data={wall}
-					keyExtractor={(item) => String(item.id) + '_' + item.created_at}
+					keyExtractor={(item) => String(item?.id) + '_' + item?.created_at}
 					renderItem={({ item }) => <PostCard item={item} handleReaction={handleReaction} />}
 					refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[theme.colors.light.primary]} />
@@ -222,13 +224,12 @@ const WallScreen = ({ navigation }) => {
 					onEndReachedThreshold={0.5}
 					ListHeaderComponent={() => (
 						<View>
-							{lastFetched && (
-								<View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
-									<CText fontSize={12}>
-										Last updated: {formatDate(lastFetched, 'MMM dd, yyyy')}
-									</CText>
-								</View>
-							)}
+							<View style={{ paddingHorizontal: 10}}>
+								<LastUpdatedBadge
+									date={lastFetched}
+									onReload={handleRefresh}
+								/>
+							</View>
 							{loading && <ActivityIndicator2 />}
 						</View>
 					)}
@@ -299,14 +300,14 @@ const styles = StyleSheet.create({
 	},
 	gmeetJoinButton: {
 		backgroundColor: theme.colors.light.primary + '18',
-		padding: 6,
-		borderRadius: 10,
+		padding: 8,
+		borderRadius: 8,
 	},
 	floatingButton: {
 		position: 'absolute',
 		bottom: 30,
 		right: 20,
-		backgroundColor: theme.colors.light.primary,
+		backgroundColor: theme.colors.light.warning,
 		borderRadius: 30,
 		width: 55,
 		height: 55,

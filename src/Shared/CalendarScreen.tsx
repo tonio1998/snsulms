@@ -23,6 +23,7 @@ import { theme } from "../theme";
 import CustomHeader2 from "../components/layout/CustomHeader2.tsx";
 import ActivityIndicator2 from "../components/loaders/ActivityIndicator2.tsx";
 import {LastUpdatedBadge} from "../components/common/LastUpdatedBadge";
+import {CText} from "../components/common/CText.tsx";
 
 LocaleConfig.locales['en'] = {
 	monthNames: [
@@ -95,6 +96,7 @@ const CalendarScreen = () => {
 			if (cachedEventsJSON) {
 				const cachedEvents = JSON.parse(cachedEventsJSON);
 				setEvents(cachedEvents);
+				return;
 			}
 
 			const accessToken = await AsyncStorage.getItem(`googleAccessToken${email}`);
@@ -102,6 +104,27 @@ const CalendarScreen = () => {
 
 			const calendarEvents = await fetchGoogleCalendarEvents(accessToken);
 			setEvents(calendarEvents);
+			console.log("🔍 Fetched calendar events", calendarEvents);
+
+			await AsyncStorage.setItem(STORAGE_KEY_PREFIX + email, JSON.stringify(calendarEvents));
+			setLastFetched(new Date());
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setLoading(false);
+		}
+	}, [email]);
+
+	const loadEventsOnline = useCallback(async () => {
+		setLoading(true);
+
+		try {
+			const accessToken = await AsyncStorage.getItem(`googleAccessToken${email}`);
+			if (!accessToken) throw new Error('No Google access token found');
+
+			const calendarEvents = await fetchGoogleCalendarEvents(accessToken);
+			setEvents(calendarEvents);
+			console.log("🔍 Fetched calendar events", calendarEvents);
 
 			await AsyncStorage.setItem(STORAGE_KEY_PREFIX + email, JSON.stringify(calendarEvents));
 			setLastFetched(new Date());
@@ -119,7 +142,7 @@ const CalendarScreen = () => {
 	const onRefresh = async () => {
 		setRefreshing(true);
 		try {
-			await loadEvents();
+			await loadEventsOnline();
 		} catch (error) {
 			console.error(error);
 		} finally {
@@ -233,7 +256,7 @@ const CalendarScreen = () => {
 					<>
 						<ActivityIndicator2 />
 					</>
-				)}
+				)}karong cge
 				<Calendar
 					style={styles.calendar}
 					markedDates={{
@@ -289,6 +312,19 @@ const CalendarScreen = () => {
 								{selectedEvent?.description && (
 									<Text style={styles.modalDescription}>{selectedEvent.description}</Text>
 								)}
+								{selectedEvent?.attendees?.length > 0 && (
+									<>
+										<CText fontSize={14} fontStyle={'SB'} style={{ marginTop: 12, marginBottom: 10 }}>
+											Attendees
+										</CText>
+										{selectedEvent.attendees.map((attendee, index) => (
+											<Text key={index} style={styles.modalAttendee}>
+												{attendee.email}
+											</Text>
+										))}
+									</>
+								)}
+
 							</ScrollView>
 							{meetingLink && (
 								<TouchableOpacity

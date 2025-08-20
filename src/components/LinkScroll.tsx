@@ -3,12 +3,18 @@ import {ScrollView, TouchableOpacity, Text, View, Dimensions, Linking, Alert} fr
 import Icon from "react-native-vector-icons/Ionicons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import {theme} from "../theme";
+import {PAGE_ID} from "../../env.ts";
 
 const screenWidth = Dimensions.get("window").width;
 async function openApp(url: string, fallbackUrl?: string) {
     try {
         const supported = await Linking.canOpenURL(url);
-        if (supported) {
+        if(url === "fb-messenger://user/"){
+            const fburl = `fb-messenger://user/${PAGE_ID}`;
+            Linking.openURL(fburl).catch(() => {
+                Linking.openURL(`https://m.me/${PAGE_ID}`);
+            });
+        }else if (supported) {
             await Linking.openURL(url);
         } else if (fallbackUrl) {
             Alert.alert(
@@ -65,7 +71,7 @@ export default function LinkScroll({ buttons }) {
                                 onPress={() => openApp(url, fallbackUrl)}
                             >
                                 <View style={styles.icon_box}>
-                                    <IconComponent name={iconName} size={24} color={theme.colors.light.text} />
+                                    <IconComponent name={iconName} size={22} color={theme.colors.light.text} />
                                 </View>
                                 <Text numberOfLines={1} style={styles.link_button_text}>
                                     {name}
@@ -100,28 +106,35 @@ export default function LinkScroll({ buttons }) {
 const styles = {
     link_container: {
         // paddingHorizontal: 10,
-        alignItems: "center",
+        paddingBottom: 10,
+        flexDirection: "row",
+        justifyContent: "space-between",
     },
     link_button: {
         alignItems: "center",
         width: 70,
         marginHorizontal: 8,
         padding: 8,
-        borderRadius: 8,
         backgroundColor: "#fff",
+        borderRadius: 8,
+        // elevation: 2,
+        shadowColor: theme.colors.light.primary,
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 1 },
     },
     icon_box: {
-        // backgroundColor: theme.colors.light.primary + '22',
+        backgroundColor: theme.colors.light.primary + '22',
         width: 40,
         height: 40,
-        borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 6,
+        borderRadius: 20,
     },
     link_button_text: {
         color: theme.colors.light.text,
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: "600",
         textAlign: "center",
     },

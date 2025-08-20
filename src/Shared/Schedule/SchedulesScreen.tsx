@@ -145,6 +145,10 @@ const SchedulesScreen = () => {
 								const lunchEnd = getMinutesSinceStart('13:00');
 								const hasLunchClass = daySched.some(cls => !(cls.TimeTo <= '12:00' || cls.TimeFrom >= '13:00'));
 
+								if ((dayKey === "S" || dayKey === "Su") && daySched.length === 0) {
+									return null;
+								}
+
 								return (
 									<View key={dayKey} style={styles.dayColumn}>
 										<View style={styles.headerCell}>
@@ -190,7 +194,15 @@ const SchedulesScreen = () => {
 };
 
 const styles = StyleSheet.create({
-	table: { flexDirection: 'row', borderWidth: 1, borderColor: '#ccc', borderRadius: 6, overflow: 'hidden', backgroundColor: '#fff' },
+	table: {
+		flexDirection: 'row',
+		borderWidth: 1,
+		borderColor: '#ccc',
+		borderRadius: 6,
+		overflow: 'hidden',
+		backgroundColor: '#fff',
+		marginHorizontal: 16,
+	},
 	timeColumn: { borderRightWidth: 1, borderColor: '#ccc' },
 	dayColumn: { borderRightWidth: 1, borderColor: '#ccc', width: 130 },
 	headerCell: { height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.light.primary || '#004D1A', borderBottomWidth: 1, borderColor: '#ccc' },

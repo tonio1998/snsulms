@@ -28,6 +28,7 @@ import { formatDate } from "../../../utils/dateFormatter";
 import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
 import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
 import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
+import DonutProgress from "../../../components/common/DonutProgress.tsx";
 
 const ClassesScreen = ({ navigation, route }) => {
 	const { user } = useAuth();
@@ -109,7 +110,7 @@ const ClassesScreen = ({ navigation, route }) => {
 			setClasses(allClasses);
 		} else {
 			const lower = text.toLowerCase();
-			const filtered = allClasses.filter(item =>
+			const filtered = classes.filter(item =>
 				item?.class_info?.CourseName?.toLowerCase().includes(lower) ||
 				item.teacher?.name?.toLowerCase().includes(lower)
 			);
@@ -118,14 +119,14 @@ const ClassesScreen = ({ navigation, route }) => {
 	};
 
 	useEffect(() => {
-		const loadData = async () => {
-			await loadFromCache();
-			const { data } = await loadClassesFromLocal(user?.id, acad);
-			if (!data) {
-				fetchFromApi();
-			}
-		};
-		loadData();
+		// const loadData = async () => {
+		// 	await loadFromCache();
+		// 	const { data } = await loadClassesFromLocal(user?.id, acad);
+		// 	if (!data) {
+		// 		fetchFromApi();
+		// 	}
+		// };
+		loadFromCache();
 	}, [acad, user?.id]);
 
 
@@ -158,29 +159,42 @@ const ClassesScreen = ({ navigation, route }) => {
 			<View style={styles.accordionCard}>
 				<TouchableOpacity style={styles.accordionHeader} onPress={() => toggleAccordion(item.ClassStudentID)}>
 					<View style={{ flex: 1 }}>
-						<CText fontStyle="SB" fontSize={16} style={styles.courseText}>
-							{classInfo?.CourseCode} - {classInfo?.CourseName}
-						</CText>
-						<Text style={styles.sectionText}>Section: {classInfo?.Section}</Text>
+						<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+							<CText fontStyle="SB" fontSize={14} style={styles.courseText} numberOfLines={1} ellipsizeMode={'middle'}>
+								{classInfo?.CourseCode} - {classInfo?.CourseName}
+							</CText>
+							<View style={{ padding: 10, position: 'absolute', top: 0, right: 2 }}>
+								<DonutProgress
+									percentage={submissionRate.toFixed(0)}
+									radius={16}
+									strokeWidth={4}
+									percentTextSize={8}
+									strokeColor={theme.colors.light.primary}
+								/>
+							</View>
+						</View>
+						<View style={{ flexDirection: 'row', gap: 10 }}>
+							<Text style={styles.sectionText}>Section: {classInfo?.Section}</Text>
+							<Text style={styles.sectionText}>Activities: {totalActivities}</Text>
+						</View>
 						<View style={styles.activityMeta}>
-							<CText fontSize={12}>Activities: {totalActivities}</CText>
 							{/*<CText fontSize={12} style={{ color: theme.colors.light.primary }}>*/}
 							{/*	Submitted: {submittedCount} / Assigned: {assignedCount}*/}
 							{/*</CText>*/}
-							<View style={styles.progressBarContainer}>
-								<View style={styles.progressBar}>
-									<View
-										style={[
-											styles.progressFill,
-											{ width: `${submissionRate}%`, backgroundColor: theme.colors.light.primary },
-										]}
-									/>
-								</View>
-								<Text style={styles.percentageText}>{submissionRate.toFixed(0)}%</Text>
-							</View>
+							{/*<View style={styles.progressBarContainer}>*/}
+							{/*	<View style={styles.progressBar}>*/}
+							{/*		<View*/}
+							{/*			style={[*/}
+							{/*				styles.progressFill,*/}
+							{/*				{ width: `${submissionRate}%`, backgroundColor: theme.colors.light.primary },*/}
+							{/*			]}*/}
+							{/*		/>*/}
+							{/*	</View>*/}
+							{/*	<Text style={styles.percentageText}>{submissionRate.toFixed(0)}%</Text>*/}
+							{/*</View>*/}
 						</View>
 					</View>
-					<Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} size={22} color="#444" />
+					{/*<Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} size={22} color="#444" />*/}
 				</TouchableOpacity>
 
 				{isExpanded && (
@@ -267,7 +281,7 @@ const styles = StyleSheet.create({
 	viewButton: {
 		paddingHorizontal: 14,
 		paddingVertical: 8,
-		borderRadius: theme.radius.sm,
+		borderRadius: theme.radius.xs,
 		backgroundColor: theme.colors.light.primary + '18',
 	},
 	container: {
@@ -321,6 +335,7 @@ const styles = StyleSheet.create({
 	courseText: {
 		textTransform: 'uppercase',
 		color: '#222',
+		maxWidth: '80%',
 	},
 	sectionText: {
 		backgroundColor: theme.colors.light.primary + '18',

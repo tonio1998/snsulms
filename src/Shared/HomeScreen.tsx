@@ -37,6 +37,10 @@ import LinkScroll from "../components/LinkScroll.tsx";
 import TextTicker from "react-native-text-ticker";
 import {loadDashboardCache, saveDashboardCache} from "../utils/cache/dashboardCache.ts";
 import ActivityIndicator2 from "../components/loaders/ActivityIndicator2.tsx";
+import {isTablet} from "../utils/responsive";
+import SNSULogoDraw from "../components/loaders/SNSULogo.tsx";
+import SNSULoading from "../components/loaders/SNSULoading.tsx";
+import {LastUpdatedBadge} from "../components/common/LastUpdatedBadge";
 
 const HomeScreen = () => {
 	const network = useContext(NetworkContext);
@@ -90,17 +94,25 @@ const HomeScreen = () => {
 		}
 	};
 
+	const getDashboardLocal = async (acadStr: string) => {
+		try {
+			setLoading(true);
+			const { data, date } = await loadDashboardCache(user?.id, acadStr);
+			if (data) {
+				setDashData(data);
+				setLastUpdated(date);
+				setIsCachedData(true);
+			}
+		} catch (err) {
+			handleApiError(err, 'Fetch Dashboard Data');
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	const getDashboardData = async (acadStr: string, forceRefresh = false) => {
 		try {
 			setLoading(true);
-			if (!forceRefresh) {
-				const { data, date } = await loadDashboardCache(user?.id, acadStr);
-				if (data) {
-					setDashData(data);
-					setLastUpdated(date);
-					setIsCachedData(true);
-				}
-			}
 			const filter = { AcademicYear: acadStr };
 			const res = await getDashData(filter);
 			setDashData(res);
@@ -123,7 +135,7 @@ const HomeScreen = () => {
 				if (isActive) {
 					setAcad(acadStr);
 					setAcadRaw(acadInfo);
-					await getDashboardData(acadStr);
+					await getDashboardLocal(acadStr);
 				}
 			};
 			init();
@@ -241,7 +253,7 @@ const HomeScreen = () => {
 							stats={[{ label: '', value: stats.classesHandled }]}
 							gradientColors={[theme.colors.light.primary, theme.colors.light.secondary]}
 							textColor={theme.colors.light.card}
-							cardStyle={styles.summaryCardSmall}
+							cardStyle={[styles.summaryCardSmall, {width: isTablet() ? Dimensions.get('window').width * -0.9 : Dimensions.get('window').width * 0.5}]}
 						/>
 						<SummaryCard
 							title="Activities"
@@ -249,9 +261,9 @@ const HomeScreen = () => {
 							formatNumber={formatNumber}
 							CText={CText}
 							stats={[{ label: '', value: stats.activities }]}
-							gradientColors={[theme.colors.light.warning, '#fff']}
+							gradientColors={[theme.colors.light.warning, theme.colors.light.warning_soft]}
 							textColor={theme.colors.light.text}
-							cardStyle={styles.summaryCardSmall}
+							cardStyle={[styles.summaryCardSmall, {width: isTablet() ? Dimensions.get('window').width * -0.9 : Dimensions.get('window').width * 0.5}]}
 						/>
 					</View>
 				</ScrollView>
@@ -287,11 +299,12 @@ const HomeScreen = () => {
 	};
 
 	const buttons = [
-		{ url: 'org.nativescript.snsu://', fallbackUrl: 'https://play.google.com/store/apps/details?id=org.nativescript.snsu', iconSet: 'Ionicons', iconName: 'link-outline', name: 'SNSU' },
+		// { url: 'org.nativescript.snsu://', fallbackUrl: 'https://play.google.com/store/apps/details?id=org.nativescript.snsu', iconSet: 'Ionicons', iconName: 'link-outline', name: 'SNSU' },
 		{ url: 'https://www.snsu.edu.ph/', iconSet: 'Ionicons', iconName: 'globe-outline', name: 'Website' },
 		{ url: 'https://www.youtube.com/@snsuofficialchannel5179', fallbackUrl: 'https://www.youtube.com/@snsuofficialchannel5179',iconSet: 'FontAwesome', iconName: 'youtube', name: 'YouTube' },
 		{ url: 'https://www.facebook.com/SNSUOfficial', iconSet: 'FontAwesome', iconName: 'facebook', name: 'Facebook' },
-		{ url: 'worklinker://', fallbackUrl: 'https://worklinker.snsu.edu.ph/', iconSet: 'Ionicons', iconName: 'link-outline', name: 'Worklinker' },
+		{ url: 'fb-messenger://user/', iconSet: 'Ionicons', iconName: 'chatbubble-ellipses-outline', name: 'Messenger' },
+		// { url: 'worklinker://', fallbackUrl: 'https://worklinker.snsu.edu.ph/', iconSet: 'Ionicons', iconName: 'link-outline', name: 'Worklinker' },
 	];
 
 	return (
@@ -306,42 +319,35 @@ const HomeScreen = () => {
 				>
 					<CustomHomeHeader />
 					<Text>{'\n\n\n\n\n'}</Text>
-					<View style={styles.welcomeContainer}>
-						{lastUpdated && (
-							<View style={styles.updatedBadge}>
-								<Icon
-									name="time-outline"
-									size={14}
-									color={theme.colors.light.card}
-									style={{ marginRight: 4 }}
-								/>
-								<CText fontStyle={'SB'} style={styles.updatedText}>
-									Last Update: {formatDate(lastUpdated, 'MMM dd, yyyy HH:mm')}
-								</CText>
+					<View style={{ marginHorizontal: 0}}>
+						<View style={styles.welcomeContainer}>
+							<LastUpdatedBadge
+								date={lastUpdated}
+								onReload={onRefresh}
+							/>
+							<View>
+								<LinkScroll buttons={buttons} />
+								{loading && (
+									<>
+										<ActivityIndicator2 />
+									</>
+								)}
 							</View>
-						)}
-						<View style={{ flex: 1, paddingTop: 10 }}>
-							{loading && (
-								<>
-									<ActivityIndicator2 />
-								</>
-							)}
-							<LinkScroll buttons={buttons} />
+							<TextTicker
+								style={{ fontSize: 18, color: theme.colors.light.primary, fontWeight: 'semibold' }}
+								duration={12000}
+								loop
+								bounce={false}
+								repeatSpacer={50}
+								marqueeDelay={2000}
+							>
+								Welcome to SNSU! 🚨 Announcement: Start of Class for the AY 2025-2026 is on August 18th! Don’t miss it!
+							</TextTicker>
 						</View>
-						<TextTicker
-							style={{ fontSize: 18, color: theme.colors.light.primary, fontWeight: 'semibold' }}
-							duration={12000}
-							loop
-							bounce={false}
-							repeatSpacer={50}
-							marqueeDelay={2000}
-						>
-							Welcome to SNSU! 🚨 Announcement: Start of Class for the AY 2025-2026 is on August 18th! Don’t miss it!
-						</TextTicker>
-					</View>
 
-					{hasRole('STUD') && renderStudentDashboard()}
-					{hasRole('ACAD') && renderTeacherDashboard()}
+						{hasRole('STUD') && renderStudentDashboard()}
+						{hasRole('ACAD') && renderTeacherDashboard()}
+					</View>
 				</ScrollView>
 			</SafeAreaView>
 		</>
@@ -380,8 +386,11 @@ const ActivityItem = ({ title, date, student, isDue }: any) => (
 const styles = StyleSheet.create({
 	welcomeContainer: {
 		paddingHorizontal: 16,
-		marginTop: 15,
+		marginTop: 25,
 		marginBottom: 10,
+		backgroundColor: theme.colors.light.background,
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20
 	},
 	updatedBadge: {
 		flexDirection: 'row',
@@ -395,7 +404,7 @@ const styles = StyleSheet.create({
 	},
 	updatedText: {
 		fontSize: 12,
-		color: theme.colors.light.card,
+		color: theme.colors.light.text,
 	},
 	noDataContainer: {
 		alignItems: 'center',

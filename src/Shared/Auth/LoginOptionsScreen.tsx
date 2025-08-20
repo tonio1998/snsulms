@@ -27,6 +27,9 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { APP_NAME, GOOGLE_CLIENT_ID, TAGLINE } from '../../../env.ts';
 import DeviceInfo from 'react-native-device-info';
 import LinearGradient from "react-native-linear-gradient";
+import useResponsive from "../../hooks/useResponsive";
+import {isTablet} from "../../utils/responsive";
+import {useAlert} from "../../components/CAlert.tsx";
 const { width } = Dimensions.get('window');
 
 GoogleSignin.configure({
@@ -39,6 +42,7 @@ export default function LoginOptionsScreen() {
 	const navigation = useNavigation();
 	const { user } = useAuth();
 	const { loginAuth } = useAuth();
+	const { showAlert } = useAlert();
 	const { showLoading, hideLoading } = useLoading();
 	const [loading, setLoading] = useState(false);
 	const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
@@ -115,6 +119,7 @@ export default function LoginOptionsScreen() {
 				error?.response?.data?.message ||
 				error?.message ||
 				'Something went wrong during Google login.';
+			showAlert('error', 'Error', message);
 			handleApiError(error, 'Google Login');
 		} finally {
 			hideLoading();
@@ -122,66 +127,72 @@ export default function LoginOptionsScreen() {
 	};
 
 	return (
-		<SafeAreaView style={styles.container}>
-			<LinearGradient
-				colors={[theme.colors.light.primary, theme.colors.light.secondary]}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
-				style={StyleSheet.absoluteFill}
+		<>
+			<StatusBar
+				barStyle="light-content"
+				backgroundColor="transparent"
+				translucent={true}
+				hidden={false}
 			/>
 
-			<ImageBackground
-				source={require('../../../assets/img/bg2.png')}
-				style={styles.container}
-				imageStyle={{ opacity: 0.4 }}
-				resizeMode="cover"
-			>
-				<View style={styles.wrapper}>
-					{/* Header */}
-					<View style={styles.header}>
-						<Image
-							source={require('../../../assets/img/ic_launcher.png')}
-							style={styles.logo}
-						/>
-						<CText fontStyle="SB" fontSize={40} style={styles.appName}>
-							{APP_NAME}
-						</CText>
-						<CText fontStyle="R" fontSize={14} style={styles.tagline}>
-							{TAGLINE}
-						</CText>
-					</View>
+			<SafeAreaView style={styles.container}>
+				<LinearGradient
+					colors={[theme.colors.light.primary, theme.colors.light.secondary]}
+					start={{ x: 0, y: 0 }}
+					end={{ x: 1, y: 1 }}
+					style={StyleSheet.absoluteFill}
+				/>
 
-					{/* Auth Section */}
-					<View style={styles.authSection}>
-						<CText style={styles.loginLabel}>Sign in to continue</CText>
+				<ImageBackground
+					source={require('../../../assets/img/bg2.png')}
+					style={styles.container}
+					imageStyle={{ opacity: 0.8 }}
+					resizeMode="cover"
+				>
+					<View style={styles.wrapper}>
+						<View style={styles.header}>
+							<Image
+								source={require('../../../assets/img/ic_launcher.png')}
+								style={styles.logo}
+							/>
+							<CText fontStyle="SB" fontSize={40} style={styles.appName}>
+								{APP_NAME}
+							</CText>
+							<CText fontStyle="SB" fontSize={13} style={styles.tagline}>
+								{TAGLINE}
+							</CText>
+						</View>
 
-						<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
-							<Icon name="logo-google" size={22} color="#DB4437" />
-							<CText style={styles.authText}>Continue with Google</CText>
-						</TouchableOpacity>
+						<View style={styles.authSection}>
+							<CText style={styles.loginLabel}>Sign in to continue</CText>
 
-						<TouchableOpacity style={styles.authButtonOutline} onPress={() => navigation.navigate('Login')}>
-							<Icon name="key-outline" size={22} color="#fff" />
-							<CText style={styles.authTextWhite}>Login with Password</CText>
-						</TouchableOpacity>
-
-						{isBiometricEnabled && (
-							<TouchableOpacity onPress={handleBiometricLogin} style={styles.fingerprint}>
-								<Icon name="finger-print-outline" size={40} color="#fff" style={{ textShadowColor: 'rgba(255,255,255,0.6)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 }} />
-								<CText style={styles.bioText}>Use Biometrics</CText>
+							<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
+								<Icon name="logo-google" size={22} color="#DB4437" />
+								<CText style={styles.authText}>Continue with Google</CText>
 							</TouchableOpacity>
-						)}
-					</View>
 
-					{/* Footer */}
-					<View style={styles.footer}>
-						<CText fontSize={11} style={styles.footerText}>Developed by SNSU - ICT fgWorkz</CText>
-						<CText fontSize={11} style={styles.footerText}>Version {version} • © 2025 All rights reserved</CText>
-					</View>
-				</View>
-			</ImageBackground>
-		</SafeAreaView>
+							<TouchableOpacity style={styles.authButtonOutline} onPress={() => navigation.navigate('Login')}>
+								<Icon name="key-outline" size={22} color="#fff" />
+								<CText style={styles.authTextWhite}>Login with Password</CText>
+							</TouchableOpacity>
 
+							{isBiometricEnabled && (
+								<TouchableOpacity onPress={handleBiometricLogin} style={styles.fingerprint}>
+									<Icon name="finger-print-outline" size={40} color="#fff" style={{ textShadowColor: 'rgba(255,255,255,0.6)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 }} />
+									<CText style={styles.bioText}>Use Biometrics</CText>
+								</TouchableOpacity>
+							)}
+						</View>
+
+						{/* Footer */}
+						<View style={styles.footer}>
+							<CText fontSize={11} style={styles.footerText}>Developed by SNSU - ICT fgWorkz</CText>
+							<CText fontSize={11} style={styles.footerText}>Version {version} • © 2025 All rights reserved</CText>
+						</View>
+					</View>
+				</ImageBackground>
+			</SafeAreaView>
+		</>
 	);
 }
 
@@ -193,8 +204,8 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		paddingVertical: 14,
 		paddingHorizontal: 20,
-		borderRadius: theme.radius.md,
-		width: width * 0.8,
+		borderRadius: theme.radius.sm,
+		// width: width * 0.8,
 		elevation: 4,
 		shadowColor: '#000',
 		shadowOpacity: 0.2,
@@ -209,7 +220,7 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		paddingVertical: 14,
 		paddingHorizontal: 20,
-		borderRadius: theme.radius.md,
+		borderRadius: theme.radius.sm,
 		width: width * 0.8,
 		backgroundColor: 'rgba(255,255,255,0.05)',
 	},
@@ -220,8 +231,9 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		justifyContent: 'space-between',
-		paddingHorizontal: 28,
+		alignItems: 'center',
 		paddingVertical: 70,
+		paddingHorizontal: 28,
 	},
 	header: {
 		alignItems: 'center',

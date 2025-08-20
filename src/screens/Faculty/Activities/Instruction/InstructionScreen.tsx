@@ -99,6 +99,11 @@ const InstructionScreen = ({ navigation, route }) => {
 
 	const renderHeader = () => (
 		<>
+			{loading && (
+				<>
+				<ActivityIndicator2 />
+				</>
+			)}
 			<View style={styles.card}>
 				{activity?.topic?.Title && (
 					<CText fontSize={12} style={styles.label}>Topic: {activity?.topic?.Title}</CText>
@@ -177,11 +182,6 @@ const InstructionScreen = ({ navigation, route }) => {
 		<>
 			<BackHeader title="Instruction" />
 			<SafeAreaView style={globalStyles.safeArea}>
-				{loading && (
-					<>
-						<ActivityIndicator2 />
-					</>
-				)}
 				<FlatList
 					data={submissions}
 					keyExtractor={(item, i) => `${item.id}-${i}`}

@@ -20,6 +20,7 @@ import { getAcademicInfo } from '../../utils/getAcademicInfo';
 import { formatAcad } from '../../utils/format';
 import Icon from "react-native-vector-icons/Ionicons";
 import {BlurView} from "@react-native-community/blur";
+import {isTablet} from "../../utils/responsive";
 
 const generateCircles = (count = 5) => {
     const fixedPositions = [
@@ -50,6 +51,7 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
             (async () => {
                 const acadInfo = await getAcademicInfo();
                 setAcad(acadInfo);
+                console.log("acadInfo", acadInfo);
             })();
 
             Animated.parallel([
@@ -72,29 +74,35 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
 
     return (
         <>
+            <StatusBar
+                barStyle="light-content"
+                backgroundColor="transparent"
+                translucent={true}
+                hidden={false}
+            />
             <LinearGradient
-                colors={[theme.colors.light.secondary, theme.colors.light.primary]}
+                colors={[theme.colors.light.primary, theme.colors.light.secondary]}
                 start={{ x: 1, y: 3 }}
                 end={{ x: 1.4, y: 1 }}
                 style={styles.gradientBg}
             >
-                {/*{circles.map(({ key, size, top, left }) => (*/}
-                {/*    <Animated.View*/}
-                {/*        key={key}*/}
-                {/*        style={[*/}
-                {/*            styles.circle,*/}
-                {/*            {*/}
-                {/*                width: size,*/}
-                {/*                height: size,*/}
-                {/*                borderRadius: size / 2,*/}
-                {/*                top,*/}
-                {/*                left,*/}
-                {/*                opacity: fadeAnim,*/}
-                {/*                transform: [{ scale: scaleAnim }],*/}
-                {/*            },*/}
-                {/*        ]}*/}
-                {/*    />*/}
-                {/*))}*/}
+                {circles.map(({ key, size, top, left }) => (
+                    <Animated.View
+                        key={key}
+                        style={[
+                            styles.circle,
+                            {
+                                width: size,
+                                height: size,
+                                borderRadius: size / 2,
+                                top,
+                                left,
+                                opacity: fadeAnim,
+                                transform: [{ scale: scaleAnim }],
+                            },
+                        ]}
+                    />
+                ))}
             </LinearGradient>
 
             <View style={styles.headerWrapper}>
@@ -139,6 +147,7 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
                             activeOpacity={0.85}
                         >
                             <Icon name={'school'} size={25} color={theme.colors.light.card} />
+                            {isTablet() && <CText style={styles.acadText} fontStyle={'SB'}>{formatAcad(acad?.semester, acad?.from, acad?.to)}</CText>}
                         </TouchableOpacity>
                         {rightContent}
                     </View>
@@ -175,7 +184,7 @@ const styles = StyleSheet.create({
         right: 0,
         zIndex: -9,
         // backgroundColor: theme.colors.light.primary,
-        // borderBottomLeftRadius: 20,
+        // borderBottomLeftRadius: 0,
         // borderBottomRightRadius: 20
     },
     circle: {
@@ -200,6 +209,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
+        // backgroundColor: theme.colors.light.card + '22',
+        padding: 8,
     },
     appName: {
         color: theme.colors.light.card,
@@ -219,16 +230,19 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.colors.light.card + '55',
         // marginRight: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     acadText: {
         color: theme.colors.light.card,
+        marginLeft: 10,
     },
     avatarWrapper: {
         width: 42,
         height: 42,
         borderRadius: 21,
         borderWidth: 1,
-        borderColor: theme.colors.light.primary,
+        borderColor: theme.colors.light.card,
         overflow: 'hidden',
     },
     avatar: {

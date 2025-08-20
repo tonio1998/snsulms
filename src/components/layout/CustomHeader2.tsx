@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
         zIndex: 1,
         // borderBottomWidth: 1,
         // borderBottomColor: '#ddd',
-        // backgroundColor: theme.colors.light.card,
+        // backgroundColor: theme.colors.light.primary,
     },
     headerContent: {
         paddingHorizontal: 10,

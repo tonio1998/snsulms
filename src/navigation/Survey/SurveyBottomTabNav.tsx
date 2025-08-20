@@ -8,6 +8,7 @@ import { useAuth } from "../../context/AuthContext.tsx";
 import { useAccess } from "../../hooks/useAccess.ts";
 import InfoScreen from "../../Shared/Survey/SurveyDetails/InfoScreen.tsx";
 import QuestionsScreen from "../../Shared/Survey/SurveyDetails/QuestionsScreen.tsx";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 const Tab = createBottomTabNavigator();
 
@@ -17,6 +18,7 @@ export default function SurveyBottomTabNav({ route }) {
 	const { hasRole } = useAccess();
 	const { user } = useAuth();
 	const SurveyID = route.params.id;
+	const insets = useSafeAreaInsets();
 
 	return (
 		<Tab.Navigator
@@ -28,8 +30,8 @@ export default function SurveyBottomTabNav({ route }) {
 				tabBarInactiveTintColor: '#9F9F9F',
 				tabBarStyle: {
 					backgroundColor: currentColors.card,
-					height: 65,
-					paddingBottom: 6,
+					// height: 65,
+					// paddingBottom: 6,
 					paddingTop: 6,
 					elevation: 4,
 					shadowColor: '#000',
@@ -37,6 +39,8 @@ export default function SurveyBottomTabNav({ route }) {
 					shadowRadius: 10,
 					shadowOffset: { width: 0, height: -2 },
 					borderTopColor: '#ccc',
+					paddingBottom: insets.bottom, // Adds padding for devices with 3-button nav
+					height: 60 + insets.bottom,
 				},
 				tabBarIcon: ({ focused, color, size }) => {
 					let iconName = 'ellipse-outline';

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
@@ -17,8 +17,10 @@ import ClassSettingsScreen from "../../screens/Faculty/Classes/ClassDetails/Clas
 import ScanScreen from "../../Shared/Scanner/ScanScreen.tsx";
 import ClassScheduleScreen from "../../Shared/Schedule/ClassScheduleScreen.tsx";
 import OutlineListScreen from "../../screens/Faculty/Classes/Outline/OutlineListScreen.tsx";
-import { Platform, StatusBar, View } from "react-native";
+import {Dimensions, Platform, StatusBar, View} from "react-native";
 import StudentMaterialScreen from "../../screens/Student/Classes/MaterialScreen.tsx";
+import {useFocusEffect} from "@react-navigation/native";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 const BottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -38,12 +40,25 @@ function ClassTopTabs({ route }) {
 	const { hasRole } = useAccess();
 	const { classes } = useClass();
 
+	useFocusEffect(
+		useCallback(() => {
+			StatusBar.setBarStyle('light-content');
+			StatusBar.setBackgroundColor('#1e1e1e');
+			return () => {
+				StatusBar.setBarStyle('dark-content');
+				StatusBar.setBackgroundColor('#ffffff');
+			};
+		}, [])
+	);
+
 	return (
 		<>
-			{/*<StatusBar*/}
-			{/*	barStyle="light-content"*/}
-			{/*	translucent={true}*/}
-			{/*/>*/}
+			<StatusBar
+				barStyle="light-content"
+				translucent={true}
+				hidden={false}
+			/>
+
 			<View style={{ flex: 1 }}>
 				<View
 					style={{
@@ -66,18 +81,20 @@ function ClassTopTabs({ route }) {
 								style={{
 									color: focused ? color : '#9F9F9F',
 									fontWeight: focused ? 'bold' : 'normal',
-									fontSize: 10,
+									fontSize: 11,
 									textAlign: 'center',
 								}}
 							>
 								{route.name}
 							</CText>
 						),
+						tabBarScrollEnabled: true,
+						tabBarItemStyle: { width: Dimensions.get('window').width / 5 },
 						tabBarIndicatorStyle: {
 							backgroundColor: theme.colors.light.primary,
-							height: 4,
+							height: 2,
 							borderRadius: 3,
-							marginBottom: Platform.OS === 'android' ? -3 : 0
+							marginBottom: Platform.OS === 'android' ? -1.5 : 0
 						},
 						tabBarActiveTintColor: theme.colors.light.primary,
 						tabBarInactiveTintColor: '#9F9F9F',
@@ -97,7 +114,7 @@ function ClassTopTabs({ route }) {
 								case "Activities": iconName = focused ? "reader" : "reader-outline"; break;
 								case "Materials": iconName = focused ? "book" : "book-outline"; break;
 								case "Schedule": iconName = focused ? "calendar" : "calendar-outline"; break;
-								case "Scan": iconName = focused ? "scan" : "scan-outline"; break;
+								case "Attendance": iconName = focused ? "scan" : "scan-outline"; break;
 								case "Outline": iconName = focused ? "list" : "list-outline"; break;
 								case "Settings": iconName = focused ? "settings" : "settings-outline"; break;
 								default: iconName = "ellipse-outline";
@@ -129,7 +146,7 @@ function ClassTopTabs({ route }) {
 						<>
 							{classes?.Attendance === "Y" && (
 								<TopTab.Screen
-									name="Scan"
+									name="Attendance"
 									component={ScanScreen}
 									initialParams={{ ClassID }}
 								/>
@@ -171,6 +188,7 @@ function WallStackScreen({ route }) {
 }
 
 function InnerTabs({ ClassID }) {
+	const insets = useSafeAreaInsets();
 	return (
 		<BottomTab.Navigator
 			screenOptions={({ route }) => ({
@@ -209,7 +227,8 @@ function InnerTabs({ ClassID }) {
 				tabBarInactiveTintColor: '#9F9F9F',
 				tabBarStyle: {
 					backgroundColor: theme.colors.light.card,
-					height: 65,
+					paddingBottom: insets.bottom, // Adds padding for devices with 3-button nav
+					height: 60 + insets.bottom,
 					borderTopWidth: 1,
 					borderTopColor: '#ccc',
 					elevation: 4,

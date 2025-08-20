@@ -131,7 +131,8 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		alignItems: 'center',
 		justifyContent: 'center',
-		elevation: 5
+		elevation: 2,
+		shadowColor: theme.colors.light.primary
 	},
 
 	titleContainer: {

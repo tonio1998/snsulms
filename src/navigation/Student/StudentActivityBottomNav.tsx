@@ -15,6 +15,7 @@ import InstructionScreen from "../../screens/Student/Activities/Instruction/Inst
 import SubmissionScreen from "../../screens/Student/Activities/Submission/SubmissionScreen.tsx";
 import {ActivityProvider} from "../../context/SharedActivityContext.tsx";
 import ClassesScreen from "../../screens/Student/Classes/ClassesScreen.tsx";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 const Tab = createBottomTabNavigator();
 const ClassesDetailsStack = createNativeStackNavigator();
 const SubmissionStack = createNativeStackNavigator();
@@ -38,9 +39,10 @@ export default function StudentActivityBottomNav({route, navigation}) {
 	// console.log("route", route.params);
 	const ClassID = route.params.ClassID;
 	const ActivityID = route.params.ActivityID;
-	const Type = route.params.type;
+	const Type = route.params.ActivityTypeID;
 	const isLandscape = useOrientation();
 	const { hasRole, can } = useAccess();
+	const insets = useSafeAreaInsets();
 
 	return (
 		<>
@@ -97,9 +99,8 @@ export default function StudentActivityBottomNav({route, navigation}) {
 						headerShown: false,
 						tabBarStyle: {
 							backgroundColor: theme.colors.light.card,
-							height: isLandscape ? 55 : 65,
-							paddingTop: 4,
-							paddingBottom: isLandscape ? 4 : 10,
+							paddingBottom: insets.bottom, // Adds padding for devices with 3-button nav
+							height: 60 + insets.bottom,
 							shadowColor: '#000',
 							shadowOffset: { width: 0, height: -2 },
 							shadowOpacity: 0.1,
@@ -110,7 +111,7 @@ export default function StudentActivityBottomNav({route, navigation}) {
 					})}
 				>
 					<Tab.Screen name="Instruction" component={InstructionScreen}/>
-					{Type !== 1 && <Tab.Screen name="Submission" component={SubmissionScreen}/>}
+					{Type > 1 && <Tab.Screen name="Submission" component={SubmissionScreen}/>}
 				</Tab.Navigator>
 			</ActivityProvider>
 		</>

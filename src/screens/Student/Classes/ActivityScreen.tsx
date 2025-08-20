@@ -50,6 +50,7 @@ const ActivityScreen = ({ navigation, route }) => {
 			setLoading(true);
 			const res = await getStudentActivities({ page: 1, search: '', ClassID });
 			const list = res?.data ?? [];
+			console.log("list: ", list)
 			setAllActivities(list);
 			filterActivities(actType, list);
 			const date = await saveStudentClassActivitiesCache(ClassID, user?.id, list);
@@ -92,11 +93,12 @@ const ActivityScreen = ({ navigation, route }) => {
 		setExpandedId(prev => (prev === id ? null : id));
 	};
 
-	const handleView = (id, title, actId) => {
+	const handleView = (id, title, actId, ActivityTypeID) => {
 		navigation.navigate('ActivityDetails', {
 			StudentActivityID: id,
 			Title: title,
 			ActivityID: actId,
+			ActivityTypeID:ActivityTypeID
 		});
 	};
 
@@ -136,7 +138,7 @@ const ActivityScreen = ({ navigation, route }) => {
 							</View>
 							<TouchableOpacity
 								style={styles.viewBtn}
-								onPress={() => handleView(item.StudentActivityID, act?.Title, act?.ActivityID)}
+								onPress={() => handleView(item.StudentActivityID, act?.Title, act?.ActivityID, item?.activity?.ActivityTypeID)}
 							>
 								<CText fontStyle="SB" style={{ color: theme.colors.light.primary }}>View Activity</CText>
 							</TouchableOpacity>

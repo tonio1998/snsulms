@@ -46,7 +46,9 @@ const InstructionScreen = ({ navigation }) => {
 	const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 	const [submissionState, setSubmissionState] = useState(null);
 
-	const SUBMISSION_KEY = 'submission_' + StudentActivityID;
+	const SUBMISSION_KEY = 'submission_' + StudentActivityID +'_'+user?.id;
+
+	console.log("🔍 Fetching submissions", activity);
 	const loadSubmissions = async () => {
 		setLoading(true);
 		try {
@@ -140,7 +142,7 @@ const InstructionScreen = ({ navigation }) => {
 				<BackHeader
 					title="Instruction"
 					rightButton={
-						!activity?.Grade && (
+						!activity?.Grade && activity?.activity.ActivityTypeID > 1 && (
 							<TouchableOpacity
 								style={[
 									globalStyles.button,
@@ -172,6 +174,9 @@ const InstructionScreen = ({ navigation }) => {
 						</>
 					)}
 					<View style={styles.card}>
+						{/*<CText fontSize={13} style={styles.topicLabel}>*/}
+						{/*	Topic: {activity?.activity?.ActivityTypeID}*/}
+						{/*</CText>*/}
 						{activity?.activity?.topic?.Title && (
 							<CText fontSize={13} style={styles.topicLabel}>
 								Topic: {activity.activity.topic.Title}
