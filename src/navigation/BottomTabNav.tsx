@@ -1,31 +1,32 @@
 import React from 'react';
-import { Dimensions } from 'react-native';
+import { Dimensions, Platform, StatusBar, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { theme } from '../theme';
-
-import HomeScreen from '../Shared/HomeScreen.tsx';
-import ClassesScreen from '../screens/Student/Classes/ClassesScreen.tsx';
-import ActivitiesScreen from '../screens/Student/Classes/ActivitiesScreen.tsx';
-import QRCodeScreen from '../Shared/User/QRCodeScreen.tsx';
-import ClassesListScreen from '../screens/Faculty/Classes/ClassesListScreen.tsx';
-
 import { useAccess } from '../hooks/useAccess.ts';
 import { useAuth } from '../context/AuthContext.tsx';
 import { CText } from '../components/common/CText.tsx';
 
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import TestBuilderScreen from "../Shared/Survey/TestBuilderScreen.tsx";
+import HomeScreen from '../Shared/HomeScreen.tsx';
 import CalendarScreen from "../Shared/CalendarScreen.tsx";
 import SchedulesScreen from "../Shared/Schedule/SchedulesScreen.tsx";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import TestBuilderScreen from "../Shared/Survey/TestBuilderScreen.tsx";
 
-const ClassesStack = createNativeStackNavigator();
-const FacClassesStack = createNativeStackNavigator();
+import ClassesScreen from '../screens/Student/Classes/ClassesScreen.tsx';
+import ActivitiesScreen from '../screens/Student/Classes/ActivitiesScreen.tsx';
+import ClassesListScreen from '../screens/Faculty/Classes/ClassesListScreen.tsx';
+import CustomHeader2 from "../components/layout/CustomHeader2.tsx";
 
 const Tab = createBottomTabNavigator();
+const ClassesStack = createNativeStackNavigator();
+const FacClassesStack = createNativeStackNavigator();
+const TopTab = createMaterialTopTabNavigator();
 
-const currentColors = theme.colors.light;
+const colors = theme.colors.light;
 
 export default function BottomTabs() {
 	const { hasRole } = useAccess();
@@ -37,12 +38,11 @@ export default function BottomTabs() {
 			initialRouteName="Home"
 			screenOptions={({ route }) => ({
 				headerShown: false,
-				swipeEnabled: true,
 				tabBarShowIcon: true,
-				tabBarActiveTintColor: currentColors.primary,
+				tabBarActiveTintColor: colors.primary,
 				tabBarInactiveTintColor: '#9F9F9F',
 				tabBarStyle: {
-					backgroundColor: currentColors.card,
+					backgroundColor: colors.card,
 					paddingBottom: insets.bottom,
 					height: 60 + insets.bottom,
 					paddingTop: 4,
@@ -54,32 +54,17 @@ export default function BottomTabs() {
 					shadowRadius: 10,
 					shadowOffset: { width: 0, height: -2 },
 				},
-				tabBarIcon: ({ focused, color, size }) => {
+				tabBarIcon: ({ focused, color }) => {
 					let iconName = 'ellipse-outline';
 					switch (route.name) {
 						case 'Home':
 							iconName = focused ? 'home' : 'home-outline';
 							break;
-						case 'Activities':
-							iconName = focused ? 'reader' : 'reader-outline';
-							break;
 						case 'Classes':
 							iconName = focused ? 'library' : 'library-outline';
 							break;
-						case 'myQR':
-							iconName = 'qr-code';
-							break;
-						case 'Grades':
-							iconName = focused ? 'bar-chart' : 'bar-chart-outline';
-							break;
-						case 'Test Builder':
-							iconName = focused ? 'book' : 'book-outline';
-							break;
 						case 'Calendar':
 							iconName = focused ? 'calendar' : 'calendar-outline';
-							break;
-						case 'Schedule':
-							iconName = focused ? 'time' : 'time-outline';
 							break;
 						default:
 							break;
@@ -104,36 +89,119 @@ export default function BottomTabs() {
 			<Tab.Screen name="Home" component={HomeScreen} />
 
 			{hasRole('STUD') && (
-				<>
-					<Tab.Screen name="Classes" component={ClassesStackScreen} />
-					{/*<Tab.Screen name="myQR" component={QRCodeScreen} />*/}
-					<Tab.Screen name="Activities" component={ActivitiesScreen} />
-				</>
+				<Tab.Screen name="Classes" component={StudentClassesStack} />
 			)}
+
 			{hasRole('ACAD') && (
-				<>
-					<Tab.Screen name="Classes" component={FacClassesStackScreen} />
-					<Tab.Screen name="Test Builder" component={TestBuilderScreen} />
-				</>
+				<Tab.Screen name="Classes" component={FacultyClassesStack} />
 			)}
-			<Tab.Screen name="Schedule" component={SchedulesScreen} />
+
 			<Tab.Screen name="Calendar" component={CalendarScreen} />
 		</Tab.Navigator>
 	);
 }
 
-function ClassesStackScreen() {
+// STUDENT Classes with Top Tabs
+function StudentClassesStack() {
 	return (
 		<ClassesStack.Navigator screenOptions={{ headerShown: false }}>
-			<ClassesStack.Screen name="Classes" component={ClassesScreen} />
+			<ClassesStack.Screen name="StudentClassesTopTabs" component={StudentClassesTopTabs} />
 		</ClassesStack.Navigator>
 	);
 }
 
-function FacClassesStackScreen() {
+function StudentClassesTopTabs() {
+	return (
+		<View style={{ flex: 1 }}>
+			<View
+				style={{
+					paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 44,
+					paddingBottom: 70,
+					backgroundColor: colors.card,
+					alignItems: "center",
+					justifyContent: "center",
+				}}
+			>
+				<CustomHeader2/>
+			</View>
+			<TopTab.Navigator
+				screenOptions={{
+					tabBarScrollEnabled: true,
+					tabBarItemStyle: { width: Dimensions.get('window').width / 3 },
+					tabBarIndicatorStyle: {
+						backgroundColor: colors.primary,
+						height: 2,
+						borderRadius: 3,
+						marginBottom: Platform.OS === 'android' ? -1.5 : 0,
+					},
+					tabBarActiveTintColor: colors.primary,
+					tabBarInactiveTintColor: '#9F9F9F',
+					tabBarStyle: {
+						backgroundColor: colors.card,
+						elevation: 0,
+						shadowOffset: { width: 0, height: -2 },
+						borderBottomWidth: 1,
+						borderBottomColor: '#ccc',
+					},
+					tabBarLabelStyle: { fontWeight: 'bold', color: colors.text },
+				}}
+			>
+				<TopTab.Screen name="Classes" component={ClassesScreen} />
+				<TopTab.Screen name="Activities" component={ActivitiesScreen} />
+				<TopTab.Screen name="Schedule" component={SchedulesScreen} />
+			</TopTab.Navigator>
+		</View>
+	);
+}
+
+// FACULTY Classes Top Tabs
+function FacultyClassesStack() {
 	return (
 		<FacClassesStack.Navigator screenOptions={{ headerShown: false }}>
-			<FacClassesStack.Screen name="Classes" component={ClassesListScreen} />
+			<FacClassesStack.Screen name="FacultyClassesTopTabs" component={FacultyClassesTopTabs} />
 		</FacClassesStack.Navigator>
+	);
+}
+
+function FacultyClassesTopTabs() {
+	return (
+		<View style={{ flex: 1 }}>
+			<View
+				style={{
+					paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 44,
+					paddingBottom: 70,
+					backgroundColor: colors.card,
+					alignItems: "center",
+					justifyContent: "center",
+				}}
+			>
+				<CustomHeader2/>
+			</View>
+			<TopTab.Navigator
+				screenOptions={{
+					tabBarScrollEnabled: true,
+					tabBarItemStyle: { width: Dimensions.get('window').width / 2 },
+					tabBarIndicatorStyle: {
+						backgroundColor: colors.primary,
+						height: 2,
+						borderRadius: 3,
+						marginBottom: Platform.OS === 'android' ? -1.5 : 0,
+					},
+					tabBarActiveTintColor: colors.primary,
+					tabBarInactiveTintColor: '#9F9F9F',
+					tabBarStyle: {
+						backgroundColor: colors.card,
+						elevation: 0,
+						shadowOffset: { width: 0, height: -2 },
+						borderBottomWidth: 1,
+						borderBottomColor: '#ccc',
+					},
+					tabBarLabelStyle: { fontWeight: 'bold', color: colors.text },
+				}}
+			>
+				<TopTab.Screen name="Classes" component={ClassesListScreen} />
+				<TopTab.Screen name="Test Builder" component={TestBuilderScreen} />
+			</TopTab.Navigator>
+		</View>
 	);
 }

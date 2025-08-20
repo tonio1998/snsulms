@@ -8,7 +8,7 @@ import { CText } from '../../components/common/CText.tsx';
 import InstructionScreen from '../../screens/Faculty/Activities/Instruction/InstructionScreen.tsx';
 import SubmissionListScreen from '../../screens/Faculty/Activities/Submission/SubmissionListScreen.tsx';
 
-import { FacActivityProvider } from '../../context/FacSharedActivityContext.tsx';
+import {FacActivityProvider, useFacActivity} from '../../context/FacSharedActivityContext.tsx';
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 const Tab = createMaterialTopTabNavigator();

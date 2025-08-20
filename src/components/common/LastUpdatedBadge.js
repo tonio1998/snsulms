@@ -17,25 +17,27 @@ export const LastUpdatedBadge = ({ date, onReload, style }) => {
         : '';
 
     return (
-        <View style={[styles.container, style]}>
-            {date && (
-                <View style={styles.left}>
-                    <Icon
-                        name="time-outline"
-                        size={14}
-                        color={theme.colors.light.textSecondary || '#6B7280'}
-                        style={{ marginRight: 4 }}
-                    />
-                    <Text style={styles.text}>{formatted}</Text>
+        <>
+            {false && (
+                <View style={[styles.container, style]}>
+                        <View style={styles.left}>
+                            <Icon
+                                name="time-outline"
+                                size={14}
+                                color={theme.colors.light.textSecondary || '#6B7280'}
+                                style={{ marginRight: 4 }}
+                            />
+                            <Text style={styles.text}>{formatted}</Text>
+                        </View>
+
+                    {onReload && (
+                        <TouchableOpacity style={styles.reloadBtn} onPress={onReload} activeOpacity={0.7}>
+                            <Icon name="refresh-outline" size={14} color={theme.colors.light.primary} />
+                        </TouchableOpacity>
+                    )}
                 </View>
             )}
-
-            {onReload && (
-                <TouchableOpacity style={styles.reloadBtn} onPress={onReload} activeOpacity={0.7}>
-                    <Icon name="refresh-outline" size={14} color={theme.colors.light.primary} />
-                </TouchableOpacity>
-            )}
-        </View>
+        </>
     );
 };
 

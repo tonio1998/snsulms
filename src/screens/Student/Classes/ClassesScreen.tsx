@@ -66,12 +66,11 @@ const ClassesScreen = ({ navigation, route }) => {
 		if (!user?.id) return;
 		const { data, date } = await loadClassesFromLocal(user.id, acad);
 		if (data) {
-			console.log("classes", data);
 			setAllClasses(data);
 			setClasses(data);
 		}
 		if (date) setLastFetched(date);
-	}, [user?.id]);
+	}, []);
 
 	const fetchFromApi = useCallback(async () => {
 		if (!acad || !user?.id) return;
@@ -233,8 +232,7 @@ const ClassesScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<CustomHeader2 />
-			<SafeAreaView style={globalStyles.safeArea}>
+			<SafeAreaView style={globalStyles.safeArea2}>
 				<View style={styles.container}>
 					<View style={styles.searchWrapper}>
 						<TextInput

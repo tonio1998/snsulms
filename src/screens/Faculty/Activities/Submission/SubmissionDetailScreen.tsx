@@ -60,9 +60,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 
 	const fetchLocal = async () => {
 		const local = await fetchStudentActivitySubmissions(ActivityID, StudentActivityID);
-		console.log('local?.data: ',local)
 		if (local) {
-			console.log('local?.data: ',local)
 			setSubmission(local);
 			setAttachment(local?.st_attachments || []);
 			setGradeInput(local?.Grade ? local.Grade.toString() : '');

@@ -93,13 +93,19 @@ const SigninForm = ({ navigation }: any) => {
 
 		try {
 			if (isOnline) {
-				const response = await authLogin({ email, password });
-				const sessionData = { ...response.data, password };
+				try {
+					const response = await authLogin({ email, password });
+					console.log("response", response);
+					const sessionData = { ...response.data, password };
 
-				await loginAuth(response.data);
-				await AsyncStorage.setItem('isLoggedIn', 'true');
-				await AsyncStorage.setItem('mobile', sessionData.token);
-				await Keychain.setGenericPassword(JSON.stringify(sessionData), sessionData.token);
+					await loginAuth(response.data);
+					await AsyncStorage.setItem('isLoggedIn', 'true');
+					await AsyncStorage.setItem('mobile', sessionData.token);
+					await Keychain.setGenericPassword(JSON.stringify(sessionData), sessionData.token);
+				} catch (err) {
+					console.error('Login error:', err);
+					handleApiError(err, 'Login');
+				}
 			} else {
 				const cachedSession = await Keychain.getGenericPassword();
 				if (cachedSession) {

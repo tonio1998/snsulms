@@ -36,7 +36,7 @@ const generateCircles = (count = 2) => {
     });
 };
 
-const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null }) => {
+const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null, style }) => {
     const navigation = useNavigation();
     const { user } = useAuth();
     const [acad, setAcad] = useState(null);
@@ -102,7 +102,7 @@ const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null }) 
                 {/*))}*/}
             </View>
 
-            <View style={styles.headerWrapper}>
+            <View style={[styles.headerWrapper, style]}>
                 {/*<BlurView*/}
                 {/*    style={StyleSheet.absoluteFill}*/}
                 {/*    blurType="light"*/}
@@ -132,7 +132,7 @@ const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null }) 
                             />
                         </TouchableOpacity>
                         <View style={{ marginLeft: 10 }}>
-                            <CText fontSize={14} style={{ color: theme.colors.light.text}} fontStyle="SB">Hello 👋</CText>
+                            <CText fontSize={13} style={{ color: theme.colors.light.text}} fontStyle="SB">Hello 👋</CText>
                             <CText fontSize={15} style={{ color: theme.colors.light.text}} fontStyle="SB">{user?.name}</CText>
                         </View>
                     </View>

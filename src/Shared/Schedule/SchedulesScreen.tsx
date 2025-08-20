@@ -114,8 +114,7 @@ const SchedulesScreen = () => {
 
 	return (
 		<>
-			<CustomHeader2 />
-			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
+			<SafeAreaView style={[globalStyles.safeArea2]}>
 				<View style={{paddingHorizontal: 16 }}>
 					<LastUpdatedBadge date={lastFetched} onReload={() => acad && fetchClassSchedule(acad)} />
 				</View>

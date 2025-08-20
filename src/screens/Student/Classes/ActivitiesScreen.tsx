@@ -217,8 +217,7 @@ const ActivitiesScreen = ({ navigation }) => {
 
 	return (
 		<>
-			<CustomHeader2 />
-			<SafeAreaView style={globalStyles.safeArea}>
+			<SafeAreaView style={globalStyles.safeArea2}>
 				<View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 10 }}>
 					<View style={styles.searchWrapper}>
 						<TextInput

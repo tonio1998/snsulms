@@ -106,35 +106,13 @@ const StudentMaterialScreen = ({ navigation, route }) => {
 		return (
 			<TouchableOpacity
 				style={styles.card}
-				onPress={() => toggleExpand(item.StudentActivityID)}
+				onPress={() => handleViewAct(item.StudentActivityID, item.activity.Title)}
 				activeOpacity={0.9}
 			>
 				<View style={styles.cardInner}>
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
 						<CText fontSize={16} fontStyle="SB">{act?.Title}</CText>
 					</View>
-					{act?.Description && (
-						<CText fontSize={14} style={styles.desc}>{act?.Description}</CText>
-					)}
-					{isExpanded && (
-						<>
-							<View style={[styles.dateRow, { marginTop: 6 }]}>
-								<CText fontSize={13} fontStyle={'SB'} style={{ color: submitted ? theme.colors.light.success : theme.colors.light.danger }}>
-									{submissionText}{submittedDate}
-								</CText>
-							</View>
-							<View style={styles.dateRow}>
-								{act?.DueDate && <CText fontSize={12} style={styles.date}>Due: {formatDate(act?.DueDate)}</CText>}
-								{act?.created_at && <CText fontSize={12} style={styles.date}>Created: {formatDate(act?.created_at, 'relative')}</CText>}
-							</View>
-							<TouchableOpacity
-								style={styles.viewBtn}
-								onPress={() => handleViewAct(item.StudentActivityID, item.activity.Title)}
-							>
-								<CText fontStyle="SB" style={{ color: theme.colors.light.primary }}>View</CText>
-							</TouchableOpacity>
-						</>
-					)}
 				</View>
 			</TouchableOpacity>
 		);

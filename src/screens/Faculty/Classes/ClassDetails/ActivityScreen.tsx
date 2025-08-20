@@ -35,10 +35,8 @@ const { height } = Dimensions.get('window');
 const ActivityCard = React.memo(({ item, onPress }) => (
 	<TouchableOpacity
 		style={globalStyles.card}
-		onPress={() => onPress(item.Title, item.ActivityID)}
+		onPress={() => onPress(item?.Title, item?.ActivityID)}
 		activeOpacity={0.5}
-		onLongPress={() => Alert.alert("Long Press!", "You held the button")}
-		delayLongPress={800}
 	>
 		<View style={globalStyles.cardInner}>
 			<CText fontSize={17} fontStyle="SB" style={globalStyles.cardTitle}>{item?.Title}</CText>
@@ -112,9 +110,13 @@ const ActivityScreen = ({ navigation }) => {
 	}, [fetchActivities]));
 
 	const filteredActivities = useMemo(() => {
-		if (!actType) return activities;
-		return activities.filter(act => act.ActivityTypeID == actType);
+		let filtered = activities.filter(act => act?.ActivityTypeID > 1);
+		if (actType) {
+			filtered = filtered.filter(act => act?.ActivityTypeID == actType);
+		}
+		return filtered;
 	}, [activities, actType]);
+
 
 	const handleRefresh = async () => {
 		refresh();
