@@ -92,9 +92,9 @@ function ClassTopTabs({ route }) {
 						tabBarItemStyle: { width: Dimensions.get('window').width / 5 },
 						tabBarIndicatorStyle: {
 							backgroundColor: theme.colors.light.primary,
-							height: 2,
+							height: 3,
 							borderRadius: 3,
-							marginBottom: Platform.OS === 'android' ? -1.5 : 0
+							marginBottom: Platform.OS === 'android' ? -1.5 : 0,
 						},
 						tabBarActiveTintColor: theme.colors.light.primary,
 						tabBarInactiveTintColor: '#9F9F9F',
