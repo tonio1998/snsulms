@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
 		position: 'absolute',
 		top: Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44,
 		// top: 0,
+
 		left: 0,
 		right: 0,
 	},
@@ -130,7 +131,8 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		alignItems: 'center',
 		justifyContent: 'center',
-		elevation: 5
+		elevation: 2,
+		shadowColor: theme.colors.light.primary
 	},
 
 	titleContainer: {

@@ -18,7 +18,7 @@ interface LoadingProps {
 
 const Loading: React.FC<LoadingProps> = ({
                                              loading,
-                                             timeout = 10000,
+                                             timeout = 20000,
                                              onTimeout,
                                              text = "Loading..."
                                          }) => {

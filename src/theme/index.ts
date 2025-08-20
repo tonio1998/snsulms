@@ -10,40 +10,46 @@
 //         secondary: '#921BFD',
 //         secondary_soft: '#02801C',
 
+// SNSU GREEN
+// primary: '#138808',
+//         primary_soft: '#5314E4',
+//         secondary: '#35712C',
+//         secondary_soft: '#02801C',
+
 const colors = {
     light: {
         // Backgrounds
-        background: '#FAFAFA',        // main app background
-        surface: '#E6EDF7',           // cards, panels (slightly softer)
-        card: '#FFFFFF',               // card background
-        muted: '#F8F8F8',             // disabled / low-priority areas
-        muted_soft: '#E6E6E6',        // secondary muted elements
+        background: '#F9FAFB',
+        surface: '#EEF4FA',
+        card: '#FFFFFF',
+        muted: '#F5F5F5',
+        muted_soft: '#E0E0E0',
 
         // Text & Borders
-        text: '#1C1C1E',              // main readable text
-        border: '#DADADA',            // subtle borders
-        inputBackground: '#FFFFFF',   // form inputs
+        text: '#1A1D1F',
+        border: '#D1D5DB',
+        inputBackground: '#FFFFFF',
 
-        // Primary / Secondary (for buttons, headers, highlights)
-        primary: '#138808',           // darker green for main actions
-        primary_soft: '#005C29',       // softer gradient variant for hover / cards
-        secondary: '#004225',          // deep blue for secondary actions
-        secondary_soft: '#228C22',     // softer secondary gradient
+        // Primary / Secondary (single shades)
+        primary: '#138808',      // Blue (trust, knowledge) for main actions
+        secondary: '#144E00',    // Green (growth, progress) for secondary actions
 
         // Status Colors
-        success: '#34C759',           // confirmation / positive actions
-        success_soft: '#BDF5C7',      // lighter success for backgrounds
-        danger: '#FF3B30',            // errors / critical alerts
-        danger_soft: '#FFBFB8',       // softer danger background
-        warning: '#FCBE02',           // caution / pending alerts
-        warning_soft: '#FFF3CD',      // soft warning background
-        info: '#5AC8FA',              // informational messages
-        info_soft: '#B3E5FC',         // soft info background
+        success: '#22C55E',
+        success_soft: '#DCFCE7',
+        danger: '#EF4444',
+        danger_soft: '#FEE2E2',
+        warning: '#F59E0B',
+        warning_soft: '#FEF3C7',
+        info: '#3B82F6',
+        info_soft: '#DBEAFE',
 
-        // Additional UX-friendly accents
-        link: '#007AFF',               // tappable links
-        highlight: '#FFD700',          // highlights / badges
+        // Accents
+        link: '#2563EB',
+        highlight: '#FACC15',
     },
+
+
     dark: {
         background: '#000000',
         surface: '#1C1C1C',
@@ -101,6 +107,18 @@ export const font = {
     bold: 'Poppins-Bold',
     italic: 'Poppins-Italic',
 };
+
+// export const font = {
+//     regular: 'Roboto-Regular',
+//     medium: 'Roboto-Medium',
+//     semiBold: 'Roboto-SemiBold',
+//     bold: 'Roboto-Bold',
+//     italic: 'Roboto-Italic',
+//     light: 'Roboto-Light',
+//     thin: 'Roboto-Thin',
+//     black: 'Roboto-Black',
+// };
+
 export const FontFamily = 'MazzardSoftH-SemiBold';
 export const FontFamilyNormal = 'MazzardSoftH-Regular';
 

@@ -180,8 +180,7 @@ const TestBuilderScreen = ({ navigation }) => {
 
 	return (
 		<>
-			<CustomHeader2 />
-			<SafeAreaView style={globalStyles.safeArea}>
+			<SafeAreaView style={globalStyles.safeArea2}>
 				<View style={styles.container}>
 					{/* Search Box */}
 					<View style={styles.searchBox}>

@@ -93,7 +93,7 @@ const ClassesListScreen = ({ navigation }) => {
 	const loadFromCache = async () => {
 		try {
 			setLoading(true);
-			showLoading2('Loading classes...');
+			// showLoading2('Loading classes...');
 			const { data, date } = await loadFacClassesFromLocal(user?.id, acad);
 			if (data) {
 				setAllClasses(data);
@@ -106,7 +106,7 @@ const ClassesListScreen = ({ navigation }) => {
 			await loadClassesOnline();
 		} finally {
 			setLoading(false);
-			hideLoading2();
+			// hideLoading2();
 		}
 	};
 
@@ -265,9 +265,8 @@ const ClassesListScreen = ({ navigation }) => {
 
 	return (
 		<>
-			<CustomHeader2 />
-			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 100}]}>
-				<View style={[styles.container, {paddingTop: 0}]}>
+			<SafeAreaView style={[globalStyles.safeArea2]}>
+				<View style={[styles.container, {paddingTop: 10}]}>
 					<LastUpdatedBadge
 						date={lastFetched}
 						onReload={loadClassesOnline}

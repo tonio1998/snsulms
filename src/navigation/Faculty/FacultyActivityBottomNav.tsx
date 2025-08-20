@@ -8,7 +8,8 @@ import { CText } from '../../components/common/CText.tsx';
 import InstructionScreen from '../../screens/Faculty/Activities/Instruction/InstructionScreen.tsx';
 import SubmissionListScreen from '../../screens/Faculty/Activities/Submission/SubmissionListScreen.tsx';
 
-import { FacActivityProvider } from '../../context/FacSharedActivityContext.tsx';
+import {FacActivityProvider, useFacActivity} from '../../context/FacSharedActivityContext.tsx';
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -30,6 +31,7 @@ function useOrientation() {
 export default function FacultyActivitySwipeTabs({ route }) {
 	const ActivityID = route.params.ActivityID;
 	const isLandscape = useOrientation();
+	const insets = useSafeAreaInsets();
 
 	return (
 		<FacActivityProvider ActivityID={ActivityID}>
@@ -69,14 +71,15 @@ export default function FacultyActivitySwipeTabs({ route }) {
 					tabBarIndicatorStyle: {
 						backgroundColor: theme.colors.light.primary,
 						top: -2,
-						padding: 2,
+						padding: 1,
 						borderRadius: 10,
+						// height: 2
 					},
 					tabBarStyle: {
 						backgroundColor: theme.colors.light.card,
-						height: isLandscape ? 55 : 65,
 						paddingTop: 4,
-						paddingBottom: isLandscape ? 4 : 10,
+						paddingBottom: insets.bottom,
+						height: 60 + insets.bottom,
 						shadowColor: '#000',
 						shadowOffset: { width: 0, height: -2 },
 						shadowOpacity: 0.1,

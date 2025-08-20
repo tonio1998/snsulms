@@ -161,8 +161,7 @@ const AppNavigator = () => {
     return (
         <>
             {/*<StatusBar backgroundColor={theme.colors.light.primary} barStyle="dark-content" />*/}
-            <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-            <SafeAreaProvider>
+            <StatusBar translucent backgroundColor="transparent" barStyle="light-content" hidden={false} />
                 <AccessProvider>
                     <NavigationContainer ref={navigationRef} onReady={tryFlushPendingNavigation}>
                         <Stack.Navigator screenOptions={{
@@ -207,12 +206,12 @@ const AppNavigator = () => {
                         </Stack.Navigator>
                     </NavigationContainer>
                 </AccessProvider>
-            </SafeAreaProvider>
         </>
     );
 };
 
 export default function App(): React.JSX.Element {
+
 
     const syncPendingResponses = async () => {
         const keys = await AsyncStorage.getAllKeys();
@@ -247,19 +246,23 @@ export default function App(): React.JSX.Element {
 
 
     return (
-        <LoadingProvider>
-            <Loading2Provider>
-                <CAlert>
-                    <NetworkProvider>
-                        <AuthProvider>
-                            <GestureHandlerRootView style={{ flex: 1 }}>
-                                <AppNavigator />
-                            </GestureHandlerRootView>
-                        </AuthProvider>
-                        <StatusIndicator />
-                    </NetworkProvider>
-                </CAlert>
-            </Loading2Provider>
-        </LoadingProvider>
+        <>
+            <SafeAreaProvider>
+                <LoadingProvider>
+                    <Loading2Provider>
+                        <CAlert>
+                            <NetworkProvider>
+                                <AuthProvider>
+                                    <GestureHandlerRootView style={{ flex: 1 }}>
+                                        <AppNavigator />
+                                    </GestureHandlerRootView>
+                                </AuthProvider>
+                                <StatusIndicator />
+                            </NetworkProvider>
+                        </CAlert>
+                    </Loading2Provider>
+                </LoadingProvider>
+            </SafeAreaProvider>
+        </>
     );
 }

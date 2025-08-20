@@ -10,7 +10,7 @@ import {
 	StyleSheet,
 	ActivityIndicator,
 	Linking,
-	Alert,
+	Alert, ToastAndroid,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -32,6 +32,9 @@ import { useAlert } from '../../../../components/CAlert.tsx';
 import { useFacActivity } from '../../../../context/FacSharedActivityContext.tsx';
 import CButton from "../../../../components/buttons/CButton.tsx";
 import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
+import {SubmissionModal} from "../../../../components/SubmissionModal.tsx";
+import {pick} from "@react-native-documents/picker";
+import {uploadStudentSubmission} from "../../../../api/modules/submissionApi.ts";
 
 const InstructionScreen = ({ navigation, route }) => {
 	const { activity, refreshFromOnline } = useFacActivity();
@@ -44,11 +47,15 @@ const InstructionScreen = ({ navigation, route }) => {
 	const [refreshing, setRefreshing] = useState(false);
 	const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 	const [submissions, setSubmissions] = useState([]);
+	const [link, setLink] = useState('');
+	const [modalVisible, setModalVisible] = useState(false);
+	const [uploading, setUploading] = useState(false);
 
 	const loadSubmissions = async () => {
 		setLoading(true);
 		try {
 			const res = activity?.files || [];
+			setSubmissions(res);
 		} catch (err) {
 			handleApiError(err, 'Fetch');
 		} finally {
@@ -60,6 +67,7 @@ const InstructionScreen = ({ navigation, route }) => {
 	useEffect(() => {
 		if (activity?.ActivityID > 0) {
 			setActivityID(activity?.ActivityID);
+			console.log("🔍 Fetching activity", activity);
 		}
 	}, [activity]);
 
@@ -97,51 +105,143 @@ const InstructionScreen = ({ navigation, route }) => {
 		);
 	};
 
+	const handleFileSelect = async () => {
+		try {
+			const result = await pick({
+				type: ['application/pdf', 'image/png', 'image/jpg', 'image/jpeg', 'image/webp', 'image/gif'],
+			});
+			if (!result.length) return;
+
+			const file = result[0];
+			if (file.size > 10 * 1024 * 1024) {
+				Alert.alert('File too large', 'Max size is 10MB');
+				return;
+			}
+
+			const formData = new FormData();
+			formData.append('file', {
+				uri: file.uri,
+				type: file.type,
+				name: file.name,
+			});
+			formData.append('ActivityID', ActivityID.toString());
+
+			setUploading(true);
+			const response = await uploadStudentSubmission(formData);
+			console.log("🔍 Uploaded file", response);
+			if (response.success && response.data) {
+				setSubmissions(prev => [response.data, ...prev]);
+				ToastAndroid.show('File uploaded successfully.', ToastAndroid.SHORT);
+			} else {
+				ToastAndroid.show(response?.message || 'Server rejected the file.', ToastAndroid.SHORT);
+			}
+		} catch (error) {
+			handleApiError(error, 'Upload');
+		} finally {
+			setUploading(false);
+			setModalVisible(false);
+		}
+	};
+
+	const handleSubmitLink = async () => {
+		if (!link.trim()) {
+			ToastAndroid.show('Please enter a valid link.', ToastAndroid.SHORT);
+			return;
+		}
+
+		if (!/^https?:\/\//i.test(link.trim())) {
+			ToastAndroid.show('Link must start with http:// or https://', ToastAndroid.SHORT);
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append('link', link.trim());
+		formData.append('ActivityID', ActivityID.toString());
+
+		try {
+			setUploading(true);
+			const response = await uploadStudentSubmission(formData);
+
+			if (response.success && response.data) {
+				setSubmissions(prev => [response.data, ...prev]);
+				ToastAndroid.show('Link submitted successfully', ToastAndroid.SHORT);
+			} else {
+				ToastAndroid.show(response?.message || 'Server rejected the link.', ToastAndroid.SHORT);
+			}
+		} catch (error) {
+			ToastAndroid.show('Something went wrong.', ToastAndroid.SHORT);
+		} finally {
+			setUploading(false);
+			setLink('');
+			setModalVisible(false);
+		}
+	};
+
+
 	const renderHeader = () => (
 		<>
+			{loading && (
+				<>
+				<ActivityIndicator2 />
+				</>
+			)}
 			<View style={styles.card}>
 				{activity?.topic?.Title && (
 					<CText fontSize={12} style={styles.label}>Topic: {activity?.topic?.Title}</CText>
 				)}
 				<CText fontSize={16} fontStyle="SB" style={styles.title}>{activity?.Title}</CText>
-				{activity?.Description && (
+
+				{activity?.ActivityTypeID > 1 && (
 					<>
-						<CText fontSize={12} style={styles.label}>
-							Instruction:
-						</CText>
-						<CText style={styles.text}>{activity?.Description}</CText>
+						{activity?.Description && (
+							<>
+								<CText fontSize={12} style={styles.label}>
+									Instruction:
+								</CText>
+								<CText style={styles.text}>{activity?.Description}</CText>
+							</>
+						)}
+
+						{activity?.DueDate && (
+							<>
+								<CText fontSize={12} style={styles.label}>
+									Due Date:
+								</CText>
+								<CText style={styles.text}>{formatDate(activity?.DueDate)}</CText>
+							</>
+						)}
+
+						<View style={[globalStyles.cardRow, { flexDirection: 'row', justifyContent: 'flex-start' }]}>
+							{activity?.Points > 0 && (
+								<View style={[styles.pointsRow, { marginRight: 45 }]}>
+									<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>
+										{formatNumber(activity?.Points)}
+									</CText>
+									<CText fontSize={12} style={styles.pointsLabel}>Points</CText>
+								</View>
+							)}
+							{activity?.Grade > 0 && (
+								<View style={styles.pointsRow}>
+									<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>
+										{formatNumber(activity?.Grade)}
+									</CText>
+									<CText fontSize={12} style={styles.pointsLabel}>Points Earned</CText>
+								</View>
+							)}
+						</View>
+
+						<View style={[globalStyles.cardRow, { flexDirection: 'row', justifyContent: 'flex-start' }]}>
+							{activity?.DateSubmitted && (
+								<View style={styles.pointsRow}>
+									<CText fontSize={18} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>
+										{formatDate(activity?.DateSubmitted)}
+									</CText>
+									<CText fontSize={12} style={styles.pointsLabel}>Date Submitted</CText>
+								</View>
+							)}
+						</View>
 					</>
 				)}
-				{activity?.DueDate && (
-					<>
-						<CText fontSize={12} style={styles.label}>Due Date:</CText>
-						<CText style={styles.text}>{formatDate(activity?.DueDate)}</CText>
-					</>
-				)}
-
-				<View style={[globalStyles.cardRow, { flexDirection: 'row', justifyContent: 'flex-start' }]}>
-					{activity?.Points > 0 && (
-						<View style={[styles.pointsRow, { marginRight: 45 }]}>
-							<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>{formatNumber(activity?.Points)}</CText>
-							<CText fontSize={12} style={styles.pointsLabel}>Points</CText>
-						</View>
-					)}
-					{activity?.Grade > 0 && (
-						<View style={styles.pointsRow}>
-							<CText fontSize={20} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>{formatNumber(activity?.Grade)}</CText>
-							<CText fontSize={12} style={styles.pointsLabel}>Points Earned</CText>
-						</View>
-					)}
-				</View>
-
-				<View style={[globalStyles.cardRow, { flexDirection: 'row', justifyContent: 'flex-start' }]}>
-					{activity?.DateSubmitted && (
-						<View style={styles.pointsRow}>
-							<CText fontSize={18} fontStyle="SB" style={{ color: theme.colors.light.primary, textAlign: 'center' }}>{formatDate(activity?.DateSubmitted)}</CText>
-							<CText fontSize={12} style={styles.pointsLabel}>Date Submitted</CText>
-						</View>
-					)}
-				</View>
 			</View>
 
 			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Instructor</CText>
@@ -177,11 +277,6 @@ const InstructionScreen = ({ navigation, route }) => {
 		<>
 			<BackHeader title="Instruction" />
 			<SafeAreaView style={globalStyles.safeArea}>
-				{loading && (
-					<>
-						<ActivityIndicator2 />
-					</>
-				)}
 				<FlatList
 					data={submissions}
 					keyExtractor={(item, i) => `${item.id}-${i}`}
@@ -190,6 +285,24 @@ const InstructionScreen = ({ navigation, route }) => {
 					contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
 					ListEmptyComponent={<Text style={styles.emptyText}>No attachments. 💤</Text>}
+				/>
+
+				{activity?.ActivityTypeID === 1 && (
+					<>
+						<TouchableOpacity style={globalStyles.fab} onPress={() => setModalVisible(true)}>
+							<Icon name="cloud-upload-outline" size={28} color="#fff" />
+						</TouchableOpacity>
+					</>
+				)}
+
+				<SubmissionModal
+					visible={modalVisible}
+					onClose={() => setModalVisible(false)}
+					link={link}
+					setLink={setLink}
+					onFileSelect={handleFileSelect}
+					onSubmitLink={handleSubmitLink}
+					uploading={uploading}
 				/>
 			</SafeAreaView>
 		</>

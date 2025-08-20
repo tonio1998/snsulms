@@ -62,8 +62,8 @@ export default function SubmissionScreen({ navigation, route }) {
 		showLoading2('Loading submissions...');
 		try {
 			const { data, date } = await loadStudentActivityToLocal(StudentActivityID);
+			console.log("data", data);
 			if (data?.student_info) {
-				console.log("data", data);
 				setLastFetched(date);
 				setSubmissions(data?.st_attachments || []);
 			} else {

@@ -1,214 +1,243 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState, useMemo } from 'react';
 import {
 	View,
 	FlatList,
-	Text,
-	ActivityIndicator,
 	TouchableOpacity,
 	RefreshControl,
 	SafeAreaView,
-	Image,
 	StyleSheet,
 	ScrollView,
+	Modal,
+	Animated,
+	Easing,
+	Dimensions,
+	ActivityIndicator, Alert,
 } from 'react-native';
 import { globalStyles } from '../../../../theme/styles.ts';
 import { theme } from '../../../../theme';
 import { handleApiError } from '../../../../utils/errorHandler.ts';
-import { useLoading } from '../../../../context/LoadingContext.tsx';
 import { useFocusEffect } from '@react-navigation/native';
 import { CText } from '../../../../components/common/CText.tsx';
-import { getStudentActivities } from "../../../../api/modules/activitiesApi.ts";
-import { formatDate } from "../../../../utils/dateFormatter";
-import BackHeader from "../../../../components/layout/BackHeader.tsx";
-import BackgroundWrapper from "../../../../utils/BackgroundWrapper";
-import { NetworkContext } from "../../../../context/NetworkContext.tsx";
-import { getOfflineActivities, saveActivitiesOffline } from "../../../../utils/sqlite/offlineActivityService.ts";
-import {useClass} from "../../../../context/SharedClassContext.tsx";
+import { formatDate } from '../../../../utils/dateFormatter';
+import BackHeader from '../../../../components/layout/BackHeader.tsx';
+import { NetworkContext } from '../../../../context/NetworkContext.tsx';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useClass } from '../../../../context/SharedClassContext.tsx';
+import { useLoading2 } from '../../../../context/Loading2Context.tsx';
+import ProgressBar from "../../../../components/common/ProgressBar.tsx";
+import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
+import FabMenu from "../../../../components/buttons/FabMenu.tsx";
 import HomeHeader from "../../../../components/layout/HomeHeader.tsx";
+import DonutProgress from "../../../../components/common/DonutProgress.tsx";
 
-const MaterialsScreen = ({ navigation, route }) => {
-	const { classes } = useClass();
+const { height } = Dimensions.get('window');
+
+const ActivityCard = React.memo(({ item, onPress }) => (
+	<TouchableOpacity
+		style={globalStyles.card}
+		onPress={() => onPress(item.Title, item.ActivityID)}
+		activeOpacity={0.5}
+		onLongPress={() => Alert.alert("Long Press!", "You held the button")}
+		delayLongPress={800}
+	>
+		<View style={globalStyles.cardInner}>
+			<CText fontSize={17} fontStyle="SB" style={globalStyles.cardTitle}>{item?.Title}</CText>
+			{item?.Description?.trim() !== '' && (
+				<CText fontSize={14} style={globalStyles.cardDesc} numberOfLines={2}>{item?.Description}</CText>
+			)}
+			<View style={globalStyles.cardFooter}>
+				<CText fontSize={12} style={globalStyles.cardMeta}>Created {formatDate(item?.created_at, 'relative')}</CText>
+			</View>
+		</View>
+	</TouchableOpacity>
+));
+
+const MaterialScreen = ({ navigation }) => {
+	const { classes, refresh } = useClass();
 	const ClassID = classes?.ClassID;
-	const Type = route.params.type;
+
 	const network = useContext(NetworkContext);
+	const { showLoading2, hideLoading2 } = useLoading2();
+
 	const [activities, setActivities] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
-	const { showLoading, hideLoading } = useLoading();
-	const [actType, setActType] = useState(1);
-	const [allActivities, setAllActivities] = useState([]);
+	const [actType, setActType] = useState('');
+	const [showModal, setShowModal] = useState(false);
+	const slideAnim = useRef(new Animated.Value(height)).current;
 
-	const activityTypes = [
-		// { label: 'All', value: '' },
-		{ label: 'Resource', value: 1 },
-		// { label: 'Assignment', value: 2 },
-		// { label: 'Quiz', value: 3 },
-		// { label: 'Exam', value: 4 }
-	];
+	const activityTypes = useMemo(() => [
+		{ label: 'All', value: '' },
+		{ label: 'Assignment', value: 2 },
+		{ label: 'Quiz/Exam', value: 3 },
+	], []);
 
-	const fetchLocalActivities = async () => {
+	const fetchActivities = useCallback(async () => {
+		setLoading(true);
 		try {
-			setLoading(true);
-			const list = await getOfflineActivities({ ClassID });
-			setAllActivities(list);
-			setActivities(list);
-			handleActTypeFilter(actType, list);
+			// showLoading2('Loading activities...');
+			const res = classes?.activities || [];
+			const enriched = res.map(item => {
+				const total = item.student_activity?.length || 0;
+				const submitted = item.student_activity?.filter(stu => stu.DateSubmitted)?.length || 0;
+				return { ...item, CompletedPercent: total ? Math.round((submitted / total) * 100) : 0 };
+			});
+
+			console.log("🔍 Fetched activities", res);
+
+			setActivities(enriched);
+			setLoading(false);
 		} catch (err) {
 			handleApiError(err, 'Failed to fetch activities');
 		} finally {
 			setLoading(false);
+			// hideLoading2();
 		}
-	};
+	}, [classes?.activities, loading, network?.isOnline, showLoading2, hideLoading2]);
 
-	const fetchActivities = async () => {
-		try {
-			setLoading(true);
-			showLoading('Loading activities...');
+	useFocusEffect(useCallback(() => {
+		fetchActivities();
+		console.log("🔍 Fetching activities from API", ClassID);
+	}, [fetchActivities]));
 
-			let list = [];
-			const filter = { page: 1, search: '', ClassID };
+	const filteredActivities = useMemo(() => {
+		let filtered = activities.filter(act => act?.ActivityTypeID === 1);
+		return filtered;
+	}, [activities, actType]);
 
-			if (network?.isOnline) {
-				const res = await getStudentActivities(filter);
-				list = res?.data || [];
-				await saveActivitiesOffline(list, ClassID);
-			}
-
-			setAllActivities(list);
-			setActivities(list);
-			handleActTypeFilter(actType, list);
-
-		} catch (err) {
-			handleApiError(err, 'Failed to fetch activities');
-		} finally {
-			setLoading(false);
-			hideLoading();
-		}
-	};
-
-	useFocusEffect(
-		useCallback(() => {
-			if (ClassID) fetchLocalActivities();
-		}, [ClassID])
-	);
 
 	const handleRefresh = async () => {
-		setRefreshing(true);
+		refresh();
 		await fetchActivities();
-		setRefreshing(false);
 	};
 
-	const handleActTypeFilter = (type, list = allActivities) => {
-		setActType(type);
-		if (!type) {
-			setActivities(list);
-		} else {
-			setActivities(list.filter(item => item.activity.ActivityTypeID === type));
-		}
+	const handleViewAct = (Title, ActivityID) => navigation.navigate('FacActivityDetails', { Title, ActivityID });
+
+	const openModal = () => {
+		setShowModal(true);
+		Animated.timing(slideAnim, { toValue: 0, duration: 300, easing: Easing.out(Easing.ease), useNativeDriver: true }).start();
 	};
 
-	const handleViewAct = (StudentActivityID, Title) => {
-		navigation.navigate('ActivityDetails', {
-			StudentActivityID,
-			Title,
-			type: actType
+	const closeModal = () => {
+		Animated.timing(slideAnim, { toValue: height, duration: 250, useNativeDriver: true }).start(() => setShowModal(false));
+	};
+
+	const handleOption = type => {
+		closeModal();
+		if (type === '1') navigation.navigate('AddActivity', {
+			ClassID,
+			ActivityTypeID: type,
+			ClassInfo: classes,
+			onAdded: fetchActivities
 		});
 	};
 
-	const renderItem = ({ item }) => (
-		<TouchableOpacity style={styles.card}
-						  onPress={() => handleViewAct(item.StudentActivityID, item.activity.Title)}
-		>
-			<View style={{ padding: 16 }}>
-				<CText fontSize={16} fontStyle="SB" style={{ color: '#000' }}>
-					{item?.activity?.Title}
-				</CText>
-				<CText fontSize={14} style={{ color: '#444', marginTop: 4 }}>
-					{item?.activity?.Description}
-				</CText>
-				<View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-					<CText fontSize={12} style={{ color: '#777' }}>
-						Due: {formatDate(item?.activity?.DueDate)}
-					</CText>
-					<CText fontSize={12} style={{ color: '#777' }}>
-						Created: {formatDate(item?.activity?.created_at, 'relative')}
-					</CText>
-				</View>
-			</View>
-		</TouchableOpacity>
-	);
-
 	const renderFilterHeader = () => (
-		<ScrollView
-			horizontal
-			showsHorizontalScrollIndicator={false}
-			style={{ paddingHorizontal: 10, marginBottom: 10 }}
-		>
-			<View style={{ flexDirection: 'row', gap: 8, marginHorizontal: 20 }}>
-				{activityTypes.map((type, idx) => (
-					<TouchableOpacity
-						key={idx}
-						onPress={() => handleActTypeFilter(type.value)}
-						style={[
-							styles.filterBtn,
-							actType === type.value && styles.activeFilterBtn
-						]}
-					>
-						<CText style={{ color: actType === type.value ? '#fff' : '#000' }} fontStyle="SB">
-							{type.label}
-						</CText>
-					</TouchableOpacity>
-				))}
-			</View>
-		</ScrollView>
+		<>
+			<ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+				<View style={{ flexDirection: 'row', gap: 10 }}>
+					{activityTypes.map((type, idx) => {
+						const isActive = actType === type.value;
+						return (
+							<TouchableOpacity
+								key={idx}
+								onPress={() => setActType(type.value)}
+								style={[styles.filterBtn, isActive && styles.activeFilterBtn]}
+							>
+								<CText style={{ color: isActive ? '#fff' : '#111', fontSize: 13 }} fontStyle="SB">{type.label}</CText>
+							</TouchableOpacity>
+						);
+					})}
+				</View>
+			</ScrollView>
+		</>
 	);
 
 	return (
 		<>
-			{/*<BackHeader title="Materials" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
-			{/*<HomeHeader title="Activities" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />*/}
-				<SafeAreaView style={[globalStyles.safeArea2]}>
-					<FlatList
-						data={activities}
-						keyExtractor={(item) => item.StudentActivityID.toString()}
-						renderItem={renderItem}
-						// ListHeaderComponent={renderFilterHeader}
-						contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
-						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-						ListEmptyComponent={
-							!loading && (
-								<View style={{ padding: 20, alignItems: 'center' }}>
-									<CText fontSize={14} style={{ color: '#888' }}>
-										No materials found
-									</CText>
-								</View>
-							)
-						}
-					/>
-				</SafeAreaView>
+			<SafeAreaView style={[globalStyles.safeArea2]}>
+				{loading && (
+					<>
+						<ActivityIndicator2 />
+					</>
+				)}
+				<FlatList
+					data={filteredActivities}
+					keyExtractor={item => item?.ActivityID.toString()}
+					renderItem={({ item }) => <ActivityCard item={item} onPress={handleViewAct} />}
+					contentContainerStyle={{ padding: 10, paddingBottom: 120 }}
+					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+					initialNumToRender={5}
+					maxToRenderPerBatch={5}
+					removeClippedSubviews
+					ListEmptyComponent={!loading && (
+						<View style={{ padding: 20, alignItems: 'center' }}>
+							<Icon name="list-circle-outline" size={48} color="#ccc" />
+							<CText fontSize={14} style={{ color: '#888', marginTop: 10 }}>No activities found</CText>
+						</View>
+					)}
+				/>
+
+				<FabMenu
+					fabColor={theme.colors.light.warning}
+					fabIcon="add"
+					iconColor="#fff"
+					iconSize={28}
+					radius={80}
+					startAngle={200}
+					spacingAngle={60}
+					fabSize={55}
+					options={[
+						{
+							label: "Resources",
+							color: theme.colors.light.primary,
+							icon: "document-text",
+							onPress: () => handleOption("1"),
+						},
+					]}
+
+				/>
+
+
+
+			</SafeAreaView>
 		</>
 	);
 };
 
 const styles = StyleSheet.create({
-	card: {
-		backgroundColor: theme.colors.light.card,
-		borderRadius: 8,
-		marginBottom: 12,
-		borderWidth: 1,
-		borderColor: '#ddd'
+	overlay: {
+		flex: 1,
+		backgroundColor: 'transparent', // no dark dim
 	},
-	filterBtn: {
-		backgroundColor: '#ccc',
-		paddingHorizontal: 14,
-		paddingVertical: 8,
-		borderRadius: 20,
-		minHeight: 35,
+	modalContainerNearFab: {
+		position: 'absolute',
+		right: 20, // adjust to match FAB horizontal position
+		bottom: 90, // pop above FAB height
+		alignItems: 'center',
+		gap: 10,
+	},
+	option: {
+		height: 60,
+		width: 120,
+		borderRadius: 10,
+		backgroundColor: '#fff',
 		justifyContent: 'center',
+		alignItems: 'center',
+		elevation: 4,
 	},
-	activeFilterBtn: {
-		backgroundColor: theme.colors.light.primary,
+	circleOption: {
+		width: 70,
+		height: 70,
+		borderRadius: 35,
+		backgroundColor: '#4a90e2',
+		justifyContent: 'center',
+		alignItems: 'center',
+		elevation: 6,
 	},
+	filterBtn: { borderRadius: 20, paddingVertical: 8, paddingHorizontal: 20, backgroundColor: '#f3f4f6' },
+	activeFilterBtn: { backgroundColor: theme.colors.light.primary },
+	fab: { position: 'absolute', bottom: 30, right: 20, backgroundColor: theme.colors.light.primary, width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowOffset: { width: 0, height: 4 }, shadowRadius: 6, elevation: 5 },
 });
 
-export default MaterialsScreen;
+export default MaterialScreen;

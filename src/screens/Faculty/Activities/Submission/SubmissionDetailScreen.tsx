@@ -60,9 +60,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 
 	const fetchLocal = async () => {
 		const local = await fetchStudentActivitySubmissions(ActivityID, StudentActivityID);
-		console.log('local?.data: ',local)
 		if (local) {
-			console.log('local?.data: ',local)
 			setSubmission(local);
 			setAttachment(local?.st_attachments || []);
 			setGradeInput(local?.Grade ? local.Grade.toString() : '');
@@ -146,7 +144,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 			>
 				<Icon name="document-outline" size={22} color="#555" />
 				<View style={{ marginLeft: 12, flex: 1 }}>
-					<CText fontSize={16} fontStyle="SB" numberOfLines={1} style={{ color: '#000' }}>
+					<CText fontSize={16} fontStyle="B" numberOfLines={1} style={{ color: '#000' }}>
 						{item.Title}
 					</CText>
 					{item.FileSize && (
@@ -194,7 +192,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 											style={styles.avatar}
 										/>
 										<View style={styles.profileInfo}>
-											<CText style={styles.nameText}>
+											<CText style={styles.nameText} fontStyle={'SB'}>
 												{submission?.student_info?.FirstName} {submission?.student_info?.LastName}
 											</CText>
 											<CText style={styles.subText}>
@@ -306,11 +304,11 @@ const styles = StyleSheet.create({
 	profileCard: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		backgroundColor: '#fff',
+		backgroundColor: theme.colors.light.info+'22',
 		borderRadius: 10,
 		padding: 12,
 		marginBottom: 14,
-		elevation: 2,
+		// elevation: 2,
 		shadowColor: '#000',
 		shadowOpacity: 0.04,
 		shadowOffset: { width: 0, height: 1 },

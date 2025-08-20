@@ -65,11 +65,11 @@ export const globalStyles = StyleSheet.create({
         width: 55,
         height: 55,
         borderRadius: 30,
-        backgroundColor: theme.colors.light.primary,
+        backgroundColor: theme.colors.light.warning,
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 6,
-        shadowColor: '#000',
+        shadowColor: theme.colors.light.warning,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
@@ -135,40 +135,24 @@ export const globalStyles = StyleSheet.create({
         elevation: 20,
         // margin: 5
     },
-    
-    
+
+
     card: {
-        backgroundColor: theme.colors.light.card,
-        // padding: 16,
-        borderRadius: 8,
-        marginBottom: 10,
-        shadowColor: theme.colors.light.primary,
+        backgroundColor: '#fff',
+        borderRadius: theme.radius.sm,
+        padding: 16,
+        marginBottom: 14,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 1,
+        elevation: 2
     },
-    cardbody:{
-        padding: 8,
-    },
-    cardheader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-        padding: 8,
-        borderBottomWidth: 1,
-        borderColor: '#ddd',
-    },
-    cardfooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 10,
-        padding: 8,
-        borderTopWidth: 1,
-        borderColor: '#ddd',
-    },
+    cardInner: {},
+    cardTitle: { fontSize: 17, color: '#111', marginBottom: 6 },
+    cardDesc: { fontSize: 14, color: '#555', lineHeight: 20 },
+    cardFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
+    cardMeta: { fontSize: 12, color: '#888' },
     label: {
         fontSize: 16,
         fontWeight: '600',

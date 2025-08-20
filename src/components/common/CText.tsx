@@ -29,7 +29,7 @@ export const CText = ({
             break;
         case 'L':
         default:
-            fontFamily = theme.font.light;
+            fontFamily = theme.font.regular;
             break;
     }
     
