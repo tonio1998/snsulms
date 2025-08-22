@@ -7,11 +7,9 @@ import {
 	SafeAreaView,
 	StyleSheet,
 	ScrollView,
-	Modal,
 	Animated,
 	Easing,
 	Dimensions,
-	ActivityIndicator, Alert,
 } from 'react-native';
 import { globalStyles } from '../../../../theme/styles.ts';
 import { theme } from '../../../../theme';
@@ -19,16 +17,12 @@ import { handleApiError } from '../../../../utils/errorHandler.ts';
 import { useFocusEffect } from '@react-navigation/native';
 import { CText } from '../../../../components/common/CText.tsx';
 import { formatDate } from '../../../../utils/dateFormatter';
-import BackHeader from '../../../../components/layout/BackHeader.tsx';
 import { NetworkContext } from '../../../../context/NetworkContext.tsx';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useClass } from '../../../../context/SharedClassContext.tsx';
-import { useLoading2 } from '../../../../context/Loading2Context.tsx';
-import ProgressBar from "../../../../components/common/ProgressBar.tsx";
+import DonutProgress from "../../../../components/common/DonutProgress.tsx";
 import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
 import FabMenu from "../../../../components/buttons/FabMenu.tsx";
-import HomeHeader from "../../../../components/layout/HomeHeader.tsx";
-import DonutProgress from "../../../../components/common/DonutProgress.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -68,7 +62,6 @@ const ActivityScreen = ({ navigation }) => {
 	const ClassID = classes?.ClassID;
 
 	const network = useContext(NetworkContext);
-	const { showLoading2, hideLoading2 } = useLoading2();
 
 	const [activities, setActivities] = useState([]);
 	const [loading, setLoading] = useState(false);
@@ -86,7 +79,9 @@ const ActivityScreen = ({ navigation }) => {
 	const fetchActivities = useCallback(async () => {
 		setLoading(true);
 		try {
-			// showLoading2('Loading activities...');
+			// simulate slight delay so loading spinner is visible
+			await new Promise(resolve => setTimeout(resolve, 500));
+
 			const res = classes?.activities || [];
 			const enriched = res.map(item => {
 				const total = item.student_activity?.length || 0;
@@ -95,14 +90,12 @@ const ActivityScreen = ({ navigation }) => {
 			});
 
 			setActivities(enriched);
-			setLoading(false);
 		} catch (err) {
 			handleApiError(err, 'Failed to fetch activities');
 		} finally {
 			setLoading(false);
-			// hideLoading2();
 		}
-	}, [classes?.activities, loading, network?.isOnline, showLoading2, hideLoading2]);
+	}, [classes?.activities, network?.isOnline]);
 
 	useFocusEffect(useCallback(() => {
 		fetchActivities();
@@ -117,25 +110,17 @@ const ActivityScreen = ({ navigation }) => {
 		return filtered;
 	}, [activities, actType]);
 
-
 	const handleRefresh = async () => {
-		refresh();
+		setRefreshing(true);
+		await refresh();
 		await fetchActivities();
+		setRefreshing(false);
 	};
 
-	const handleViewAct = (Title, ActivityID) => navigation.navigate('FacActivityDetails', { Title, ActivityID });
-
-	const openModal = () => {
-		setShowModal(true);
-		Animated.timing(slideAnim, { toValue: 0, duration: 300, easing: Easing.out(Easing.ease), useNativeDriver: true }).start();
-	};
-
-	const closeModal = () => {
-		Animated.timing(slideAnim, { toValue: height, duration: 250, useNativeDriver: true }).start(() => setShowModal(false));
-	};
+	const handleViewAct = (Title, ActivityID) =>
+		navigation.navigate('FacActivityDetails', { Title, ActivityID });
 
 	const handleOption = type => {
-		closeModal();
 		if (type === '2') navigation.navigate('AddActivity', {
 			ClassID,
 			ActivityTypeID: type,
@@ -169,101 +154,68 @@ const ActivityScreen = ({ navigation }) => {
 					})}
 				</View>
 			</ScrollView>
+			{loading && <ActivityIndicator2 />}
 		</>
 	);
 
 	return (
-		<>
-			<SafeAreaView style={[globalStyles.safeArea2]}>
-				{loading && (
-					<>
-						<ActivityIndicator2 />
-					</>
+		<SafeAreaView style={[globalStyles.safeArea2]}>
+			<FlatList
+				data={filteredActivities}
+				keyExtractor={item => item?.ActivityID.toString()}
+				renderItem={({ item }) => <ActivityCard item={item} onPress={handleViewAct} />}
+				ListHeaderComponent={renderFilterHeader}
+				contentContainerStyle={{ padding: 10, paddingBottom: 120 }}
+				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+				initialNumToRender={5}
+				maxToRenderPerBatch={5}
+				removeClippedSubviews
+				ListEmptyComponent={!loading && (
+					<View style={{ padding: 20, alignItems: 'center' }}>
+						<Icon name="list-circle-outline" size={48} color="#ccc" />
+						<CText fontSize={14} style={{ color: '#888', marginTop: 10 }}>No activities found</CText>
+					</View>
 				)}
-				<FlatList
-					data={filteredActivities}
-					keyExtractor={item => item?.ActivityID.toString()}
-					renderItem={({ item }) => <ActivityCard item={item} onPress={handleViewAct} />}
-					ListHeaderComponent={renderFilterHeader}
-					contentContainerStyle={{ padding: 10, paddingBottom: 120 }}
-					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-					initialNumToRender={5}
-					maxToRenderPerBatch={5}
-					removeClippedSubviews
-					ListEmptyComponent={!loading && (
-						<View style={{ padding: 20, alignItems: 'center' }}>
-							<Icon name="list-circle-outline" size={48} color="#ccc" />
-							<CText fontSize={14} style={{ color: '#888', marginTop: 10 }}>No activities found</CText>
-						</View>
-					)}
-				/>
+			/>
 
-				<FabMenu
-					fabColor={theme.colors.light.warning}
-					fabIcon="add"
-					iconColor="#fff"
-					iconSize={28}
-					radius={80}
-					startAngle={200}
-					spacingAngle={60}
-					fabSize={55}
-					options={[
-						{
-							label: "Assignment",
-							color: theme.colors.light.primary,
-							icon: "document-text",
-							onPress: () => handleOption("2"),
-						},
-						{
-							label: "Quiz/Exam",
-							color: theme.colors.light.primary,
-							icon: "clipboard",
-							onPress: () => handleOption("3"),
-						},
-					]}
-
-				/>
-
-
-
-			</SafeAreaView>
-		</>
+			<FabMenu
+				fabColor={theme.colors.light.warning}
+				fabIcon="add"
+				iconColor="#fff"
+				iconSize={28}
+				radius={80}
+				startAngle={200}
+				spacingAngle={60}
+				fabSize={55}
+				options={[
+					{
+						label: "Assignment",
+						color: theme.colors.light.primary,
+						icon: "document-text",
+						onPress: () => handleOption("2"),
+					},
+					{
+						label: "Quiz/Exam",
+						color: theme.colors.light.primary,
+						icon: "clipboard",
+						onPress: () => handleOption("3"),
+					},
+				]}
+			/>
+		</SafeAreaView>
 	);
 };
 
 const styles = StyleSheet.create({
-	overlay: {
-		flex: 1,
-		backgroundColor: 'transparent', // no dark dim
+	filterBtn: {
+		borderRadius: 20,
+		paddingVertical: 8,
+		paddingHorizontal: 20,
+		backgroundColor: '#f3f4f6'
 	},
-	modalContainerNearFab: {
-		position: 'absolute',
-		right: 20, // adjust to match FAB horizontal position
-		bottom: 90, // pop above FAB height
-		alignItems: 'center',
-		gap: 10,
+	activeFilterBtn: {
+		backgroundColor: theme.colors.light.primary
 	},
-	option: {
-		height: 60,
-		width: 120,
-		borderRadius: 10,
-		backgroundColor: '#fff',
-		justifyContent: 'center',
-		alignItems: 'center',
-		elevation: 4,
-	},
-	circleOption: {
-		width: 70,
-		height: 70,
-		borderRadius: 35,
-		backgroundColor: '#4a90e2',
-		justifyContent: 'center',
-		alignItems: 'center',
-		elevation: 6,
-	},
-	filterBtn: { borderRadius: 20, paddingVertical: 8, paddingHorizontal: 20, backgroundColor: '#f3f4f6' },
-	activeFilterBtn: { backgroundColor: theme.colors.light.primary },
-	fab: { position: 'absolute', bottom: 30, right: 20, backgroundColor: theme.colors.light.primary, width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowOffset: { width: 0, height: 4 }, shadowRadius: 6, elevation: 5 },
 });
 
 export default ActivityScreen;

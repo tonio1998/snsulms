@@ -8,6 +8,7 @@ import api from "../api.ts";
 // };
 
 export const getStudentActivities = async ({ page = 1, search = '', ClassID = '' }) => {
+    console.log("🔍 Fetching activities from API", ClassID);
     const response = await api.get('/lms/myclasses/activities/students', {
         params: { page, search, ClassID }
     });

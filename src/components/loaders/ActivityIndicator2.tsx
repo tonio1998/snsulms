@@ -16,26 +16,26 @@ export default function ActivityIndicator2() {
                 Animated.parallel([
                     Animated.timing(dot1X, {
                         toValue: distance,
-                        duration: 600,
+                        duration: 400,
                         useNativeDriver: true,
                         easing: Easing.inOut(Easing.ease),
                     }),
                     Animated.timing(dot2X, {
                         toValue: 0,
-                        duration: 600,
+                        duration: 400,
                         useNativeDriver: true,
                         easing: Easing.inOut(Easing.ease),
                     }),
                     // Shrink dot1, grow dot2
                     Animated.timing(dot1Scale, {
                         toValue: 0.6,
-                        duration: 600,
+                        duration: 400,
                         useNativeDriver: true,
                         easing: Easing.inOut(Easing.ease),
                     }),
                     Animated.timing(dot2Scale, {
                         toValue: 1,
-                        duration: 600,
+                        duration: 400,
                         useNativeDriver: true,
                         easing: Easing.inOut(Easing.ease),
                     }),
@@ -43,26 +43,26 @@ export default function ActivityIndicator2() {
                 Animated.parallel([
                     Animated.timing(dot1X, {
                         toValue: 0,
-                        duration: 600,
+                        duration: 400,
                         useNativeDriver: true,
                         easing: Easing.inOut(Easing.ease),
                     }),
                     Animated.timing(dot2X, {
                         toValue: distance,
-                        duration: 600,
+                        duration: 400,
                         useNativeDriver: true,
                         easing: Easing.inOut(Easing.ease),
                     }),
                     // Grow dot1, shrink dot2
                     Animated.timing(dot1Scale, {
                         toValue: 1,
-                        duration: 600,
+                        duration: 400,
                         useNativeDriver: true,
                         easing: Easing.inOut(Easing.ease),
                     }),
                     Animated.timing(dot2Scale, {
                         toValue: 0.6,
-                        duration: 600,
+                        duration: 400,
                         useNativeDriver: true,
                         easing: Easing.inOut(Easing.ease),
                     }),

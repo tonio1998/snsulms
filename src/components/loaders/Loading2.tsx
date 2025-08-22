@@ -11,9 +11,9 @@ import { theme } from '../../theme';
 
 interface LoadingProps {
     loading: boolean;
-    timeout?: number; // Optional timeout in ms, default: 6000
+    timeout?: number;
     onTimeout?: (errorMessage: string) => void;
-    bottom?: number; // Optional bottom offset, default: 65
+    bottom?: number;
 }
 
 const Loading: React.FC<LoadingProps> = ({
@@ -32,7 +32,7 @@ const Loading: React.FC<LoadingProps> = ({
         animationRef.current = Animated.loop(
             Animated.timing(translateX, {
                 toValue: 500,
-                duration: 500,
+                duration: 100,
                 easing: Easing.linear,
                 useNativeDriver: true,
             })
@@ -42,7 +42,6 @@ const Loading: React.FC<LoadingProps> = ({
 
     useEffect(() => {
         if (loading) {
-            // ToastAndroid.show('Opening file...' + bottom, ToastAndroid.SHORT);
             setShouldShow(true);
             startIndeterminateAnimation();
 

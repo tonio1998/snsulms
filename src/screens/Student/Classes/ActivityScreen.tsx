@@ -7,7 +7,7 @@ import { globalStyles } from '../../../theme/styles.ts';
 import { theme } from '../../../theme';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import { CText } from '../../../components/common/CText.tsx';
-import { getStudentActivities } from '../../../api/modules/activitiesApi.ts';
+import {getActivities, getStudentActivities} from '../../../api/modules/activitiesApi.ts';
 import { formatDate } from '../../../utils/dateFormatter';
 import BackHeader from '../../../components/layout/BackHeader.tsx';
 import Icon from "react-native-vector-icons/Ionicons";
@@ -18,6 +18,7 @@ import {
 import {useAuth} from "../../../context/AuthContext.tsx";
 import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
 import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
+import {handleApiError} from "../../../utils/errorHandler.ts";
 
 const ActivityScreen = ({ navigation, route }) => {
 	const ClassID = route.params.ClassID;
@@ -50,18 +51,21 @@ const ActivityScreen = ({ navigation, route }) => {
 			setLoading(true);
 			const res = await getStudentActivities({ page: 1, search: '', ClassID });
 			const list = res?.data ?? [];
-			console.log("list: ", list)
+
 			setAllActivities(list);
 			filterActivities(actType, list);
+
 			const date = await saveStudentClassActivitiesCache(ClassID, user?.id, list);
 			if (date) setLastFetched(date);
 		} catch (err) {
 			console.error('❌ Error loading activities:', err);
+			handleApiError(err, 'Unable to load activities');
 		} finally {
 			setLoading(false);
 			hideLoading();
 		}
 	};
+
 
 	const loadCachedActivities = async () => {
 		if (!ClassID) return;

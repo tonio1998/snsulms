@@ -4,7 +4,7 @@ import DatePickerModal from 'react-native-date-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import dayjs from 'dayjs';
 import { theme } from '../../theme';
-import { CText } from '../common/CText.tsx'; // adjust this path if needed
+import { CText } from '../common/CText.tsx';
 
 interface CustomDatePickerProps {
 	value: Date;
