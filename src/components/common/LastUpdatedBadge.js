@@ -18,7 +18,7 @@ export const LastUpdatedBadge = ({ date, onReload, style }) => {
 
     return (
         <>
-            {false && (
+            {date && (
                 <View style={[styles.container, style]}>
                         <View style={styles.left}>
                             <Icon

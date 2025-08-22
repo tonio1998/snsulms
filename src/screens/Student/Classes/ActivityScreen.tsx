@@ -205,7 +205,7 @@ const ActivityScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
 	card: {
 		backgroundColor: theme.colors.light.card,
-		borderRadius: theme.radius.sm,
+		borderRadius: theme.radius.md,
 		marginBottom: 14,
 		borderWidth: 1,
 		borderColor: '#e2e2e2',

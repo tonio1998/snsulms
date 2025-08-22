@@ -95,7 +95,7 @@ const SubmissionListScreen = ({ navigation }) => {
 
 		return (
 			<TouchableOpacity
-				style={styles.card}
+				style={[globalStyles.card, {marginHorizontal: 10}]}
 				onPress={() => handleViewSubmission(item.StudentActivityID, item.ActivityID)}
 			>
 				<View style={styles.submissionCard}>

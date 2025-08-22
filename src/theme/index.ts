@@ -19,7 +19,7 @@
 const colors = {
     light: {
         // Backgrounds
-        background: '#F9FAFB',
+        background: '#F1F1F1',
         surface: '#EEF4FA',
         card: '#FFFFFF',
         muted: '#F5F5F5',
@@ -31,8 +31,8 @@ const colors = {
         inputBackground: '#FFFFFF',
 
         // Primary / Secondary (single shades)
-        primary: '#138808',      // Blue (trust, knowledge) for main actions
-        secondary: '#144E00',    // Green (growth, progress) for secondary actions
+        primary: '#1A4E07',      // Blue (trust, knowledge) for main actions
+        secondary: '#138808',    // Green (growth, progress) for secondary actions
 
         // Status Colors
         success: '#22C55E',

@@ -128,10 +128,10 @@ const styles = StyleSheet.create({
 	},
 	button: {
 		backgroundColor: '#ccc',
-		borderRadius: 20,
+		borderRadius: theme.radius.md,
 		paddingVertical: 8,
 		paddingHorizontal: 14,
-		margin: 6, // replaced gap with margin for spacing
+		margin: 6,
 	},
 	selectedButton: {
 		backgroundColor: theme.colors.light.primary,
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
 	},
 	saveButton: {
 		backgroundColor: theme.colors.light.primary,
-		borderRadius: theme.radius.sm,
+		borderRadius: theme.radius.md,
 		paddingVertical: 12,
 		paddingHorizontal: 30,
 		marginTop: 30,

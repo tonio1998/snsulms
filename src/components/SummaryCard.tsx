@@ -75,7 +75,7 @@ export const SummaryCard = ({
 
 const styles = StyleSheet.create({
     cardContainer: {
-        borderRadius: 8,
+        borderRadius: theme.radius.md,
         overflow: "hidden",
         minWidth: 150,
         flex: 1,

@@ -111,7 +111,7 @@ const OutlineListScreen = ({ navigation, route }) => {
 						)}
 						renderItem={({ item }) => (
 							<TouchableOpacity
-								style={styles.item}
+								style={globalStyles.card}
 								onPress={() => navigation.navigate("OutlineDetails", { outline: item })}
 							>
 								<CText fontStyle="SB" fontSize={15}>{item.Title}</CText>
@@ -135,12 +135,7 @@ const OutlineListScreen = ({ navigation, route }) => {
 
 					<TouchableOpacity
 						onPress={() => navigation.navigate("AddOutline", { ClassID })}
-						style={[globalStyles.fab, {
-							margin: 15,
-							width: 60,
-							height: 60,
-							borderRadius: 50
-						}]}
+						style={[globalStyles.fab]}
 					>
 						<Icon name="add" size={28} color="#fff" />
 					</TouchableOpacity>

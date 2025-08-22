@@ -390,7 +390,8 @@ const styles = StyleSheet.create({
 		marginBottom: 10,
 		backgroundColor: theme.colors.light.background,
 		borderTopLeftRadius: 20,
-		borderTopRightRadius: 20
+		borderTopRightRadius: 20,
+		// elevation: 10,
 	},
 	updatedBadge: {
 		flexDirection: 'row',
@@ -409,7 +410,7 @@ const styles = StyleSheet.create({
 	noDataContainer: {
 		alignItems: 'center',
 		padding: 16,
-		borderRadius: 8,
+		borderRadius: theme.radius.md,
 		marginTop: 16,
 	},
 	noDataIconWrapper: {
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		backgroundColor: '#fff',
-		borderRadius: 8,
+		borderRadius: theme.radius.md,
 		padding: 16,
 		marginBottom: 12,
 		shadowColor: '#000',
@@ -464,11 +465,11 @@ const styles = StyleSheet.create({
 	summaryCard: {
 		width: Dimensions.get('window').width * 1.1,
 		padding: 20,
-		borderRadius: 8,
+		borderRadius: theme.radius.md,
 	},
 	summaryCardSmall: {
 		width: Dimensions.get('window').width * 0.60,
-		borderRadius: 8,
+		borderRadius: theme.radius.md,
 	},
 	section: {
 		marginTop: 30,
@@ -480,7 +481,7 @@ const styles = StyleSheet.create({
 	shimmerPlaceholder: {
 		height: 70,
 		width: Dimensions.get('window').width * 0.9,
-		borderRadius: 8,
+		borderRadius: theme.radius.md,
 		marginBottom: 12,
 	},
 });
