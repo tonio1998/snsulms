@@ -9,7 +9,7 @@ import {
 	Modal,
 	Animated,
 	Easing,
-	FlatList,
+	FlatList, Text,
 } from 'react-native';
 import CustomHeader from "../../components/layout/CustomHeader.tsx";
 import { globalStyles } from "../../theme/styles.ts";
@@ -164,6 +164,52 @@ const UseExistingQuiz = ({ navigation, route }) => {
 
 	const loadData = () => {
 		fetchData();
+	};
+
+	if (true) {
+		return (
+			<>
+				<BackHeader title="Test Builder" />
+				<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 100}]}>
+					<View style={styles.container}>
+				<View style={{
+					flex: 1,
+					justifyContent: 'center',
+					alignItems: 'center',
+					padding: 20,
+				}}>
+					<View style={{
+						backgroundColor: theme.colors.light.primary,
+						padding: 20,
+						borderRadius: 8,
+						shadowColor: "#000",
+						shadowOffset: { width: 0, height: 2 },
+						shadowOpacity: 0.25,
+						shadowRadius: 3.84,
+						elevation: 5,
+					}}>
+						<Text style={{
+							fontSize: 18,
+							fontWeight: 'bold',
+							color: theme.colors.light.card,
+							textAlign: 'center'
+						}}>
+							⚠️ This screen is still under development ⚠️
+						</Text>
+						<Text style={{
+							fontSize: 14,
+							color: theme.colors.light.card,
+							textAlign: 'center',
+							marginTop: 5
+						}}>
+							Hang tight! Cool stuff is coming soon 🚀
+						</Text>
+					</View>
+				</View>
+					</View>
+				</SafeAreaView>
+			</>
+		);
 	};
 
 	return (

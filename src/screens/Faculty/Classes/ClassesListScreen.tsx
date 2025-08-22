@@ -38,6 +38,7 @@ import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
 import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
 import {useLoading} from "../../../context/LoadingContext.tsx";
 import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
+import OptionModal from "../../../components/OptionModal.tsx";
 
 const { height } = Dimensions.get('window');
 
@@ -103,7 +104,6 @@ const ClassesListScreen = ({ navigation }) => {
 				await loadClassesOnline();
 			}
 		} catch (err) {
-			await loadClassesOnline();
 		} finally {
 			setLoading(false);
 			// hideLoading2();
@@ -308,40 +308,18 @@ const ClassesListScreen = ({ navigation }) => {
 					<Icon name="add" size={24} color="white" />
 				</TouchableOpacity>
 
-				{showModal && (
-					<>
-						<Modal transparent visible={showModal} animationType="none">
-							<TouchableOpacity
-								style={globalStyles.overlay}
-								activeOpacity={1}
-								onPress={closeModal}
-							/>
-							<Animated.View
-								style={[
-									globalStyles.modalContainer,
-									{ transform: [{ translateY: slideAnim }] },
-								]}
-							>
-								<TouchableOpacity
-									style={globalStyles.option}
-									onPress={() => handleOption('manual')}
-								>
-									<CText fontStyle="SB" fontSize={16}>
-										Add Class
-									</CText>
-								</TouchableOpacity>
-								<TouchableOpacity
-									style={globalStyles.option}
-									onPress={() => handleOption('fetch')}
-								>
-									<CText fontStyle="SB" fontSize={16}>
-										Import
-									</CText>
-								</TouchableOpacity>
-							</Animated.View>
-						</Modal>
-					</>
-				)}
+				<OptionModal
+					visible={showModal}
+					onClose={closeModal}
+					options={[
+						{ label: "Add Class", value: "manual"},
+						{ label: "Import", value: "fetch" },
+					]}
+					onSelect={(value) => {
+						handleOption(value);
+						closeModal();
+					}}
+				/>
 
 			</SafeAreaView>
 		</>
@@ -390,7 +368,7 @@ const styles = StyleSheet.create({
 	},
 	card: {
 		backgroundColor: 'white',
-		borderRadius: 5,
+		borderRadius: theme.radius.sm,
 		padding: 12,
 		marginBottom: 12,
 		shadowColor: '#000',
@@ -427,7 +405,7 @@ const styles = StyleSheet.create({
 	viewButton: {
 		paddingHorizontal: 14,
 		paddingVertical: 8,
-		borderRadius: 8,
+		borderRadius: 5,
 		backgroundColor: theme.colors.light.primary + '33',
 	},
 	modalOverlay: {

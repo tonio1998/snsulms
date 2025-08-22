@@ -31,13 +31,13 @@ import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx"
 import HomeHeader from "../../components/layout/HomeHeader.tsx";
 import SNSULogoDraw from "../../components/loaders/SNSULogoDraw.tsx";
 import {LastUpdatedBadge} from "../../components/common/LastUpdatedBadge";
+import OptionModal from "../../components/OptionModal.tsx";
 
 const PAGE_SIZE = 10;
 
 const WallScreen = ({ navigation }) => {
 	const { classes } = useClass();
 	const ClassID = classes?.ClassID;
-
 	const [wall, setWall] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
@@ -52,11 +52,13 @@ const WallScreen = ({ navigation }) => {
 
 	const loadCache = async () => {
 		if (!ClassID) return;
+		setLoading(true);
 		const { data, date } = await loadClassWallFromLocal(ClassID);
 		if (data) {
 			setWall(data);
 			setLastFetched(date);
 			setPage(Math.ceil(data.length / PAGE_SIZE));
+			setLoading(false);
 		} else {
 			fetchWall(1, true);
 		}
@@ -209,6 +211,11 @@ const WallScreen = ({ navigation }) => {
 		</View>
 	);
 
+	const handleSelect = (value: string) => {
+		console.log("Selected:", value);
+		setShowModal(false);
+	};
+
 	return (
 		<>
 			<HomeHeader title="Wall" goTo={{ tab: 'MainTabs', screen: 'Classes' }} />
@@ -236,23 +243,22 @@ const WallScreen = ({ navigation }) => {
 
 				/>
 
-				<TouchableOpacity style={styles.floatingButton} onPress={openModal}>
+				<TouchableOpacity style={globalStyles.fab} onPress={() => setShowModal(true)}>
 					<Icon name="add" size={28} color="#fff" />
 				</TouchableOpacity>
 
-				<Modal transparent visible={showModal} animationType="none">
-					<TouchableOpacity style={globalStyles.overlay} onPress={closeModal} />
-					<Animated.View style={[globalStyles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
-						<TouchableOpacity style={globalStyles.option} onPress={() => handleWallOption('post')}>
-							<Icon name="document-text-outline" size={20} color="#333" />
-							<CText fontStyle={'SB'} fontSize={15} style={{ marginLeft: 10 }}>Post</CText>
-						</TouchableOpacity>
-						<TouchableOpacity style={globalStyles.option} onPress={() => handleWallOption('meet')}>
-							<Icon name="people-outline" size={20} color="#333" />
-							<CText fontStyle={'SB'} fontSize={15} style={{ marginLeft: 10 }}>Meet</CText>
-						</TouchableOpacity>
-					</Animated.View>
-				</Modal>
+				<OptionModal
+					visible={showModal}
+					onClose={closeModal}
+					options={[
+						{ label: "Post", value: "post", icon: "document-text-outline" },
+						{ label: "Meet", value: "meet", icon: "people-outline" },
+					]}
+					onSelect={(value) => {
+						handleWallOption(value);
+						closeModal();
+					}}
+				/>
 			</SafeAreaView>
 		</>
 	);

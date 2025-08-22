@@ -22,7 +22,7 @@ export const globalStyles = StyleSheet.create({
     },
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,.5)',
+        backgroundColor: 'transparent',
     },
     modalContainer: {
         position: 'absolute',
@@ -35,10 +35,12 @@ export const globalStyles = StyleSheet.create({
         // paddingBottom: 30,
         padding: 15,
         paddingHorizontal: 24,
-        elevation: 20,
-        // shadowColor: theme.colors.light.primary,
+        elevation: 2,
+        shadowColor: theme.colors.light.primary,
         maxHeight: '75%',
         flexGrow: 1,
+        // borderWidth: 1,
+        // borderColor: '#ccc',
     },
     modalTitle: {
         fontSize: 20,
@@ -60,8 +62,8 @@ export const globalStyles = StyleSheet.create({
     },
     fab: {
         position: 'absolute',
-        right: 15,
-        bottom: 15,
+        right: 20,
+        bottom: 20,
         width: 55,
         height: 55,
         borderRadius: 30,
@@ -139,7 +141,7 @@ export const globalStyles = StyleSheet.create({
 
     card: {
         backgroundColor: '#fff',
-        borderRadius: theme.radius.sm,
+        borderRadius: theme.radius.md,
         padding: 16,
         marginBottom: 14,
         shadowColor: '#000',

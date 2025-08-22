@@ -17,10 +17,11 @@ import ClassSettingsScreen from "../../screens/Faculty/Classes/ClassDetails/Clas
 import ScanScreen from "../../Shared/Scanner/ScanScreen.tsx";
 import ClassScheduleScreen from "../../Shared/Schedule/ClassScheduleScreen.tsx";
 import OutlineListScreen from "../../screens/Faculty/Classes/Outline/OutlineListScreen.tsx";
-import {Dimensions, Platform, StatusBar, View} from "react-native";
+import {Dimensions, Platform, StatusBar, TouchableOpacity, View} from "react-native";
 import StudentMaterialScreen from "../../screens/Student/Classes/MaterialScreen.tsx";
 import {useFocusEffect} from "@react-navigation/native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+import BottomTabNav from "../BottomTabNav.tsx";
 
 const BottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -35,7 +36,7 @@ export default function ClassBottomNav({ route }) {
 	);
 }
 
-function ClassTopTabs({ route }) {
+function ClassTopTabs({ route, navigation }) {
 	const { ClassID } = route.params;
 	const { hasRole } = useAccess();
 	const { classes } = useClass();
@@ -67,8 +68,12 @@ function ClassTopTabs({ route }) {
 						backgroundColor: theme.colors.light.primary,
 						alignItems: "center",
 						justifyContent: "center",
+						flexDirection: 'row',
 					}}
 				>
+					{/*<TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Home')}>*/}
+					{/*	<Icon name="arrow-back" size={22} color="#fff" />*/}
+					{/*</TouchableOpacity>*/}
 					<CText style={{ fontSize: 16, fontWeight: "bold", color: "#fff", width: "80%", textAlign: 'center' }} numberOfLines={1}>
 						{classes?.CourseCode || "Class"} - {classes?.CourseName || "Class"}
 					</CText>
@@ -108,6 +113,7 @@ function ClassTopTabs({ route }) {
 						tabBarIcon: ({ focused, color }) => {
 							let iconName = "ellipse-outline";
 							switch (route.name) {
+								case "Home": iconName = focused ? "home" : "home-outline"; break;
 								case "Activities": iconName = focused ? "reader" : "reader-outline"; break;
 								case "Materials": iconName = focused ? "book" : "book-outline"; break;
 								case "Schedule": iconName = focused ? "calendar" : "calendar-outline"; break;

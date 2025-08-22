@@ -8,12 +8,10 @@ import {
 	StyleSheet,
 	Text,
 	LayoutAnimation,
-	Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-import CustomHeader from '../../../components/layout/CustomHeader.tsx';
 import { CText } from '../../../components/common/CText.tsx';
 import { ShimmerList } from '../../../components/loaders/ShimmerList.tsx';
 import { globalStyles } from '../../../theme/styles.ts';
@@ -24,13 +22,11 @@ import { getMyClasses } from '../../../api/modules/classesApi.ts';
 import { useLoading } from '../../../context/LoadingContext.tsx';
 import { useAuth } from '../../../context/AuthContext.tsx';
 import { loadClassesFromLocal, saveClassesToLocal } from "../../../utils/cache/Student/localStudentClassesService";
-import { formatDate } from "../../../utils/dateFormatter";
-import CustomHeader2 from "../../../components/layout/CustomHeader2.tsx";
-import {LastUpdatedBadge} from "../../../components/common/LastUpdatedBadge";
+import { LastUpdatedBadge } from "../../../components/common/LastUpdatedBadge";
 import ActivityIndicator2 from "../../../components/loaders/ActivityIndicator2.tsx";
 import DonutProgress from "../../../components/common/DonutProgress.tsx";
 
-const ClassesScreen = ({ navigation, route }) => {
+const ClassesScreen = ({ navigation }) => {
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
 
@@ -45,6 +41,7 @@ const ClassesScreen = ({ navigation, route }) => {
 	const [expandedClass, setExpandedClass] = useState(null);
 	const [lastFetched, setLastFetched] = useState(null);
 
+	/** 1. Get Academic Info on focus */
 	useFocusEffect(
 		useCallback(() => {
 			let isActive = true;
@@ -62,16 +59,22 @@ const ClassesScreen = ({ navigation, route }) => {
 		}, [])
 	);
 
+	/** 2. Load cached classes when acad is ready */
 	const loadFromCache = useCallback(async () => {
-		if (!user?.id) return;
+		if (!user?.id || !acad) return;
 		const { data, date } = await loadClassesFromLocal(user.id, acad);
 		if (data) {
 			setAllClasses(data);
 			setClasses(data);
 		}
 		if (date) setLastFetched(date);
-	}, []);
+	}, [acad, user?.id]);
 
+	useEffect(() => {
+		loadFromCache();
+	}, [acad, loadFromCache]);
+
+	/** 3. Fetch fresh classes from API */
 	const fetchFromApi = useCallback(async () => {
 		if (!acad || !user?.id) return;
 		setLoading(true);
@@ -103,13 +106,14 @@ const ClassesScreen = ({ navigation, route }) => {
 		}
 	}, [acad, user?.id, user?.conn_id, searchQuery]);
 
+	/** Search handler */
 	const handleSearch = (text) => {
 		setSearchQuery(text);
 		if (!text.trim()) {
 			setClasses(allClasses);
 		} else {
 			const lower = text.toLowerCase();
-			const filtered = classes.filter(item =>
+			const filtered = allClasses.filter(item =>
 				item?.class_info?.CourseName?.toLowerCase().includes(lower) ||
 				item.teacher?.name?.toLowerCase().includes(lower)
 			);
@@ -117,31 +121,13 @@ const ClassesScreen = ({ navigation, route }) => {
 		}
 	};
 
-	useEffect(() => {
-		// const loadData = async () => {
-		// 	await loadFromCache();
-		// 	const { data } = await loadClassesFromLocal(user?.id, acad);
-		// 	if (!data) {
-		// 		fetchFromApi();
-		// 	}
-		// };
-		loadFromCache();
-	}, [acad, user?.id]);
-
-
-	const handleSearchTextChange = (text) => {
-		setSearchQuery(text);
-		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-		debounceTimeout.current = setTimeout(() => {
-			loadFromCache();
-		}, 500);
-	};
-
+	/** Accordion toggle */
 	const toggleAccordion = (id) => {
 		LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 		setExpandedClass((prev) => (prev === id ? null : id));
 	};
 
+	/** Render each class */
 	const renderClassItem = ({ item }) => {
 		const classInfo = item.class_info;
 		const teacher = classInfo?.teacher || {};
@@ -176,24 +162,7 @@ const ClassesScreen = ({ navigation, route }) => {
 							<Text style={styles.sectionText}>Section: {classInfo?.Section}</Text>
 							<Text style={styles.sectionText}>Activities: {totalActivities}</Text>
 						</View>
-						<View style={styles.activityMeta}>
-							{/*<CText fontSize={12} style={{ color: theme.colors.light.primary }}>*/}
-							{/*	Submitted: {submittedCount} / Assigned: {assignedCount}*/}
-							{/*</CText>*/}
-							{/*<View style={styles.progressBarContainer}>*/}
-							{/*	<View style={styles.progressBar}>*/}
-							{/*		<View*/}
-							{/*			style={[*/}
-							{/*				styles.progressFill,*/}
-							{/*				{ width: `${submissionRate}%`, backgroundColor: theme.colors.light.primary },*/}
-							{/*			]}*/}
-							{/*		/>*/}
-							{/*	</View>*/}
-							{/*	<Text style={styles.percentageText}>{submissionRate.toFixed(0)}%</Text>*/}
-							{/*</View>*/}
-						</View>
 					</View>
-					{/*<Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} size={22} color="#444" />*/}
 				</TouchableOpacity>
 
 				{isExpanded && (
@@ -231,43 +200,37 @@ const ClassesScreen = ({ navigation, route }) => {
 	};
 
 	return (
-		<>
-			<SafeAreaView style={globalStyles.safeArea2}>
-				<View style={styles.container}>
-					<View style={styles.searchWrapper}>
-						<TextInput
-							style={styles.searchInput}
-							placeholder="Search classes..."
-							placeholderTextColor="#666"
-							value={searchQuery}
-							onChangeText={handleSearch}
-							returnKeyType="search"
-							clearButtonMode="while-editing"
-						/>
-					</View>
-					<LastUpdatedBadge
-						date={lastFetched}
-						onReload={fetchFromApi}
+		<SafeAreaView style={globalStyles.safeArea2}>
+			<View style={styles.container}>
+				<View style={styles.searchWrapper}>
+					<TextInput
+						style={styles.searchInput}
+						placeholder="Search classes..."
+						placeholderTextColor="#666"
+						value={searchQuery}
+						onChangeText={handleSearch}
+						returnKeyType="search"
+						clearButtonMode="while-editing"
 					/>
-					{loading && (
-						<>
-							<ActivityIndicator2 />
-						</>
-					)}
-					<ShimmerList
-						data={classes}
-						loading={loading}
-						renderItem={renderClassItem}
-						onRefresh={fetchFromApi}
-						keyExtractor={(item) => item.ClassStudentID?.toString() ?? `${item.ClassID}-${Math.random()}`}
-						ListEmptyComponent={!loading && <Text style={styles.emptyText}>No classes found.</Text>}
-					/>
-					<TouchableOpacity style={globalStyles.fab} onPress={() => navigation.navigate('JoinClass')}>
-						<Icon name="school" size={28} color="#fff" />
-					</TouchableOpacity>
 				</View>
-			</SafeAreaView>
-		</>
+				<LastUpdatedBadge
+					date={lastFetched}
+					onReload={fetchFromApi}
+				/>
+				{loading && <ActivityIndicator2 />}
+				<ShimmerList
+					data={classes}
+					loading={loading}
+					renderItem={renderClassItem}
+					onRefresh={fetchFromApi}
+					keyExtractor={(item) => item.ClassStudentID?.toString() ?? `${item.ClassID}-${Math.random()}`}
+					ListEmptyComponent={!loading && <Text style={styles.emptyText}>No classes found.</Text>}
+				/>
+				<TouchableOpacity style={globalStyles.fab} onPress={() => navigation.navigate('JoinClass')}>
+					<Icon name="school" size={28} color="#fff" />
+				</TouchableOpacity>
+			</View>
+		</SafeAreaView>
 	);
 };
 
@@ -346,42 +309,6 @@ const styles = StyleSheet.create({
 		fontSize: 11,
 		fontWeight: '600',
 	},
-	activityMeta: {
-		marginTop: 8,
-		gap: 2,
-	},
-	progressBarContainer: {
-		marginTop: 4,
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	progressBar: {
-		flex: 1,
-		height: 5,
-		backgroundColor: '#e0e0e0',
-		borderRadius: 4,
-		overflow: 'hidden',
-		marginRight: 6,
-	},
-	progressFill: {
-		height: '100%',
-		borderRadius: 4,
-	},
-	percentageText: {
-		fontSize: 11,
-		color: '#666',
-		minWidth: 28,
-	},
-	teacherContainer: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		backgroundColor: theme.colors.light.primary + '10',
-		paddingVertical: 6,
-		paddingHorizontal: 10,
-		borderRadius: 50,
-		alignSelf: 'flex-start',
-		marginTop: 8,
-	},
 	avatar: {
 		width: 35,
 		height: 35,
@@ -390,18 +317,6 @@ const styles = StyleSheet.create({
 		backgroundColor: '#ccc',
 		borderWidth: 1,
 		borderColor: theme.colors.light.primary,
-	},
-	teacherName: {
-		textTransform: 'uppercase',
-		flexShrink: 1,
-		fontSize: 11,
-	},
-	viewBtn: {
-		marginTop: 10,
-		backgroundColor: theme.colors.light.primary,
-		paddingVertical: 8,
-		alignItems: 'center',
-		borderRadius: 8,
 	},
 });
 

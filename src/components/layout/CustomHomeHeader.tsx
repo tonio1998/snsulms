@@ -241,8 +241,8 @@ const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 21,
-        borderWidth: 1,
-        borderColor: theme.colors.light.card,
+        borderWidth: 0,
+        // borderColor: theme.colors.light.card,
         overflow: 'hidden',
     },
     avatar: {

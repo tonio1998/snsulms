@@ -28,6 +28,7 @@ import { CText } from "../../components/common/CText.tsx";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader2 from "../../components/layout/CustomHeader2.tsx";
 import BackHeader from "../../components/layout/BackHeader.tsx";
+import {theme} from "../../theme";
 
 export default function ClassAttendanceScanScreen() {
     const { classes } = useClass();
@@ -49,12 +50,12 @@ export default function ClassAttendanceScanScreen() {
 
     const SCAN_BOX_SIZE = 220;
 
-    useFocusEffect(
-        useCallback(() => {
-            fetchRecentScans();
-            if (network?.isOnline) syncOfflineAttendance();
-        }, [network?.isOnline])
-    );
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         fetchRecentScans();
+    //         if (network?.isOnline) syncOfflineAttendance();
+    //     }, [network?.isOnline])
+    // );
 
     useEffect(() => {
         Animated.loop(
@@ -88,10 +89,10 @@ export default function ClassAttendanceScanScreen() {
     }, []);
 
     useEffect(() => {
-        if (isFocused) {
-            scannedRef.current = false;
-            setScanned(false);
-        }
+        // if (isFocused) {
+        //     scannedRef.current = false;
+        //     setScanned(false);
+        // }
     }, [isFocused]);
 
     const fetchRecentScans = async () => {
@@ -101,7 +102,7 @@ export default function ClassAttendanceScanScreen() {
             const list = stored ? JSON.parse(stored) : [];
             setRecentScans(list);
         } catch (e) {
-            console.error("Failed to fetch recent scans", e);
+            // console.error("Failed to fetch recent scans", e);
         }
     };
 
@@ -114,7 +115,7 @@ export default function ClassAttendanceScanScreen() {
             await AsyncStorage.setItem(key, JSON.stringify(updatedList));
             setRecentScans(updatedList);
         } catch (e) {
-            console.error("Failed to store scan locally", e);
+            // console.error("Failed to store scan locally", e);
         }
     };
 
@@ -146,7 +147,7 @@ export default function ClassAttendanceScanScreen() {
             }
 
         } catch (err) {
-            handleApiError(err, "QR Scan Error");
+            // handleApiError(err, "QR Scan Error");
         } finally {
             setTimeout(() => {
                 scannedRef.current = false;
@@ -199,6 +200,48 @@ export default function ClassAttendanceScanScreen() {
             </View>
         );
     }
+
+
+    if (true) {
+        return (
+            <>
+                <View style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: 20,
+                }}>
+                    <View style={{
+                        // backgroundColor: theme.colors.light.primary + '33',
+                        // padding: 20,
+                        // borderRadius: 8,
+                        // shadowColor: "#000",
+                        // shadowOffset: { width: 0, height: 2 },
+                        // shadowOpacity: 0.25,
+                        // shadowRadius: 3.84,
+                        // elevation: 5,
+                    }}>
+                        <Text style={{
+                            fontSize: 18,
+                            fontWeight: 'bold',
+                            color: theme.colors.light.primary,
+                            textAlign: 'center'
+                        }}>
+                            ⚠️ This screen is still under development ⚠️
+                        </Text>
+                        <Text style={{
+                            fontSize: 14,
+                            color: theme.colors.light.primary,
+                            textAlign: 'center',
+                            marginTop: 5
+                        }}>
+                            Hang tight! Cool stuff is coming soon 🚀
+                        </Text>
+                    </View>
+                </View>
+            </>
+        );
+    };
 
     return (
         <>

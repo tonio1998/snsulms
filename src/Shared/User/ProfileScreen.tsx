@@ -62,7 +62,6 @@ export default function ProfileScreen({ navigation }) {
 			const cachedData = await AsyncStorage.getItem('user_data_' + user?.id);
 			if (cachedData) {
 				setUserData(JSON.parse(cachedData));
-				console.log('[CACHE] Loaded user data');
 			} else {
 				await fetchOnline();
 			}
@@ -76,6 +75,8 @@ export default function ProfileScreen({ navigation }) {
 			if (!network?.isOnline) {
 				return;
 			}
+
+			console.log("🔍 Fetching user data from API", user?.id);
 			const res = await getUserDetails(user?.id);
 			await AsyncStorage.setItem('user_data_' + user?.id, JSON.stringify(res));
 			setUserData(res);
@@ -86,9 +87,9 @@ export default function ProfileScreen({ navigation }) {
 	};
 
 	const initFetch = async () => {
-		setLoading(true);
+		// setLoading(true);
 		await loadFromCache();
-		setLoading(false);
+		// setLoading(false);
 	};
 
 	useFocusEffect(
@@ -176,30 +177,21 @@ export default function ProfileScreen({ navigation }) {
 							onPress={handleChangeProfilePic}
 							style={{ shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, elevation: 5 }}
 						>
-							{loading ? (
-								<ShimmerPlaceHolder
-									LinearGradient={LinearGradient}
-									style={styles.avatar}
-									shimmerStyle={{ borderRadius: 100 }}
-									autoRun
-								/>
-							) : (
-								<Image
-									source={
-										userData?.profile_pic
-											? { uri: `${FILE_BASE_URL}/${userData.profile_pic}`, cache: 'force-cache' }
-											: userData?.avatar
-												? { uri: userData.avatar, cache: 'force-cache' }
-												: {
-													uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-														userData?.name || 'User'
-													)}&background=random`,
-													cache: 'force-cache'
-												}
-									}
-									style={styles.avatar}
-								/>
-							)}
+							<Image
+								source={
+									userData?.profile_pic
+										? { uri: `${FILE_BASE_URL}/${userData.profile_pic}`, cache: 'force-cache' }
+										: userData?.avatar
+											? { uri: userData.avatar, cache: 'force-cache' }
+											: {
+												uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+													userData?.name || 'User'
+												)}&background=random`,
+												cache: 'force-cache'
+											}
+								}
+								style={styles.avatar}
+							/>
 						</TouchableOpacity>
 
 						<View style={{ marginTop: 16, alignItems: 'center' }}>

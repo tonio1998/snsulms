@@ -78,37 +78,36 @@ const TestBuilderScreen = ({ navigation }) => {
 		fetchLocalData();
 	}, []);
 
-	if (false) {
+	if (true) {
 		return (
 			<>
 				<View style={{
 					flex: 1,
 					justifyContent: 'center',
 					alignItems: 'center',
-					backgroundColor: theme.colors.light.primary + '33',
 					padding: 20,
 				}}>
 					<View style={{
-						backgroundColor: theme.colors.light.primary,
-						padding: 20,
-						borderRadius: 8,
-						shadowColor: "#000",
-						shadowOffset: { width: 0, height: 2 },
-						shadowOpacity: 0.25,
-						shadowRadius: 3.84,
-						elevation: 5,
+						// backgroundColor: theme.colors.light.primary + '33',
+						// padding: 20,
+						// borderRadius: 8,
+						// shadowColor: "#000",
+						// shadowOffset: { width: 0, height: 2 },
+						// shadowOpacity: 0.25,
+						// shadowRadius: 3.84,
+						// elevation: 5,
 					}}>
 						<Text style={{
 							fontSize: 18,
 							fontWeight: 'bold',
-							color: theme.colors.light.card,
+							color: theme.colors.light.primary,
 							textAlign: 'center'
 						}}>
 							⚠️ This screen is still under development ⚠️
 						</Text>
 						<Text style={{
 							fontSize: 14,
-							color: theme.colors.light.card,
+							color: theme.colors.light.primary,
 							textAlign: 'center',
 							marginTop: 5
 						}}>

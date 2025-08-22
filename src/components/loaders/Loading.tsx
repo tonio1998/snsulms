@@ -30,7 +30,7 @@ const Loading: React.FC<LoadingProps> = ({
         if (loading) {
             Animated.timing(slideAnim, {
                 toValue: 0,
-                duration: 250,
+                duration: 55,
                 useNativeDriver: true,
             }).start();
 

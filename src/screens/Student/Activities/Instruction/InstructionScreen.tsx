@@ -75,8 +75,13 @@ const InstructionScreen = ({ navigation }) => {
 
 	const handleRefresh = async () => {
 		setLoading(true);
+		// console.log("🔍 Refreshing submissions from APsssI", activity?.SubmissionType);
 		await refreshFromOnline();
 		if (ActivityID) {
+			const isSubmitted = activity?.SubmissionType === 'Submitted';
+			const newStatesss = isSubmitted ? 'Submitted' : 'Not Submitted';
+			await AsyncStorage.setItem(SUBMISSION_KEY, newStatesss);
+			setSubmissionState(newStatesss);
 			await loadSubmissions();
 		}
 		setLoading(false);
@@ -136,7 +141,7 @@ const InstructionScreen = ({ navigation }) => {
 			<BackHeader
 				title="Instruction"
 				rightButton={
-					!activity?.Grade && activity?.activity.ActivityTypeID > 1 && (
+					!activity?.Grade && activity?.activity?.ActivityTypeID > 1 && (
 						<TouchableOpacity
 							style={[
 								globalStyles.button,
