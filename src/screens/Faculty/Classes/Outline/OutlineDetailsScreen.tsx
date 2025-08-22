@@ -20,18 +20,7 @@ const OutlineDetailsScreen = ({ navigation, route }) => {
 		<>
 			<BackHeader title={outline?.Title} />
 			<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 100 }]}>
-				<View style={{
-					marginHorizontal: 16,
-					paddingHorizontal: 20,
-					paddingVertical: 16,
-					backgroundColor: "#fff",
-					elevation: 2,
-					shadowColor: "#000",
-					shadowOpacity: 0.1,
-					shadowRadius: 4,
-					shadowOffset: { width: 0, height: 2 },
-					borderRadius: 8,
-				}}>
+				<View style={[globalStyles.card, { margin: 10 }]}>
 					<DetailItem label="Term" value={outline?.Term} />
 					<DetailItem label="Title" value={outline?.Title} />
 					<DetailItem label="Description" value={outline?.Description} />

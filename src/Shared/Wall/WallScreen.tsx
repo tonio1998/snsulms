@@ -122,11 +122,11 @@ const WallScreen = ({ navigation }) => {
 	const handleReaction = async (postId) => {
 		const scale = getHeartScale(postId);
 		Animated.sequence([
-			Animated.timing(scale, { toValue: 2, duration: 100, useNativeDriver: true }),
+			Animated.timing(scale, { toValue: 1.5, duration: 100, useNativeDriver: true }),
 			Animated.timing(scale, { toValue: 1, duration: 100, useNativeDriver: true }),
 		]).start();
 
-		Vibration.vibrate(100);
+		// Vibration.vibrate(100);
 
 		setWall(prev =>
 			prev.map(item =>
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
 		padding: 15,
 		marginHorizontal: 10,
 		marginVertical: 5,
-		borderRadius: 8,
+		borderRadius: theme.radius.md,
 		shadowColor: '#000',
 		shadowOpacity: 0.08,
 		shadowRadius: 3,

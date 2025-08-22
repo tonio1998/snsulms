@@ -144,11 +144,8 @@ export const globalStyles = StyleSheet.create({
         borderRadius: theme.radius.md,
         padding: 16,
         marginBottom: 14,
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 2
+        marginHorizontal: 2,
+        elevation: 1
     },
     cardInner: {},
     cardTitle: { fontSize: 17, color: '#111', marginBottom: 6 },

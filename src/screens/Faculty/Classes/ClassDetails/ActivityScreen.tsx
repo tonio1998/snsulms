@@ -208,10 +208,11 @@ const ActivityScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
 	filterBtn: {
-		borderRadius: 20,
+		borderRadius: theme.radius.md,
 		paddingVertical: 8,
 		paddingHorizontal: 20,
-		backgroundColor: '#f3f4f6'
+		backgroundColor: '#fff',
+		// borderWidth: 1,
 	},
 	activeFilterBtn: {
 		backgroundColor: theme.colors.light.primary

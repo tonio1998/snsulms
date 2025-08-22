@@ -41,7 +41,6 @@ const ClassesScreen = ({ navigation }) => {
 	const [expandedClass, setExpandedClass] = useState(null);
 	const [lastFetched, setLastFetched] = useState(null);
 
-	/** 1. Get Academic Info on focus */
 	useFocusEffect(
 		useCallback(() => {
 			let isActive = true;
@@ -59,7 +58,6 @@ const ClassesScreen = ({ navigation }) => {
 		}, [])
 	);
 
-	/** 2. Load cached classes when acad is ready */
 	const loadFromCache = useCallback(async () => {
 		if (!user?.id || !acad) return;
 		const { data, date } = await loadClassesFromLocal(user.id, acad);
@@ -74,7 +72,6 @@ const ClassesScreen = ({ navigation }) => {
 		loadFromCache();
 	}, [acad, loadFromCache]);
 
-	/** 3. Fetch fresh classes from API */
 	const fetchFromApi = useCallback(async () => {
 		if (!acad || !user?.id) return;
 		setLoading(true);
@@ -142,13 +139,13 @@ const ClassesScreen = ({ navigation }) => {
 
 		return (
 			<View style={styles.accordionCard}>
-				<TouchableOpacity style={styles.accordionHeader} onPress={() => toggleAccordion(item.ClassStudentID)}>
+				<TouchableOpacity style={[styles.accordionHeader, globalStyles.p_4]} onPress={() => toggleAccordion(item.ClassStudentID)}>
 					<View style={{ flex: 1 }}>
 						<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
 							<CText fontStyle="SB" fontSize={14} style={styles.courseText} numberOfLines={1} ellipsizeMode={'middle'}>
 								{classInfo?.CourseCode} - {classInfo?.CourseName}
 							</CText>
-							<View style={{ padding: 10, position: 'absolute', top: 0, right: 2 }}>
+							<View style={{ padding: 10, position: 'absolute', top: -5, right: -12 }}>
 								<DonutProgress
 									percentage={submissionRate.toFixed(0)}
 									radius={16}
@@ -166,11 +163,11 @@ const ClassesScreen = ({ navigation }) => {
 				</TouchableOpacity>
 
 				{isExpanded && (
-					<View style={styles.accordionBody}>
-						<View style={{
+					<View style={[globalStyles.p_2]}>
+						<View style={[globalStyles.p_2, {
 							flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1,
-							borderColor: '#eee', padding: 10
-						}}>
+							borderColor: '#eee'
+						}]}>
 							<View style={styles.teacherRow}>
 								<Image source={{ uri: avatarUri, cache: 'force-cache' }} style={styles.avatar} />
 								<View>
@@ -274,7 +271,7 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		borderRadius: 8,
 		marginBottom: 12,
-		paddingHorizontal: 10,
+		// padding: 15,
 		borderWidth: 1,
 		borderColor: '#e1e1e1',
 		shadowColor: '#000',
@@ -285,13 +282,6 @@ const styles = StyleSheet.create({
 	accordionHeader: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		paddingVertical: 10,
-	},
-	accordionBody: {
-		paddingHorizontal: 10,
-		paddingBottom: 10,
-		borderTopWidth: 1,
-		borderTopColor: '#eee',
 	},
 	courseText: {
 		textTransform: 'uppercase',

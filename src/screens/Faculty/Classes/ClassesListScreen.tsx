@@ -184,8 +184,8 @@ const ClassesListScreen = ({ navigation }) => {
 		const isExpanded = expanded === item.ClassID;
 
 		return (
-			<TouchableOpacity activeOpacity={0.8} onPress={() => toggleAccordion(item.ClassID)}>
-			<View style={styles.card}>
+			<TouchableOpacity activeOpacity={0.9} onPress={() => toggleAccordion(item.ClassID)}>
+			<View style={[globalStyles.card]}>
 					<View style={styles.cardHeader}>
 						<View>
 							<CText fontStyle="SB" fontSize={15}>
@@ -266,12 +266,8 @@ const ClassesListScreen = ({ navigation }) => {
 	return (
 		<>
 			<SafeAreaView style={[globalStyles.safeArea2]}>
-				<View style={[styles.container, {paddingTop: 10}]}>
-					<LastUpdatedBadge
-						date={lastFetched}
-						onReload={loadClassesOnline}
-					/>
-					<View style={styles.searchBox}>
+				<View style={[globalStyles.p_0, globalStyles.m_2]}>
+					<View style={[styles.searchBox]}>
 						<Icon name="search-outline" size={18} color="#999" style={styles.searchIcon} />
 						<TextInput
 							placeholder="Search classes..."
@@ -286,6 +282,10 @@ const ClassesListScreen = ({ navigation }) => {
 							</TouchableOpacity>
 						)}
 					</View>
+					<LastUpdatedBadge
+						date={lastFetched}
+						onReload={loadClassesOnline}
+					/>
 
 					{loading && (
 						<>
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
 	},
 	container: {
 		flex: 1,
-		paddingHorizontal: 16,
+		paddingHorizontal: 15,
 		paddingTop: 12,
 	},
 	searchBox: {

@@ -327,9 +327,9 @@ const styles = StyleSheet.create({
 	},
 	tabPill: {
 		paddingHorizontal: 12,
-		paddingVertical: 4,
+		paddingVertical: 7,
 		borderRadius: 20,
-		backgroundColor: '#eee',
+		backgroundColor: '#fff',
 	},
 	tabPillActive: {
 		backgroundColor: theme.colors.light.primary,

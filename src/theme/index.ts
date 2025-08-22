@@ -19,7 +19,7 @@
 const colors = {
     light: {
         // Backgrounds
-        background: '#F9FAFB',
+        background: '#F1F1F1',
         surface: '#EEF4FA',
         card: '#FFFFFF',
         muted: '#F5F5F5',

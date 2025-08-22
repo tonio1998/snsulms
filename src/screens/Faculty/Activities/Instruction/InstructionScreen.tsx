@@ -185,7 +185,7 @@ const InstructionScreen = ({ navigation, route }) => {
 				<ActivityIndicator2 />
 				</>
 			)}
-			<View style={styles.card}>
+			<View style={globalStyles.card}>
 				{activity?.topic?.Title && (
 					<CText fontSize={12} style={styles.label}>Topic: {activity?.topic?.Title}</CText>
 				)}
@@ -245,7 +245,7 @@ const InstructionScreen = ({ navigation, route }) => {
 			</View>
 
 			<CText fontSize={16} style={{ marginBottom: 10 }} fontStyle="SB">Instructor</CText>
-			<View style={styles.card}>
+			<View style={globalStyles.card}>
 				{!activity?.teacher?.users?.name ? (
 					<View style={styles.profileRow}>
 						<ShimmerPlaceHolder style={styles.avatar} />
