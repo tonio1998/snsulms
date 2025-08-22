@@ -236,23 +236,27 @@ export default function ProfileScreen({ navigation }) {
 								Academic Year
 							</CText>
 							<View style={styles.acadContainer}>
-								<TouchableOpacity onPress={() => navigation.navigate('AcademicYear')}>
+								<TouchableOpacity style={{
+									flexDirection: 'row',
+									alignItems: 'center',
+									// gap: 6
+								}} onPress={() => navigation.navigate('AcademicYear')}>
 									<Icon name="pencil" size={18} color={theme.colors.light.primary} />
+									<CText fontSize={15} fontStyle="SB" style={{ marginLeft: 6 }}>
+										{formatAcad(acad?.semester, acad?.from, acad?.to)}
+									</CText>
 								</TouchableOpacity>
-								<CText fontSize={15} fontStyle="SB" style={{ marginLeft: 6 }}>
-									{formatAcad(acad?.semester, acad?.from, acad?.to)}
-								</CText>
 							</View>
 						</View>
 
-						<View style={styles.rowSpaceBetween}>
-							<CText fontSize={15} style={styles.label}>
-								Roles
-							</CText>
-							<CText fontSize={15} style={{ fontWeight: 'bold', color: '#444' }}>
-								{roles?.map((r) => r?.toUpperCase()).join(', ')}
-							</CText>
-						</View>
+						{/*<View style={styles.rowSpaceBetween}>*/}
+						{/*	<CText fontSize={15} style={styles.label}>*/}
+						{/*		Roles*/}
+						{/*	</CText>*/}
+						{/*	<CText fontSize={15} style={{ fontWeight: 'bold', color: '#444' }}>*/}
+						{/*		{roles?.map((r) => r?.toUpperCase()).join(', ')}*/}
+						{/*	</CText>*/}
+						{/*</View>*/}
 
 
 						{isBiometricSupported && (

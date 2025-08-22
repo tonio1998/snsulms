@@ -175,7 +175,7 @@ const InstructionScreen = ({ navigation }) => {
 							Topic: {activity.activity.topic.Title}
 						</CText>
 					)}
-					<CText fontSize={20} fontStyle="SB" style={styles.title}>
+					<CText fontSize={15} fontStyle="SB" style={styles.title}>
 						{activity?.activity?.Title}
 					</CText>
 					{activity?.activity.ActivityTypeID > 1 && (
@@ -231,7 +231,7 @@ const InstructionScreen = ({ navigation }) => {
 					)}
 				</View>
 
-				<CText fontSize={18} fontStyle="SB" style={{ marginBottom: 12 }}>
+				<CText fontSize={16} fontStyle="SB" style={{ marginBottom: 12 }}>
 					Instructor
 				</CText>
 				<View style={[styles.card, styles.instructorCard]}>
@@ -267,7 +267,7 @@ const InstructionScreen = ({ navigation }) => {
 					)}
 				</View>
 
-				<CText fontSize={18} fontStyle="SB" style={{ marginBottom: 12, marginTop: 8 }}>
+				<CText fontSize={16} fontStyle="SB" style={{ marginBottom: 12, marginTop: 8 }}>
 					Attachments
 				</CText>
 
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
 	pointsLabel: { color: '#666' },
 	instructorCard: { paddingVertical: 16 },
 	profileRow: { flexDirection: 'row', alignItems: 'center' },
-	avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#ddd' },
+	avatar: { width: 45, height: 45, borderRadius: 28, backgroundColor: '#ddd' },
 	avatarPlaceholder: { backgroundColor: '#ccc' },
 	shimmerPlaceholder: { backgroundColor: '#eee', borderRadius: 8 },
 	attachmentRow: {

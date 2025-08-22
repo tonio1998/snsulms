@@ -139,7 +139,7 @@ const ClassesScreen = ({ navigation }) => {
 
 		return (
 			<View style={styles.accordionCard}>
-				<TouchableOpacity style={[styles.accordionHeader, globalStyles.p_4]} onPress={() => toggleAccordion(item.ClassStudentID)}>
+				<TouchableOpacity style={[styles.accordionHeader, globalStyles.p_2]} onPress={() => toggleAccordion(item.ClassStudentID)}>
 					<View style={{ flex: 1 }}>
 						<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
 							<CText fontStyle="SB" fontSize={14} style={styles.courseText} numberOfLines={1} ellipsizeMode={'middle'}>
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
 	viewButton: {
 		paddingHorizontal: 14,
 		paddingVertical: 8,
-		borderRadius: theme.radius.xs,
+		borderRadius: theme.radius.md,
 		backgroundColor: theme.colors.light.primary + '18',
 	},
 	container: {
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
 	},
 	searchInput: {
 		backgroundColor: '#fff',
-		borderRadius: 8,
+		borderRadius: theme.radius.md,
 		paddingVertical: 10,
 		paddingHorizontal: 14,
 		fontSize: 14,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
 	},
 	accordionCard: {
 		backgroundColor: '#fff',
-		borderRadius: 8,
+		borderRadius: theme.radius.md,
 		marginBottom: 12,
 		// padding: 15,
 		borderWidth: 1,
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
 		color: theme.colors.light.primary,
 		paddingHorizontal: 8,
 		paddingVertical: 3,
-		borderRadius: 12,
+		borderRadius: theme.radius.md,
 		alignSelf: 'flex-start',
 		marginTop: 4,
 		fontSize: 11,
