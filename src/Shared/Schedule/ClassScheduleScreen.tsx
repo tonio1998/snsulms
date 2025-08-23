@@ -92,7 +92,7 @@ const ClassScheduleScreen = () => {
 };
 
 const styles = StyleSheet.create({
-	container: { flexGrow: 1, backgroundColor: '#fff', padding: 16, paddingBottom: 20 },
+	container: { flexGrow: 1, padding: 16, paddingBottom: 20 },
 	noEventsText: { textAlign: 'center', fontSize: 16, color: '#444', padding: 10 },
 	card: {
 		backgroundColor: '#f8f8f8',

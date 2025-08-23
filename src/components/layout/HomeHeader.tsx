@@ -71,7 +71,6 @@ const HomeHeader = ({
 	const width = Dimensions.get('window').width;
 	return (
 		<>
-			{/*<StatusBar barStyle="dark-content" />*/}
 			<GestureDetector gesture={blockSwipeGesture}>
 				<View style={styles.headerWrapper}>
 					<TouchableOpacity onPress={handlePress} style={styles.backButton}>

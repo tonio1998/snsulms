@@ -11,7 +11,7 @@ import {
 	Pressable,
 	ScrollView,
 	Linking,
-	RefreshControl,
+	RefreshControl, StatusBar,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -291,11 +291,13 @@ const CalendarScreen = () => {
 					}
 				/>
 
+
 				<Modal
 					animationType="slide"
 					transparent={true}
 					visible={modalVisible}
 					onRequestClose={closeModal}
+					statusBarTranslucent
 				>
 					<View style={globalStyles.overlay}>
 						<View style={globalStyles.modalContainer}>
@@ -394,7 +396,7 @@ const styles = StyleSheet.create({
 	eventTitle: {
 		fontWeight: 'bold',
 		fontSize: 16,
-		color: '#004D1A',
+		color: theme.colors.light.primary,
 		maxWidth: '80%',
 	},
 	timeBadge: {
@@ -445,7 +447,7 @@ const styles = StyleSheet.create({
 	modalTitle: {
 		fontWeight: 'bold',
 		fontSize: 20,
-		color: '#004D1A',
+		color: theme.colors.light.primary,
 		marginBottom: 12,
 	},
 	modalTime: {
@@ -480,7 +482,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	closeButtonText: {
-		color: '#004D1A',
+		color: theme.colors.light.danger,
 		fontSize: 16,
 		fontWeight: '700',
 	},

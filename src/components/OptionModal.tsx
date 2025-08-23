@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Modal,
     TouchableOpacity,
@@ -40,9 +40,11 @@ const OptionModal: React.FC<OptionModalProps> = ({
                                                      textStyle,
                                                  }) => {
     const slideAnim = useRef(new Animated.Value(300)).current;
+    const [showModal, setShowModal] = useState(visible);
 
     useEffect(() => {
         if (visible) {
+            setShowModal(true); // Mount modal
             Animated.timing(slideAnim, {
                 toValue: 0,
                 duration: 250,
@@ -53,12 +55,14 @@ const OptionModal: React.FC<OptionModalProps> = ({
                 toValue: 300,
                 duration: 250,
                 useNativeDriver: true,
-            }).start();
+            }).start(() => setShowModal(false)); // Unmount after animation
         }
     }, [visible]);
 
+    if (!showModal) return null;
+
     return (
-        <Modal transparent visible={visible} animationType="none" statusBarTranslucent>
+        <Modal transparent visible={showModal} animationType="none" statusBarTranslucent>
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
 
             <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose}>

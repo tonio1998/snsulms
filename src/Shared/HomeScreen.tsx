@@ -41,6 +41,7 @@ import {isTablet} from "../utils/responsive";
 import SNSULogoDraw from "../components/loaders/SNSULogo.tsx";
 import SNSULoading from "../components/loaders/SNSULoading.tsx";
 import {LastUpdatedBadge} from "../components/common/LastUpdatedBadge";
+import FacebookFeed from "../components/FacebookFeed.tsx";
 
 const HomeScreen = () => {
 	const network = useContext(NetworkContext);
@@ -347,6 +348,13 @@ const HomeScreen = () => {
 
 						{hasRole('STUD') && renderStudentDashboard()}
 						{hasRole('ACAD') && renderTeacherDashboard()}
+
+						{/*<View style={styles.section}>*/}
+						{/*	<CText fontSize={18} fontStyle="B" style={styles.sectionTitle}>*/}
+						{/*		Facebook Feed*/}
+						{/*	</CText>*/}
+						{/*	<FacebookFeed />*/}
+						{/*</View>*/}
 					</View>
 				</ScrollView>
 			</SafeAreaView>
@@ -369,9 +377,9 @@ const ActivityItem = ({ title, date, student, isDue }: any) => (
 			<Icon name="document-text-outline" size={22} color={theme.colors.light.primary} />
 		</View>
 		<View style={styles.updateText}>
-			{student && <Text style={styles.updateLabel}>{student}</Text>}
+			{student && <CText fontSize={14} fontStyle={'SB'} style={styles.updateLabel}>{student}</CText>}
 			<Text style={styles.updateTitle} numberOfLines={1}>
-				Activity: {title || 'Untitled'}
+				{title || 'Untitled'}
 			</Text>
 			{date && (
 				<Text style={styles.updateDate}>
@@ -448,8 +456,6 @@ const styles = StyleSheet.create({
 		marginLeft: 12,
 	},
 	updateLabel: {
-		fontSize: 14,
-		fontWeight: '600',
 		color: '#333',
 	},
 	updateTitle: {
@@ -472,7 +478,7 @@ const styles = StyleSheet.create({
 		borderRadius: theme.radius.md,
 	},
 	section: {
-		marginTop: 30,
+		marginTop: 20,
 		paddingHorizontal: 16,
 	},
 	sectionTitle: {

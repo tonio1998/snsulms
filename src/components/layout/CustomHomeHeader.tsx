@@ -162,8 +162,8 @@ const styles = StyleSheet.create({
     headerWrapper: {
         position: 'absolute',
         top: Platform.OS === 'android' ? ((StatusBar.currentHeight + 5) || 24) : 44,
-        left: '3%',
-        right: '3%',
+        left: '0%',
+        right: '0%',
         borderRadius: 100,
         overflow: 'hidden',
         zIndex: 1,

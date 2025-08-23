@@ -22,6 +22,7 @@ import StudentMaterialScreen from "../../screens/Student/Classes/MaterialScreen.
 import {useFocusEffect} from "@react-navigation/native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import BottomTabNav from "../BottomTabNav.tsx";
+import AttendanceMasterlistScreen from "../../Shared/Attendance/AttendanceMasterlistScreen.tsx";
 
 const BottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -150,7 +151,7 @@ function ClassTopTabs({ route, navigation }) {
 							{classes?.Attendance === "Y" && (
 								<TopTab.Screen
 									name="Attendance"
-									component={ScanScreen}
+									component={AttendanceMasterlistScreen}
 									initialParams={{ ClassID }}
 								/>
 							)}

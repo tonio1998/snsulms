@@ -65,7 +65,7 @@ export const CAlert: React.FC<{ children: ReactNode }> = ({ children }) => {
     return (
         <AlertContext.Provider value={{ showAlert }}>
             {children}
-            <Modal transparent visible={visible} animationType="fade">
+            <Modal transparent visible={visible} animationType="fade" statusBarTranslucent>
                 <View style={styles.overlay}>
                     <Animated.View style={[styles.alertBox, { transform: [{ scale: scaleAnim }], opacity: opacityAnim }]}>
                         <View style={[styles.iconWrapper, { backgroundColor: bg }]}>

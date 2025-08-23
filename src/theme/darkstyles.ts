@@ -5,7 +5,7 @@ let ElementRadius = theme.radius.sm;
 let WhiteColor = '#fff';
 let FontFamily = 'Poppins';
 let PrimaryColorHex = theme.colors.light.primary;
-export const globalStyles = StyleSheet.create({
+export const globalStylesDark = StyleSheet.create({
     button: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -22,7 +22,7 @@ export const globalStyles = StyleSheet.create({
     },
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'transparent',
     },
     modalContainer: {
         position: 'absolute',
@@ -295,7 +295,7 @@ export const globalStyles = StyleSheet.create({
         // paddingHorizontal: 15,
         // position: 'relative',
         // marginTop: 90,
-        backgroundColor: theme.colors.light.background,
+        backgroundColor: theme.colors.dark.background,
         paddingTop: 110,
         zIndex: -1,
     },

@@ -11,10 +11,12 @@
 //         secondary_soft: '#02801C',
 
 // SNSU GREEN
-// primary: '#138808',
-//         primary_soft: '#5314E4',
-//         secondary: '#35712C',
-//         secondary_soft: '#02801C',
+// primary: '#1A4E07',
+//     secondary: '#138808',
+
+// BLUE
+// primary: '#0951C7',
+//     secondary: '#2366C7',
 
 const colors = {
     light: {
@@ -30,9 +32,8 @@ const colors = {
         border: '#D1D5DB',
         inputBackground: '#FFFFFF',
 
-        // Primary / Secondary (single shades)
-        primary: '#1A4E07',      // Blue (trust, knowledge) for main actions
-        secondary: '#138808',    // Green (growth, progress) for secondary actions
+        primary: '#1A4E07',
+        secondary: '#138808',
 
         // Status Colors
         success: '#22C55E',

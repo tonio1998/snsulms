@@ -9,7 +9,7 @@ import {
 	ScrollView,
 	SafeAreaView,
 	RefreshControl,
-	ToastAndroid,
+	ToastAndroid, Button,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { theme } from '../../theme';
@@ -30,11 +30,12 @@ import { NetworkContext } from '../../context/NetworkContext.tsx';
 import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
 import { getAcademicInfo } from '../../utils/getAcademicInfo.ts';
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect, useTheme} from '@react-navigation/native';
 import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx";
 import CButton from "../../components/buttons/CButton.tsx";
 
 export default function ProfileScreen({ navigation }) {
+	const { mode, toggleTheme, colors } = useTheme();
 	const network = useContext(NetworkContext);
 	const { showAlert } = useAlert();
 	const { showLoading, hideLoading } = useLoading();
@@ -158,7 +159,7 @@ export default function ProfileScreen({ navigation }) {
 			<BackHeader rightButton={
 				<TouchableOpacity onPress={handleLogout} style={{ borderRadius: 8, flexDirection: 'row', alignItems: 'center' }}>
 					<Icon name="log-out-outline" size={23} color={theme.colors.light.danger} />
-					<CText fontSize={17} style={{ marginLeft: 5, color: theme.colors.light.danger }}>Logout</CText>
+					<CText fontSize={15} style={{ marginLeft: 5, color: theme.colors.light.danger }}>Logout</CText>
 				</TouchableOpacity>
 			}/>
 			<SafeAreaView style={[globalStyles.safeArea, { flex: 1, padding: 15 }]}>
