@@ -211,7 +211,7 @@ const ClassesListScreen = ({ navigation }) => {
 											{teacher.name || 'Unknown Teacher'}
 										</CText>
 										{teacher.email && (
-											<CText fontSize={12} style={{ color: '#666', marginTop: -5 }}>
+											<CText fontSize={12} style={{ color: '#666', marginTop: 1 }}>
 												{teacher.email}
 											</CText>
 										)}
@@ -268,8 +268,6 @@ const ClassesListScreen = ({ navigation }) => {
 						</TouchableOpacity>
 					)}
 				</View>
-
-				<LastUpdatedBadge date={lastFetched} onReload={loadClassesOnline} />
 
 				{loading && <ActivityIndicator2 />}
 
@@ -394,7 +392,7 @@ const styles = StyleSheet.create({
 	viewButton: {
 		paddingHorizontal: 14,
 		paddingVertical: 8,
-		borderRadius: theme.radius.md,
+		borderRadius: theme.radius.sm,
 		backgroundColor: theme.colors.light.primary + '20',
 	},
 	enrollmentLabel: {

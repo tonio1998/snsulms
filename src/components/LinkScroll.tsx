@@ -51,7 +51,7 @@ export default function LinkScroll({ buttons }) {
     };
 
     return (
-        <View style={{ marginVertical: 10, marginHorizontal: 0 }}>
+        <View>
             <View>
                 <ScrollView
                     ref={scrollRef}
@@ -106,7 +106,7 @@ export default function LinkScroll({ buttons }) {
 const styles = {
     link_container: {
         // paddingHorizontal: 10,
-        paddingBottom: 10,
+        // paddingBottom: 10,
         flexDirection: "row",
         justifyContent: "space-between",
     },
@@ -115,7 +115,7 @@ const styles = {
         width: 70,
         marginHorizontal: 8,
         padding: 8,
-        backgroundColor: "#fff",
+        // backgroundColor: "#fff",
         borderRadius: 8,
         // elevation: 2,
         shadowColor: theme.colors.light.primary,
@@ -124,13 +124,15 @@ const styles = {
         shadowOffset: { width: 0, height: 1 },
     },
     icon_box: {
-        backgroundColor: theme.colors.light.primary + '22',
-        width: 40,
-        height: 40,
+        backgroundColor: theme.colors.light.card,
+        width: 50,
+        height: 50,
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: 6,
-        borderRadius: 20,
+        marginBottom: 4,
+        borderRadius: 50,
+        borderWidth: 1,
+        borderColor: '#ccc',
     },
     link_button_text: {
         color: theme.colors.light.text,

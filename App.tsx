@@ -1,8 +1,8 @@
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
-import {StatusBar, Vibration, LogBox, AppState, UIManager, Platform} from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import {StatusBar, Vibration, LogBox, AppState, UIManager, Platform, useColorScheme} from 'react-native';
+import {NavigationContainer, ThemeProvider} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import NetInfo from '@react-native-community/netinfo';
@@ -66,6 +66,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {endSurvey} from "./src/api/testBuilder/testbuilderApi.ts";
 import CreateTestScreen from "./src/Shared/Survey/CreateTestScreen.tsx";
 import QRCodeScreen from "./src/Shared/User/QRCodeScreen.tsx";
+import AddAttendanceScreen from "./src/Shared/Attendance/AddAttendanceScreen.tsx";
+import EventsBottomNav from "./src/navigation/Events/EventsBottomNav.tsx";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -170,8 +172,10 @@ const AppNavigator = () => {
                         }}>
                             <Stack.Screen name="MainTabs" component={BottomTabNav} />
                             <Stack.Screen name="SurveyTest" component={SurveyBottomTabNav} />
+                            <Stack.Screen name="Events" component={EventsBottomNav} />
                             <Stack.Screen name="CreateTest" component={CreateTestScreen} />
                             <Stack.Screen name="myQR" component={QRCodeScreen} />
+                            <Stack.Screen name="AddAttendanceScreen" component={AddAttendanceScreen} />
                             {/*<Stack.Screen name="OutlineList" component={OutlineListScreen} options={{ headerShown: false }} />*/}
                             <Stack.Screen name="AddOutline" component={AddOutlineScreen} options={{ headerShown: false }} />
                             <Stack.Screen name="OutlineDetails" component={OutlineDetailsScreen} options={{ headerShown: false }} />
@@ -211,8 +215,6 @@ const AppNavigator = () => {
 };
 
 export default function App(): React.JSX.Element {
-
-
     const syncPendingResponses = async () => {
         const keys = await AsyncStorage.getAllKeys();
         const responseKeys = keys.filter((k) => k.startsWith("surveyResponse_"));
@@ -247,22 +249,24 @@ export default function App(): React.JSX.Element {
 
     return (
         <>
+            <ThemeProvider>
             <SafeAreaProvider>
                 <LoadingProvider>
                     <Loading2Provider>
-                        <CAlert>
-                            <NetworkProvider>
-                                <AuthProvider>
-                                    <GestureHandlerRootView style={{ flex: 1 }}>
-                                        <AppNavigator />
-                                    </GestureHandlerRootView>
-                                </AuthProvider>
-                                <StatusIndicator />
-                            </NetworkProvider>
-                        </CAlert>
+                            <CAlert>
+                                <NetworkProvider>
+                                    <AuthProvider>
+                                        <GestureHandlerRootView style={{ flex: 1 }}>
+                                            <AppNavigator />
+                                        </GestureHandlerRootView>
+                                    </AuthProvider>
+                                    <StatusIndicator />
+                                </NetworkProvider>
+                            </CAlert>
                     </Loading2Provider>
                 </LoadingProvider>
             </SafeAreaProvider>
+            </ThemeProvider>
         </>
     );
 }

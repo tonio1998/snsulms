@@ -89,7 +89,7 @@ const ClassSettingsScreen = ({ route }) => {
 			<SafeAreaView style={[globalStyles.safeArea2]}>
 				<ScrollView contentContainerStyle={styles.container}>
 					{settingCards.map(({ label, key, description }) => (
-						<View key={key} style={styles.card}>
+						<View key={key} style={globalStyles.card}>
 							<View style={styles.cardContent}>
 								<View style={{ flex: 1 }}>
 									<CText fontSize={16} fontStyle="SB">{label}</CText>
@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
 	container: {
 		padding: 20,
 		paddingBottom: 100,
+		flexGrow: 1,
 	},
 	card: {
 		backgroundColor: '#fff',

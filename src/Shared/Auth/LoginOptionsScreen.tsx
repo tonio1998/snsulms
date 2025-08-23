@@ -11,7 +11,7 @@ import {
 	Alert,
 	Dimensions, StatusBar,
 } from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation, useTheme} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../theme';
@@ -30,6 +30,7 @@ import LinearGradient from "react-native-linear-gradient";
 import useResponsive from "../../hooks/useResponsive";
 import {isTablet} from "../../utils/responsive";
 import {useAlert} from "../../components/CAlert.tsx";
+import {globalStylesDark} from "../../theme/darkstyles.ts";
 const { width } = Dimensions.get('window');
 
 GoogleSignin.configure({
@@ -39,6 +40,7 @@ GoogleSignin.configure({
 });
 
 export default function LoginOptionsScreen() {
+	const { themes, toggleTheme } = useTheme();
 	const navigation = useNavigation();
 	const { user } = useAuth();
 	const { loginAuth } = useAuth();
@@ -135,7 +137,9 @@ export default function LoginOptionsScreen() {
 				hidden={false}
 			/>
 
-			<SafeAreaView style={styles.container}>
+			<SafeAreaView style={[styles.container,
+				themes === "dark" ? globalStylesDark.safeArea : '',
+			]}>
 				<LinearGradient
 					colors={[theme.colors.light.primary, theme.colors.light.secondary]}
 					start={{ x: 0, y: 0 }}
