@@ -138,7 +138,7 @@ export default function ProfileScreen({ navigation }) {
 
 			showLoading('Uploading...');
 			try {
-				await updateProfilePicture(user.id, asset);
+				await updateProfilePicture(user?.id, asset);
 				await fetchOnline();
 				showAlert('success', 'Success', 'Profile picture updated!');
 			} catch (error) {
@@ -183,7 +183,7 @@ export default function ProfileScreen({ navigation }) {
 									userData?.profile_pic
 										? { uri: `${FILE_BASE_URL}/${userData.profile_pic}`, cache: 'force-cache' }
 										: userData?.avatar
-											? { uri: userData.avatar, cache: 'force-cache' }
+											? { uri: userData?.avatar, cache: 'force-cache' }
 											: {
 												uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
 													userData?.name || 'User'

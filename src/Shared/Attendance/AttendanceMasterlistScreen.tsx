@@ -122,7 +122,7 @@ const AttendanceMasterlistScreen = ({ navigation, route }) => {
 
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
                         <CText fontSize={13} style={{ color: "#555" }}>
-                            📝 {item.LogsCount ?? 0} {item.LogsCount === 1 ? "log" : "logs"}
+                            📝 {item.logs.length ?? 0} {item.logs.length === 1 ? "log" : "logs"}
                         </CText>
                     </View>
                 </View>

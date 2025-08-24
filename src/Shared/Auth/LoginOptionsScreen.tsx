@@ -84,6 +84,7 @@ export default function LoginOptionsScreen() {
 			if (session) {
 				setLoading(true);
 				await loginAuth(session);
+				console.log("response", session);
 				await AsyncStorage.setItem('isLoggedIn', 'true');
 				await AsyncStorage.setItem('mobile', session.token);
 			}
@@ -115,6 +116,7 @@ export default function LoginOptionsScreen() {
 			});
 
 			console.log("response", response);
+
 			await loginAuth(response.data);
 		} catch (error) {
 			const message =
@@ -162,7 +164,7 @@ export default function LoginOptionsScreen() {
 							<CText fontStyle="SB" fontSize={40} style={styles.appName}>
 								{APP_NAME}
 							</CText>
-							<CText fontStyle="SB" fontSize={13} style={styles.tagline}>
+							<CText fontStyle="R" fontSize={13} style={styles.tagline}>
 								{TAGLINE}
 							</CText>
 						</View>

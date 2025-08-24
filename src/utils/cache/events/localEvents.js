@@ -38,3 +38,32 @@ export const loadEventToLocal = async (UserID) => {
         return { data: null, date: null };
     }
 };
+
+
+export const updateEventToLocal = async (userId, attendanceId, updatedData) => {
+    if (!userId || !attendanceId) return null;
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(userId);
+
+    try {
+        const dataStr = await AsyncStorage.getItem(CACHE_KEY);
+        let events = dataStr ? JSON.parse(dataStr) : [];
+
+        if (!Array.isArray(events)) events = [];
+
+        const index = events.findIndex(event => event.AttendanceID === attendanceId);
+        if (index !== -1) {
+            events[index] = { ...events[index], ...updatedData };
+        } else {
+            events.push({ AttendanceID: attendanceId, ...updatedData });
+        }
+
+        const now = new Date();
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(events));
+        await AsyncStorage.setItem(CACHE_DATE_KEY, now.toISOString());
+
+        return now;
+    } catch (err) {
+        console.error('Error updating event:', err);
+        return null;
+    }
+};

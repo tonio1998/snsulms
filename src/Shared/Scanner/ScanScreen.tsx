@@ -1,343 +1,275 @@
-import { NetworkContext } from "../../context/NetworkContext.tsx";
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useFocusEffect, useIsFocused } from "@react-navigation/native";
-import { useAlert } from "../../components/CAlert.tsx";
+import React, { useState, useEffect, useRef } from "react";
 import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
     Alert,
     Animated,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    View,
-    Vibration,
-    PermissionsAndroid,
-    Platform,
-    FlatList,
-    RefreshControl,
-    Image,
+    FlatList, Vibration, SafeAreaView,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import CustomHeader from "../../components/layout/CustomHeader.tsx";
 import { Camera } from "react-native-camera-kit";
-import { useAuth } from "../../context/AuthContext.tsx";
-import { globalStyles } from "../../theme/styles.ts";
-import { useClass } from "../../context/SharedClassContext.tsx";
-import { saveAttendanceOffline, syncOfflineAttendance } from "../../utils/sqlite/attendanceStorage";
-import { handleApiError } from "../../utils/errorHandler.ts";
-import { CText } from "../../components/common/CText.tsx";
-import Icon from "react-native-vector-icons/Ionicons";
-import CustomHeader2 from "../../components/layout/CustomHeader2.tsx";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {saveLogs} from "../../api/modules/attendanceApi.ts";
+import {handleApiError} from "../../utils/errorHandler.ts";
+import {CText} from "../../components/common/CText.tsx";
+import {globalStyles} from "../../theme/styles.ts";
 import BackHeader from "../../components/layout/BackHeader.tsx";
 import {theme} from "../../theme";
+import {useLoading} from "../../context/LoadingContext.tsx";
 
-export default function ClassAttendanceScanScreen() {
-    const { classes } = useClass();
-    const ClassID = classes.ClassID;
-    const { user } = useAuth();
-    const network = useContext(NetworkContext);
-    const isFocused = useIsFocused();
-    const { showAlert } = useAlert();
-
-    const [hasPermission, setHasPermission] = useState(false);
+export default function QrCodeScannerScreen({ route}) {
     const [scanned, setScanned] = useState(false);
-    const [recentScans, setRecentScans] = useState([]);
-    const [refreshing, setRefreshing] = useState(false);
+    const [scanHistory, setScanHistory] = useState<any[]>([]);
+    const [cameraActive, setCameraActive] = useState(false);
+    const AttendanceID = route.params?.AttendanceID;
 
-    const scanLineAnim = useRef(new Animated.Value(0)).current;
+    const { showLoading, hideLoading } = useLoading();
+
     const scannedRef = useRef(false);
-    const cameraRef = useRef(null);
-    const flatListRef = useRef(null);
+    const scanLineAnim = useRef(new Animated.Value(0)).current;
+    const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const SCAN_BOX_SIZE = 220;
+    const stopCamera = () => {
+        setCameraActive(false);
+        scannedRef.current = false;
+        if (idleTimerRef.current) {
+            clearTimeout(idleTimerRef.current);
+            idleTimerRef.current = null;
+        }
+    };
 
-    // useFocusEffect(
-    //     useCallback(() => {
-    //         fetchRecentScans();
-    //         if (network?.isOnline) syncOfflineAttendance();
-    //     }, [network?.isOnline])
-    // );
-
-    useEffect(() => {
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(scanLineAnim, {
-                    toValue: SCAN_BOX_SIZE,
-                    duration: 2000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(scanLineAnim, {
-                    toValue: 0,
-                    duration: 0,
-                    useNativeDriver: true,
-                }),
-            ])
-        ).start();
-    }, []);
+    const resetIdleTimer = () => {
+        if (idleTimerRef.current) {
+            clearTimeout(idleTimerRef.current);
+        }
+        idleTimerRef.current = setTimeout(() => {
+            console.log("⏳ Camera auto-stopped due to inactivity");
+            stopCamera();
+        }, 20000);
+    };
 
     useEffect(() => {
-        const requestPermission = async () => {
-            if (Platform.OS === 'android') {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.CAMERA
-                );
-                setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
-            } else {
-                setHasPermission(true);
-            }
+        const loadHistory = async () => {
+            const history = await AsyncStorage.getItem("scanHistory_"+AttendanceID);
+            if (history) setScanHistory(JSON.parse(history));
         };
-        requestPermission();
+        loadHistory();
     }, []);
 
     useEffect(() => {
-        // if (isFocused) {
-        //     scannedRef.current = false;
-        //     setScanned(false);
-        // }
-    }, [isFocused]);
-
-    const fetchRecentScans = async () => {
-        try {
-            const key = `recentScan_${user?.id}_${ClassID}`;
-            const stored = await AsyncStorage.getItem(key);
-            const list = stored ? JSON.parse(stored) : [];
-            setRecentScans(list);
-        } catch (e) {
-            // console.error("Failed to fetch recent scans", e);
+        if (cameraActive) {
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(scanLineAnim, {
+                        toValue: 1,
+                        duration: 1500,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(scanLineAnim, {
+                        toValue: 0,
+                        duration: 1500,
+                        useNativeDriver: true,
+                    }),
+                ])
+            ).start();
+        } else {
+            scanLineAnim.stopAnimation();
         }
+    }, [cameraActive]);
+
+    const storeScan = async (code: string) => {
+        const newHistory = [{ code, date: new Date() }, ...scanHistory];
+        setScanHistory(newHistory);
+        await AsyncStorage.setItem("scanHistory_"+AttendanceID, JSON.stringify(newHistory));
     };
 
-    const storeRecentScan = async (qr_code) => {
-        const key = `recentScan_${user?.id}_${ClassID}`;
-        try {
-            const stored = await AsyncStorage.getItem(key);
-            const list = stored ? JSON.parse(stored) : [];
-            const updatedList = [qr_code, ...list.filter(i => i !== qr_code)].slice(0, 10);
-            await AsyncStorage.setItem(key, JSON.stringify(updatedList));
-            setRecentScans(updatedList);
-        } catch (e) {
-            // console.error("Failed to store scan locally", e);
-        }
-    };
-
-    const onBarcodeRead = async (event) => {
+    const onBarcodeRead = (event: any) => {
         if (scannedRef.current) return;
         scannedRef.current = true;
-        setScanned(true);
 
-        const { codeStringValue } = event.nativeEvent;
-        if (!codeStringValue) return;
-
-        const [qr_code] = codeStringValue.split('@');
         Vibration.vibrate(100);
 
-        try {
-            console.log("qr_code: ", qr_code)
-            await saveAttendanceOffline({
-                student_id: qr_code,
-                class_id: ClassID,
-                user_id: user?.id,
-                scanned_at: new Date().toISOString(),
-            });
-            await storeRecentScan(qr_code);
+        const value =
+            event?.nativeEvent?.codeStringValue ??
+            event?.codeStringValue ??
+            "";
 
-            if (network?.isOnline) {
-                await syncOfflineAttendance();
-            } else {
-                showAlert("success", "Attendance saved offline and will sync automatically.", "warning");
-            }
-
-        } catch (err) {
-            // handleApiError(err, "QR Scan Error");
-        } finally {
-            setTimeout(() => {
-                scannedRef.current = false;
-                setScanned(false);
-            }, 2000);
+        if (value) {
+            setScanned(true);
+            storeScan(value);
+            resetIdleTimer();
         }
     };
 
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await fetchRecentScans();
-        if (network?.isOnline) await syncOfflineAttendance();
-        setRefreshing(false);
+    const toggleCamera = () => {
+        if (!cameraActive) {
+            setCameraActive(true);
+            resetIdleTimer();
+        } else {
+            stopCamera();
+        }
     };
 
-    const scannedStudentID = recentScans[0];
+    const saveAllOnline = async () => {
+        if (scanHistory.length === 0) {
+            return;
+        }
 
-    const renderItem = ({ item }) => {
-        const isScanned = item.details?.StudentID === scannedStudentID;
+        showLoading("Saving "+scanHistory.length+" scans to server...");
 
-        return (
-            <View style={styles.card}>
-                <Image
-                    source={{
-                        uri:
-                            item.details?.user?.profile_pic ||
-                            item.details?.user?.avatar ||
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(item.details?.user?.name || 'User')}&background=random`,
-                    }}
-                    style={styles.avatar}
-                />
-                <View style={{ flex: 1 }}>
-                    <CText style={styles.name} fontStyle="SB" fontSize={14.5}>
-                        {item.details?.FirstName} {item.details?.LastName}
-                    </CText>
-                    <CText style={styles.email}>{item.details?.user?.email}</CText>
-                </View>
-
-                {isScanned && (
-                    <Icon name="checkmark-circle" size={24} color="green" style={{ marginLeft: 8 }} />
-                )}
-            </View>
-        );
+        try {
+            const datasss = {
+                AttendanceID: AttendanceID,
+                Logs: scanHistory,
+            }
+            const response = await saveLogs(datasss);
+            await clearScans();
+            Alert.alert("Success", "All scans saved online!");
+        } catch (error) {
+            Alert.alert("Error", "Failed to save online");
+            handleApiError(error, "Failed to save logs");
+        } finally {
+            hideLoading();
+        }
     };
 
-    if (!hasPermission) {
-        return (
-            <View style={styles.center}>
-                <Text>Requesting camera permission...</Text>
-            </View>
-        );
-    }
-
-
-    if (true) {
-        return (
-            <>
-                <View style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: 20,
-                }}>
-                    <View style={{
-                        // backgroundColor: theme.colors.light.primary + '33',
-                        // padding: 20,
-                        // borderRadius: 8,
-                        // shadowColor: "#000",
-                        // shadowOffset: { width: 0, height: 2 },
-                        // shadowOpacity: 0.25,
-                        // shadowRadius: 3.84,
-                        // elevation: 5,
-                    }}>
-                        <Text style={{
-                            fontSize: 18,
-                            fontWeight: 'bold',
-                            color: theme.colors.light.primary,
-                            textAlign: 'center'
-                        }}>
-                            ⚠️ This screen is still under development ⚠️
-                        </Text>
-                        <Text style={{
-                            fontSize: 14,
-                            color: theme.colors.light.primary,
-                            textAlign: 'center',
-                            marginTop: 5
-                        }}>
-                            Hang tight! Cool stuff is coming soon 🚀
-                        </Text>
-                    </View>
-                </View>
-            </>
-        );
+    const clearScans = async () => {
+        await AsyncStorage.removeItem("scanHistory_"+AttendanceID);
+        setScanHistory([]);
     };
+
+    useEffect(() => {
+        return () => {
+            if (idleTimerRef.current) {
+                clearTimeout(idleTimerRef.current);
+            }
+        };
+    }, []);
 
     return (
         <>
-            {/*<BackHeader title="Scan QR Code" />*/}
-            <SafeAreaView style={[globalStyles.safeArea2, {paddingTop: 20}]}>
-                {/* STATIC CAMERA */}
+            <BackHeader title="QR Code Scanner" />
+            <SafeAreaView style={globalStyles.safeArea}>
                 <View style={styles.cameraWrapper}>
-                    <View style={styles.cameraContainer}>
-                        <Camera
-                            ref={cameraRef}
-                            cameraType="back"
-                            style={styles.camera}
-                            scanBarcode
-                            onReadCode={onBarcodeRead}
-                            showFrame={false}
-                        />
-                        <Animated.View
-                            style={[styles.scanLine, { transform: [{ translateY: scanLineAnim }] }]}
-                        />
-                    </View>
+                    {cameraActive ? (
+                        <View style={styles.cameraContainer}>
+                            <Camera
+                                style={styles.camera}
+                                cameraType="back"
+                                scanBarcode={true}
+                                showFrame={true}
+                                laserColor="red"
+                                frameColor="white"
+                                onReadCode={onBarcodeRead}
+                            />
+                            <View style={styles.scanFrame} />
+                            <Animated.View
+                                style={[styles.scanLine, { transform: [{ translateY: scanLineAnim }] }]}
+                            />
+                        </View>
+                    ) : (
+                        <View
+                            style={[
+                                styles.cameraContainer,
+                                { justifyContent: "center", alignItems: "center" },
+                            ]}
+                        >
+                            <Text style={{ color: "#888" }}>Camera is off</Text>
+                        </View>
+                    )}
                 </View>
 
-                {/* SCROLLABLE STUDENT LIST */}
+                <View style={{ flexDirection: "row", gap: 0, justifyContent: "space-between", marginHorizontal: 16 }}>
+                    <TouchableOpacity style={styles.toggleButton} onPress={toggleCamera}>
+                        <Text style={styles.toggleButtonText}>
+                            {cameraActive ? "Stop Camera" : "Start Scanning"}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.saveButton} onPress={saveAllOnline}>
+                        <Text style={styles.saveButtonText}>Save {scanHistory.length} Scans</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <Text style={styles.historyTitle}>Scan History</Text>
                 <FlatList
-                    ref={flatListRef}
-                    data={classes.students}
-                    keyExtractor={(_, i) => i.toString()}
-                    renderItem={renderItem}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-                    ListEmptyComponent={<CText style={styles.emptyText}>No data found 😶</CText>}
-                    contentContainerStyle={{ flexGrow: classes.students.length === 0 ? 1 : 0 }}
+                    data={scanHistory}
+                    keyExtractor={(_, index) => index.toString()}
+                    renderItem={({ item }) => {
+                        const code = item.code;
+                        const decryptedId = code.split("@")[1];
+                        const userId = decryptedId ?? 0;
+                        const name = userId ? userId : "UNKNOWN";
+
+                        return (
+                            <View style={styles.historyItem}>
+                                <CText fontStyle={'SB'} fontSize={17}>{name}</CText>
+                                <CText fontStyle={'R'} fontSize={15}>
+                                    {new Date(item.date).toLocaleString()}
+                                </CText>
+                            </View>
+                        );
+                    }}
                 />
+
             </SafeAreaView>
         </>
     );
 }
 
 const styles = StyleSheet.create({
-    center: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    cameraWrapper: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 20
-    },
+    container: { flex: 1, padding: 20, backgroundColor: "#f8f9fa" },
+    title: { fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
+    cameraWrapper: { alignItems: "center", marginBottom: 20 },
     cameraContainer: {
         width: 250,
         height: 250,
-        borderRadius: 16,
-        overflow: 'hidden',
-        borderWidth: 3,
-        borderColor: 'limegreen',
-        backgroundColor: '#000',
+        borderRadius: 20,
+        overflow: "hidden",
+        backgroundColor: "#000",
     },
-    camera: {
-        width: '100%',
-        height: '100%',
+    camera: { flex: 1 },
+    scanFrame: {
+        position: "absolute",
+        top: "20%",
+        left: "20%",
+        width: "60%",
+        height: "60%",
+        borderWidth: 2,
+        borderColor: "white",
+        borderRadius: 10,
     },
     scanLine: {
-        position: 'absolute',
-        width: '90%',
-        left: '5%',
-        height: 4,
-        backgroundColor: 'lime',
-        borderRadius: 2,
-        elevation: 10,
+        position: "absolute",
+        top: "20%",
+        left: "20%",
+        width: "60%",
+        height: 2,
+        backgroundColor: "red",
     },
-    card: {
-        flexDirection: 'row',
-        backgroundColor: '#fff',
+    toggleButton: {
+        marginTop: 10,
         padding: 12,
-        marginBottom: 10,
-        marginHorizontal: 16,
+        backgroundColor: theme.colors.light.primary,
         borderRadius: 8,
-        elevation: 2,
-        alignItems: 'center',
+        // width: 200,
     },
-    avatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        marginRight: 12,
+    toggleButtonText: { color: "#fff", fontWeight: "600", textAlign: "center" },
+    saveButton: {
+        marginTop: 10,
+        padding: 12,
+        backgroundColor: theme.colors.light.primary,
+        borderRadius: 8,
+        width: 200,
     },
-    name: {
-        color: '#111',
+    saveButtonText: { color: "#fff", fontWeight: "600", textAlign: "center" },
+    historyTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10, marginHorizontal: 16, marginTop: 20 },
+    historyItem: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "#ddd",
     },
-    email: {
-        fontSize: 12,
-        color: '#555',
-    },
-    emptyText: {
-        textAlign: 'center',
-        marginTop: 20,
-        color: '#888',
-    },
+    historyCode: { fontSize: 16, fontWeight: "600" },
+    historyDate: { fontSize: 12, color: "gray" },
 });

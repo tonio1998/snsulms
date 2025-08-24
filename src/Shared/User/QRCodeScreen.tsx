@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
 	View,
 	StyleSheet,
@@ -6,10 +6,8 @@ import {
 	SafeAreaView,
 	TouchableOpacity,
 	Text,
-	Platform,
 	Image,
-	StatusBar,
-	ToastAndroid
+	ToastAndroid, StatusBar,
 } from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import Share from 'react-native-share';
@@ -25,91 +23,118 @@ import { useAlert } from '../../components/CAlert.tsx';
 import { APP_NAME } from '../../../env.ts';
 import FileViewer from 'react-native-file-viewer';
 import Icon from 'react-native-vector-icons/Ionicons';
-import BackHeader from "../../components/layout/BackHeader.tsx";
+import BackHeader from '../../components/layout/BackHeader.tsx';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const QRCodeScreen = () => {
 	const { user } = useAuth();
-	const { showLoading, hideLoading } = useLoading();
+	const { hideLoading } = useLoading();
 	const { showAlert } = useAlert();
-	const qrRef = useRef(null);
+	const qrRef = useRef<ViewShot>(null);
+	const [userID, setUserID] = useState<string>('');
 
-	const qr_code = user?.conn_id ?? '';
+	useEffect(() => {
+		const loadUserID = async () => {
+			try {
+				if (user?.id) {
+					const storedID = await AsyncStorage.getItem('EncryptedUserID');
+					if (storedID) {
+						setUserID(storedID);
+					}
+				}
+			} catch (error) {
+				handleApiError(error, 'Failed to load user ID');
+			}
+		};
+
+		loadUserID();
+	}, [user?.id]);
+
+	const qr_code = userID ?? '';
 	const name = user?.name ?? '';
-	const data = (qr_code && name) ? `${qr_code}@${name}` : 'NO-DATA';
+	const data = qr_code && name ? `${qr_code}@${name}` : 'NO-DATA';
 
 	const handleShare = async () => {
 		try {
-			const uri = await qrRef.current.capture();
-			await Share.open({ url: uri });
+			if (qrRef.current) {
+				const uri = await qrRef.current.capture();
+				await Share.open({ url: uri });
+			}
 		} catch (error) {
+			// ignore cancel errors
 		}
 	};
 
 	const handleDownload = async () => {
 		try {
-			const uri = await qrRef.current.capture();
-			const fileName = `qr_${Date.now()}.png`;
-			const destPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+			if (qrRef.current) {
+				const uri = await qrRef.current.capture();
+				const fileName = `qr_${Date.now()}.png`;
+				const destPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
 
-			await RNFS.copyFile(uri, destPath);
-			ToastAndroid.show('QR Code saved to Downloads folder!', ToastAndroid.SHORT);
-			await FileViewer.open(destPath, {
-				showOpenWithDialog: false,
-			});
+				await RNFS.copyFile(uri, destPath);
+				ToastAndroid.show('QR Code saved to Downloads folder!', ToastAndroid.SHORT);
+
+				await FileViewer.open(destPath, {
+					showOpenWithDialog: false,
+				});
+			}
 		} catch (error) {
 			handleApiError(error, 'Download Failed');
 		}
 	};
 
 	return (
-		<SafeAreaView style={[globalStyles.flex1, { backgroundColor: theme.colors.light.background }]}>
-			<BackHeader title="My QR Code" />
-			<ScrollView contentContainerStyle={styles.scrollContent}>
-				{/*<View style={styles.header}>*/}
-				{/*	<View style={styles.logoContainer}>*/}
-				{/*		<Image*/}
-				{/*			source={require('../../../assets/img/qr_logo.png')}*/}
-				{/*			style={styles.logo}*/}
-				{/*			resizeMode='contain'*/}
-				{/*		/>*/}
-				{/*	</View>*/}
-				{/*	<CText fontSize={28} fontStyle='B' style={styles.title}>*/}
-				{/*		{APP_NAME}*/}
-				{/*	</CText>*/}
-				{/*</View>*/}
+		<>
+			<SafeAreaView style={[globalStyles.safeArea2]}>
+				<BackHeader title="My QR Code" style={{ color: '#fff' }} />
+				<View style={{
+					position: 'absolute',
+					top: 0,
+					left: 0,
+					right: 0,
+					height: 300,
+					backgroundColor: theme.colors.light.primary,
+				}}></View>
+				<StatusBar
+					barStyle="light-content"
+				/>
+				<ScrollView contentContainerStyle={styles.scrollContent}>
+					<ViewShot ref={qrRef} options={{ format: 'jpg', quality: 1.0, backgroundColor: '#fff' }}>
+						<View style={styles.qrCard}>
+							<View style={styles.logoContainer}>
+								<Image
+									source={require('../../../assets/img/qr_logo.png')}
+									style={styles.logo}
+									resizeMode="contain"
+								/>
+							</View>
+							<View style={styles.qrWrapper}>
+								<QRGenerator value={data} size={270} />
+							</View>
+							<CText fontStyle={'SB'} fontSize={18} style={styles.userName}>
+								{name}
+							</CText>
+							<CText fontSize={14} style={styles.userCode} numberOfLines={1}>
+								{user?.email}
+							</CText>
+						</View>
+					</ViewShot>
 
-				<ViewShot ref={qrRef} options={{ format: 'jpg', quality: 1.0, backgroundColor: '#fff' }}>
-					<View style={styles.qrCard}>
-						<View style={styles.logoContainer}>
-							<Image
-								source={require('../../../assets/img/qr_logo.png')}
-								style={styles.logo}
-								resizeMode='contain'
-							/>
-						</View>
-						<View style={styles.qrWrapper}>
-							<QRGenerator value={data} size={250} />
-						</View>
-						<CText fontSize={22} style={styles.userName}>{name}</CText>
-						<CText fontSize={14} style={styles.userCode} numberOfLines={1}>
-							{user?.email}
-						</CText>
+					<View style={styles.actions}>
+						<TouchableOpacity style={styles.actionBtn} onPress={handleShare}>
+							<Icon name="share-social-outline" size={20} color="#fff" />
+							<Text style={styles.actionText}>Share</Text>
+						</TouchableOpacity>
+
+						<TouchableOpacity style={styles.actionBtn} onPress={handleDownload}>
+							<Icon name="download-outline" size={20} color="#fff" />
+							<Text style={styles.actionText}>Download</Text>
+						</TouchableOpacity>
 					</View>
-				</ViewShot>
-
-				<View style={styles.actions}>
-					<TouchableOpacity style={styles.actionBtn} onPress={handleShare}>
-						<Icon name="share-social-outline" size={20} color="#fff" />
-						<Text style={styles.actionText}>Share</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity style={styles.actionBtn} onPress={handleDownload}>
-						<Icon name="download-outline" size={20} color="#fff" />
-						<Text style={styles.actionText}>Download</Text>
-					</TouchableOpacity>
-				</View>
-			</ScrollView>
-		</SafeAreaView>
+				</ScrollView>
+			</SafeAreaView>
+		</>
 	);
 };
 
@@ -118,40 +143,29 @@ const styles = StyleSheet.create({
 		flexGrow: 1,
 		justifyContent: 'center',
 		alignItems: 'center',
-		padding: 24,
-	},
-	header: {
-		alignItems: 'center',
-		marginBottom: 30,
+		padding: 10,
 	},
 	logoContainer: {
-		// padding: 12,
-		// borderRadius: 50,
 		marginBottom: 10,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.2,
 		shadowRadius: 4,
-		// elevation: 4,
 	},
 	logo: {
 		width: 220,
 		height: 80,
 	},
-	title: {
-		color: theme.colors.light.primary,
-	},
 	qrCard: {
 		backgroundColor: '#fff',
 		borderRadius: 8,
-		padding: 24,
+		padding: 10,
 		alignItems: 'center',
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.1,
 		shadowRadius: 10,
-		// elevation: 5,
-		width: 300,
+		// width: 350,
 	},
 	userName: {
 		marginBottom: 4,
@@ -171,7 +185,7 @@ const styles = StyleSheet.create({
 		gap: 16,
 		marginTop: 32,
 		position: 'absolute',
-		bottom: 20
+		bottom: 20,
 	},
 	actionBtn: {
 		backgroundColor: theme.colors.light.primary,

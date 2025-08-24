@@ -4,7 +4,7 @@ import {
     View,
     StyleSheet,
     ScrollView,
-    ActivityIndicator, RefreshControl,
+    ActivityIndicator, FlatList, RefreshControl,
 } from "react-native";
 import { globalStyles } from "../../theme/styles.ts";
 import { CText } from "../../components/common/CText.tsx";
@@ -13,18 +13,15 @@ import BackHeader from "../../components/layout/BackHeader.tsx";
 import { useAlert } from "../../components/CAlert.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
 import { handleApiError } from "../../utils/errorHandler.ts";
-import {getAttendanceById, getAttendanceDetails} from "../../api/modules/attendanceApi.ts";
 import {loadEventToLocal, saveEventToLocal, updateEventToLocal} from "../../utils/cache/events/localEvents";
-import {formatDate} from "date-fns";
-import {SummaryBox} from "../../components/common/SummaryBox.tsx";
+import {formatDate} from "../../utils/dateFormatter";
+import {getAttendanceById} from "../../api/modules/attendanceApi.ts";
 import {LastUpdatedBadge} from "../../components/common/LastUpdatedBadge";
 
-const AttendanceDetails = ({ navigation, route }) => {
+const AttendanceHistory = ({ navigation, route }) => {
     const { user } = useAuth();
     const { showAlert } = useAlert();
     const { AttendanceID } = route.params;
-
-    console.log("🔍 Fetching attendance details", route.params);
 
     const [loading, setLoading] = useState(true);
     const [attendance, setAttendance] = useState(null);
@@ -41,7 +38,7 @@ const AttendanceDetails = ({ navigation, route }) => {
                     const cachedEvent = cache.data.find(e => e.id === AttendanceID);
                     if (cachedEvent) {
                         setAttendance(cachedEvent);
-                        setLastUpdated(cache.date);
+                        setLastUpdated(cache?.date);
                     }
                 }
             } catch (error) {
@@ -61,8 +58,8 @@ const AttendanceDetails = ({ navigation, route }) => {
         console.log("🔍 Fetching attendance details from API", res);
         const now = await updateEventToLocal(user?.id, AttendanceID, res);
         setAttendance(res);
-        setLastUpdated(now);
         setRefreshing(false);
+        setLastUpdated(now)
     };
 
     if (loading) {
@@ -89,37 +86,32 @@ const AttendanceDetails = ({ navigation, route }) => {
 
     return (
         <>
-            <BackHeader title="Attendance Details" />
+            <BackHeader title="Attendance List" />
             <SafeAreaView style={[globalStyles.safeArea]}>
-                <View style={{ marginHorizontal: 10 }}>
-                    <LastUpdatedBadge date={lastUpdated} onReload={onRefresh} />
-                </View>
-                <ScrollView contentContainerStyle={{ padding: 16 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-                    <View style={styles.section}>
-                        <CText fontStyle="R" fontSize={13}>Title</CText>
-                        <CText fontStyle="SB" fontSize={15}>{attendance?.Title}</CText>
-                        <CText fontStyle="R" fontSize={13}>Description</CText>
-                        <CText fontSize={15} fontStyle="SB" style={styles.description}>
-                            {attendance?.Description}
-                        </CText>
-                        <CText fontStyle="R" fontSize={13}>Date of Event</CText>
-                        <CText fontSize={15} fontStyle="SB">
-                            {formatDate(attendance?.DateofEvent, "MMM dd, yyyy")}
-                        </CText>
-                    </View>
-
-                    <View style={styles.section}>
-                        <CText fontStyle="SB" fontSize={15} style={styles.sectionTitle}>
-                            Statistics
-                        </CText>
-                        <View style={[globalStyles.cardRow]}>
-                            {attendance?.class?.students.length > 0 && (
-                                <SummaryBox label="Total Students" value={attendance?.class?.students.length}/>
-                            )}
-                            <SummaryBox label="Total Logs" value={attendance?.logs.length}/>
+                <LastUpdatedBadge date={lastUpdated} onReload={onRefresh} />
+                <FlatList
+                    data={
+                        attendance?.logs
+                            ?.slice()
+                            ?.sort((a, b) => new Date(b.ScannedAt).getTime() - new Date(a.ScannedAt).getTime())
+                    }
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <View style={[globalStyles.card, { marginHorizontal: 16 }]}>
+                            <CText fontStyle="SB" fontSize={17}>
+                                {item?.user?.name}
+                            </CText>
+                            <CText fontStyle="R" fontSize={15}>
+                                {item?.user?.email}
+                            </CText>
+                            <CText fontStyle="R" fontSize={15}>
+                                {formatDate(item?.ScannedAt, "MMM dd, yyyy")}
+                            </CText>
                         </View>
-                    </View>
-                </ScrollView>
+                    )}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                />
+
             </SafeAreaView>
         </>
     );
@@ -131,18 +123,11 @@ const styles = StyleSheet.create({
         padding: 14,
         borderRadius: 10,
         marginBottom: 16,
-        shadowColor: "#000",
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    sectionTitle: {
-        marginBottom: 10,
+        marginHorizontal: 16,
     },
     description: {
         color: "#555",
     },
 });
 
-export default AttendanceDetails;
+export default AttendanceHistory;
