@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { theme } from '../theme';
+import {BlurView} from "@react-native-community/blur";
 
 type AlertStatus = 'success' | 'error' | 'info' | 'warning' | 'neutral';
 
@@ -67,6 +68,12 @@ export const CAlert: React.FC<{ children: ReactNode }> = ({ children }) => {
             {children}
             <Modal transparent visible={visible} animationType="fade" statusBarTranslucent>
                 <View style={styles.overlay}>
+                    <BlurView
+                        style={StyleSheet.absoluteFill}
+                        blurType="light"    // "light", "dark", "xlight"
+                        blurAmount={10}    // intensity
+                        reducedTransparencyFallbackColor="rgba(0,0,0,0.6)"
+                    />
                     <Animated.View style={[styles.alertBox, { transform: [{ scale: scaleAnim }], opacity: opacityAnim }]}>
                         <View style={[styles.iconWrapper, { backgroundColor: bg }]}>
                             <Icon name={name} size={60} color={color} />
@@ -97,7 +104,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(0,0,0,0.6)',
         paddingHorizontal: 20,
     },
     alertBox: {

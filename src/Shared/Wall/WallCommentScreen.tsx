@@ -111,29 +111,56 @@ const WallCommentsScreen = ({ route, navigation }) => {
 		}
 	};
 
-	const renderComment = ({ item }) => (
-		<View style={[styles.commentBubble, item.sending && { opacity: 0.5 }]}>
-			<Image
-				source={
-					item.created_by?.profile_pic
-						? { uri: `${FILE_BASE_URL}/${item.created_by.profile_pic}` }
-						: item.created_by?.avatar
-							? { uri: item.created_by.avatar }
-							: { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.created_by?.name || 'User')}&background=random` }
-				}
-				style={styles.avatar}
-			/>
-			<View style={styles.textContent}>
-				<View style={styles.headerRow}>
-					<CText fontStyle="SB" fontSize={14}>{item.created_by?.name}</CText>
-					<CText fontSize={12} style={styles.timeText}>
-						{item.sending ? 'Sending...' : formatDate(item.created_at, 'relative')}
+	const renderComment = ({ item }) => {
+		const isYou = item.created_by?.name === user?.name;
+
+		return (
+			<View
+				style={[
+					styles.commentRow,
+					isYou ? styles.commentRowRight : styles.commentRowLeft,
+				]}
+			>
+				{!isYou && (
+					<Image
+						source={
+							item.created_by?.profile_pic
+								? { uri: `${FILE_BASE_URL}/${item.created_by.profile_pic}` }
+								: item.created_by?.avatar
+									? { uri: item.created_by.avatar }
+									: {
+										uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+											item.created_by?.name || "User"
+										)}&background=random`,
+									}
+						}
+						style={styles.avatar}
+					/>
+				)}
+
+				<View
+					style={[
+						styles.commentBubble,
+						isYou ? styles.commentBubbleYou : styles.commentBubbleOther,
+						item.sending && { opacity: 0.5 },
+					]}
+				>
+					<View style={styles.headerRow}>
+						<CText fontStyle="SB" fontSize={13}>
+							{isYou ? "You" : item.created_by?.name}
+						</CText>
+						<CText fontSize={11} style={styles.timeText}>
+							{item.sending ? "Sending..." : formatDate(item.created_at, "relative")}
+						</CText>
+					</View>
+					<CText fontSize={14} style={styles.commentText}>
+						{item.content}
 					</CText>
 				</View>
-				<CText fontSize={14} style={styles.commentText}>{item.content}</CText>
 			</View>
-		</View>
-	);
+		);
+	};
+
 
 	return (
 		<>
@@ -185,78 +212,80 @@ const WallCommentsScreen = ({ route, navigation }) => {
 export default WallCommentsScreen;
 
 const styles = StyleSheet.create({
+	commentRow: {
+		flexDirection: "row",
+		marginVertical: 6,
+		maxWidth: "85%",
+	},
+	commentRowLeft: {
+		alignSelf: "flex-start",
+	},
+	commentRowRight: {
+		alignSelf: "flex-end",
+		flexDirection: "row-reverse",
+	},
 	commentBubble: {
-		flexDirection: 'row',
-		backgroundColor: '#fff',
-		padding: 12,
+		padding: 10,
 		borderRadius: 12,
 		shadowOpacity: 0.03,
 		shadowOffset: { width: 0, height: 1 },
 		shadowRadius: 2,
 	},
-	avatar: {
-		width: 38,
-		height: 38,
-		borderRadius: 19,
-		marginRight: 10,
+	commentBubbleOther: {
+		backgroundColor: "#fff",
+		marginLeft: 6,
 	},
-	textContent: {
-		flex: 1,
+	commentBubbleYou: {
+		backgroundColor: theme.colors.light.primary + "22",
+		marginRight: 6,
+	},
+	avatar: {
+		width: 32,
+		height: 32,
+		borderRadius: 16,
 	},
 	headerRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
+		flexDirection: "row",
+		justifyContent: "space-between",
+		marginBottom: 2,
 	},
 	timeText: {
-		color: '#888',
-		fontSize: 12,
+		color: "#888",
+		fontSize: 11,
 	},
 	commentText: {
-		marginTop: 4,
-		color: '#222',
-		fontSize: 14,
-	},
-	emptyContainer: {
-		alignItems: 'center',
-		marginTop: 50,
-	},
-	emptyText: {
-		color: '#666',
+		color: "#222",
 		fontSize: 14,
 	},
 	inputContainer: {
-		position: 'absolute',
+		position: "absolute",
 		bottom: 0,
 		left: 0,
 		right: 0,
-		flexDirection: 'row',
-		paddingVertical: 10,
-		paddingHorizontal: 12,
-		backgroundColor: '#fff',
+		flexDirection: "row",
+		alignItems: "center",
+		padding: 10,
+		backgroundColor: "#fff",
 		borderTopWidth: 1,
-		borderColor: '#ddd'
+		borderColor: "#eee",
 	},
 	input: {
 		flex: 1,
-		backgroundColor: '#f5f5f5',
+		backgroundColor: "#f5f5f5",
 		borderRadius: 20,
 		paddingHorizontal: 16,
-		paddingVertical: Platform.OS === 'ios' ? 8 : 4,
+		paddingVertical: Platform.OS === "ios" ? 10 : 6,
 		fontSize: 15,
-		maxHeight: 80,
+		maxHeight: 100,
 	},
 	sendBtn: {
 		marginLeft: 8,
-		padding: 10,
-		borderRadius: 20,
+		backgroundColor: theme.colors.light.primary,
+		borderRadius: 50,
+		padding: 12,
 	},
 	sendText: {
-		color: '#fff',
-		fontSize: 16,
+		color: "#fff",
+		fontSize: 15,
 	},
-	sendLoader: {
-		marginLeft: 8,
-		alignSelf: 'center'
-	}
 });

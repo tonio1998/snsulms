@@ -4,27 +4,25 @@ import {
     View,
     StyleSheet,
     ScrollView,
-    ActivityIndicator, RefreshControl,
+    ActivityIndicator,
+    RefreshControl,
 } from "react-native";
 import { globalStyles } from "../../theme/styles.ts";
 import { CText } from "../../components/common/CText.tsx";
-import CButton from "../../components/buttons/CButton.tsx";
 import BackHeader from "../../components/layout/BackHeader.tsx";
 import { useAlert } from "../../components/CAlert.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
 import { handleApiError } from "../../utils/errorHandler.ts";
-import {getAttendanceById, getAttendanceDetails} from "../../api/modules/attendanceApi.ts";
-import {loadEventToLocal, saveEventToLocal, updateEventToLocal} from "../../utils/cache/events/localEvents";
-import {formatDate} from "date-fns";
-import {SummaryBox} from "../../components/common/SummaryBox.tsx";
-import {LastUpdatedBadge} from "../../components/common/LastUpdatedBadge";
+import { getAttendanceById } from "../../api/modules/attendanceApi.ts";
+import { loadEventToLocal, updateEventToLocal } from "../../utils/cache/events/localEvents";
+import { format } from "date-fns";
+import { SummaryBox } from "../../components/common/SummaryBox.tsx";
+import { LastUpdatedBadge } from "../../components/common/LastUpdatedBadge";
 
 const AttendanceDetails = ({ navigation, route }) => {
     const { user } = useAuth();
     const { showAlert } = useAlert();
     const { AttendanceID } = route.params;
-
-    console.log("🔍 Fetching attendance details", route.params);
 
     const [loading, setLoading] = useState(true);
     const [attendance, setAttendance] = useState(null);
@@ -35,7 +33,6 @@ const AttendanceDetails = ({ navigation, route }) => {
         const fetchDetails = async () => {
             try {
                 setLoading(true);
-
                 const cache = await loadEventToLocal(user?.id);
                 if (cache?.data) {
                     const cachedEvent = cache.data.find(e => e.id === AttendanceID);
@@ -51,14 +48,12 @@ const AttendanceDetails = ({ navigation, route }) => {
                 setLoading(false);
             }
         };
-
         fetchDetails();
     }, [AttendanceID]);
 
     const onRefresh = async () => {
         setRefreshing(true);
         const res = await getAttendanceById(AttendanceID);
-        console.log("🔍 Fetching attendance details from API", res);
         const now = await updateEventToLocal(user?.id, AttendanceID, res);
         setAttendance(res);
         setLastUpdated(now);
@@ -90,33 +85,42 @@ const AttendanceDetails = ({ navigation, route }) => {
     return (
         <>
             <BackHeader title="Attendance Details" />
-            <SafeAreaView style={[globalStyles.safeArea]}>
+            <SafeAreaView style={globalStyles.safeArea}>
                 <View style={{ marginHorizontal: 10 }}>
                     <LastUpdatedBadge date={lastUpdated} onReload={onRefresh} />
                 </View>
-                <ScrollView contentContainerStyle={{ padding: 16 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+                <ScrollView
+                    contentContainerStyle={{ padding: 16 }}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                >
                     <View style={styles.section}>
-                        <CText fontStyle="R" fontSize={13}>Title</CText>
-                        <CText fontStyle="SB" fontSize={15}>{attendance?.Title}</CText>
-                        <CText fontStyle="R" fontSize={13}>Description</CText>
-                        <CText fontSize={15} fontStyle="SB" style={styles.description}>
-                            {attendance?.Description}
-                        </CText>
-                        <CText fontStyle="R" fontSize={13}>Date of Event</CText>
-                        <CText fontSize={15} fontStyle="SB">
-                            {formatDate(attendance?.DateofEvent, "MMM dd, yyyy")}
-                        </CText>
+                        <View style={styles.row}>
+                            <CText fontStyle="R" fontSize={13}>Title</CText>
+                            <CText fontStyle="SB" fontSize={15}>{attendance?.Title}</CText>
+                        </View>
+                        <View style={styles.row}>
+                            <CText fontStyle="R" fontSize={13}>Description</CText>
+                            <CText fontSize={15} fontStyle="SB" style={styles.description}>
+                                {attendance?.Description}
+                            </CText>
+                        </View>
+                        <View style={styles.row}>
+                            <CText fontStyle="R" fontSize={13}>Date of Event</CText>
+                            <CText fontSize={15} fontStyle="SB">
+                                {format(new Date(attendance?.DateofEvent), "MMM dd, yyyy")}
+                            </CText>
+                        </View>
                     </View>
 
                     <View style={styles.section}>
                         <CText fontStyle="SB" fontSize={15} style={styles.sectionTitle}>
                             Statistics
                         </CText>
-                        <View style={[globalStyles.cardRow]}>
-                            {attendance?.class?.students.length > 0 && (
-                                <SummaryBox label="Total Students" value={attendance?.class?.students.length}/>
+                        <View style={globalStyles.cardRow}>
+                            {attendance?.class?.students?.length > 0 && (
+                                <SummaryBox label="Total Students" value={attendance?.class?.students.length} />
                             )}
-                            <SummaryBox label="Total Logs" value={attendance?.logs.length}/>
+                            <SummaryBox label="Total Logs" value={attendance?.logs?.length ?? 0} />
                         </View>
                     </View>
                 </ScrollView>
@@ -142,6 +146,9 @@ const styles = StyleSheet.create({
     },
     description: {
         color: "#555",
+    },
+    row: {
+        marginBottom: 12,
     },
 });
 

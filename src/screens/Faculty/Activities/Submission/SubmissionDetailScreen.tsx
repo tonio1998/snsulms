@@ -41,6 +41,7 @@ import {
 } from "../../../../utils/cache/Student/localStudentActivity";
 import {LastUpdatedBadge} from "../../../../components/common/LastUpdatedBadge";
 import {getStudenActivityDetails} from "../../../../api/modules/activitiesApi.ts";
+import {useAlert} from "../../../../components/CAlert.tsx";
 
 const SubmissionDetailsScreen = ({ navigation, route }) => {
 	const StudentActivityID = route.params.StudentActivityID;
@@ -49,7 +50,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 	const { user } = useAuth();
 	const network = useContext(NetworkContext);
 	const { showLoading, hideLoading } = useLoading();
-
+	const { showAlert } = useAlert();
 	const [loading, setLoading] = useState(false);
 	const [submission, setSubmission] = useState(null);
 	const [attachment, setAttachment] = useState([]);
@@ -111,7 +112,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 				StudentActivityID,
 				Grade: gradeInput
 			});
-			Alert.alert('Success', 'Grade submitted successfully.');
+			showAlert('success', 'Success', 'Grade submitted successfully.')
 			navigation.goBack();
 		} catch (err) {
 			handleApiError(err, 'Submit');
@@ -157,7 +158,7 @@ const SubmissionDetailsScreen = ({ navigation, route }) => {
 
 	return (
 		<>
-			<BackHeader  title={'Submission Details'} />
+			<BackHeader title={'Submission Details'} />
 			<KeyboardAvoidingView
 				style={{ flex: 1 }}
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
 	profileCard: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		backgroundColor: theme.colors.light.info+'22',
+		backgroundColor: theme.colors.light.primary+'22',
 		borderRadius: 10,
 		padding: 12,
 		marginBottom: 14,

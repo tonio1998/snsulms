@@ -86,23 +86,23 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
                 end={{ x: 1.3, y: 1 }}
                 style={styles.gradientBg}
             >
-                {circles.map(({ key, size, top, left }) => (
-                    <Animated.View
-                        key={key}
-                        style={[
-                            styles.circle,
-                            {
-                                width: size,
-                                height: size,
-                                borderRadius: size / 2,
-                                top,
-                                left,
-                                opacity: fadeAnim,
-                                transform: [{ scale: scaleAnim }],
-                            },
-                        ]}
-                    />
-                ))}
+                {/*{circles.map(({ key, size, top, left }) => (*/}
+                {/*    <Animated.View*/}
+                {/*        key={key}*/}
+                {/*        style={[*/}
+                {/*            styles.circle,*/}
+                {/*            {*/}
+                {/*                width: size,*/}
+                {/*                height: size,*/}
+                {/*                borderRadius: size / 2,*/}
+                {/*                top,*/}
+                {/*                left,*/}
+                {/*                opacity: fadeAnim,*/}
+                {/*                transform: [{ scale: scaleAnim }],*/}
+                {/*            },*/}
+                {/*        ]}*/}
+                {/*    />*/}
+                {/*))}*/}
             </LinearGradient>
 
             <View style={styles.headerWrapper}>
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     },
     header: {
         position: 'absolute',
-        top: Platform.OS === 'android' ? ((StatusBar.currentHeight + 5) || 24) : 44,
+        top: Platform.OS === 'android' ? ((StatusBar.currentHeight) || 24) : 44,
         left: '3%',
         right: '3%',
         paddingHorizontal: 10,

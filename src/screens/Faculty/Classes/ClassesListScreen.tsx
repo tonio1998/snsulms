@@ -168,8 +168,7 @@ const ClassesListScreen = ({ navigation }) => {
 				activeOpacity={0.9}
 				onPress={() => toggleAccordion(ClassID)}
 			>
-				<View style={styles.card}>
-					{/* Header */}
+				<View style={globalStyles.card}>
 					<View style={styles.cardHeader}>
 						<View style={{ flex: 1, paddingRight: 8 }}>
 							<CText fontStyle="SB" fontSize={16} style={{ marginBottom: 2 }}>

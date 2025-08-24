@@ -17,6 +17,7 @@ import {globalStyles} from "../../theme/styles.ts";
 import BackHeader from "../../components/layout/BackHeader.tsx";
 import {theme} from "../../theme";
 import {useLoading} from "../../context/LoadingContext.tsx";
+import {useAlert} from "../../components/CAlert.tsx";
 
 export default function QrCodeScannerScreen({ route}) {
     const [scanned, setScanned] = useState(false);
@@ -25,6 +26,7 @@ export default function QrCodeScannerScreen({ route}) {
     const AttendanceID = route.params?.AttendanceID;
 
     const { showLoading, hideLoading } = useLoading();
+    const { showAlert } = useAlert();
 
     const scannedRef = useRef(false);
     const scanLineAnim = useRef(new Animated.Value(0)).current;
@@ -125,9 +127,10 @@ export default function QrCodeScannerScreen({ route}) {
             }
             const response = await saveLogs(datasss);
             await clearScans();
-            Alert.alert("Success", "All scans saved online!");
+            showAlert('success', 'Success', "All scans saved online!")
         } catch (error) {
-            Alert.alert("Error", "Failed to save online");
+            // Alert.alert("Error", "Failed to save online");
+            showAlert('error', 'Error', "Failed to save online")
             handleApiError(error, "Failed to save logs");
         } finally {
             hideLoading();

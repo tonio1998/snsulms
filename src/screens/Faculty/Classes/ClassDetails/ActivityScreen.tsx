@@ -28,31 +28,59 @@ const { height } = Dimensions.get('window');
 
 const ActivityCard = React.memo(({ item, onPress }) => (
 	<TouchableOpacity
-		style={globalStyles.card}
+		style={[globalStyles.card, { padding: 14 }]}
 		onPress={() => onPress(item?.Title, item?.ActivityID)}
-		activeOpacity={0.5}
+		activeOpacity={0.7}
 	>
-		<View style={globalStyles.cardInner}>
-			<CText fontSize={17} fontStyle="SB" style={globalStyles.cardTitle}>{item?.Title}</CText>
-			{item?.Description?.trim() !== '' && (
-				<CText fontSize={14} style={globalStyles.cardDesc} numberOfLines={2}>{item?.Description}</CText>
+		<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+			<CText fontSize={15} fontStyle="SB" numberOfLines={1} ellipsizeMode={'tail'}
+				   style={[globalStyles.cardTitle, {width: '85%'}]}>
+				{item?.Title}
+			</CText>
+
+			<DonutProgress
+				percentage={item?.CompletedPercent}
+				radius={18}
+				strokeWidth={5}
+				percentTextSize={11}
+				strokeColor={theme.colors.light.warning}
+			/>
+		</View>
+
+		{item?.Description?.trim() !== '' && (
+			<CText
+				fontSize={14}
+				style={[globalStyles.cardDesc, { marginTop: 6 }]}
+				numberOfLines={3}
+			>
+				{item?.Description}
+			</CText>
+		)}
+
+		<View
+			style={{
+				flexDirection: 'row',
+				justifyContent: 'space-between',
+				alignItems: 'center',
+				marginTop: 12,
+				borderTopWidth: StyleSheet.hairlineWidth,
+				borderTopColor: '#ddd',
+				paddingTop: 6,
+			}}
+		>
+			{item?.DueDate ? (
+				<CText fontSize={12} style={globalStyles.cardMeta}>
+					Due: {formatDate(item?.DueDate)}
+				</CText>
+			) : (
+				<CText fontSize={12} style={{ color: '#aaa' }}>
+					No due date
+				</CText>
 			)}
-			<View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
-				<DonutProgress
-					percentage={item?.CompletedPercent}
-					radius={16}
-					strokeWidth={4}
-					percentTextSize={10}
-					strokeColor={theme.colors.light.warning}
-				/>
-				<CText fontSize={12} style={globalStyles.cardMeta}>have submitted</CText>
-			</View>
-			<View style={globalStyles.cardFooter}>
-				{item?.DueDate && (
-					<CText fontSize={12} style={globalStyles.cardMeta}>Due: {formatDate(item?.DueDate)}</CText>
-				)}
-				<CText fontSize={12} style={globalStyles.cardMeta}>Created: {formatDate(item?.created_at, 'relative')}</CText>
-			</View>
+
+			<CText fontSize={12} style={globalStyles.cardMeta}>
+				Created: {formatDate(item?.created_at, 'relative')}
+			</CText>
 		</View>
 	</TouchableOpacity>
 ));
@@ -162,7 +190,7 @@ const ActivityScreen = ({ navigation }) => {
 		<SafeAreaView style={[globalStyles.safeArea2]}>
 			<FlatList
 				data={filteredActivities}
-				keyExtractor={item => item?.ActivityID.toString()}
+				keyExtractor={(item, index) => `${item?.ActivityID}-${index}`}
 				renderItem={({ item }) => <ActivityCard item={item} onPress={handleViewAct} />}
 				ListHeaderComponent={renderFilterHeader}
 				contentContainerStyle={{ padding: 10, paddingBottom: 120 }}
@@ -208,7 +236,7 @@ const ActivityScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
 	filterBtn: {
-		borderRadius: theme.radius.md,
+		borderRadius: theme.radius.sm,
 		paddingVertical: 8,
 		paddingHorizontal: 20,
 		backgroundColor: '#fff',

@@ -64,7 +64,7 @@ function ClassTopTabs({ route, navigation }) {
 			<View style={{ flex: 1 }}>
 				<View
 					style={{
-						paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 44,
+						paddingTop: Platform.OS === "android" ? StatusBar.currentHeight + 10 : 44,
 						paddingBottom: 12,
 						backgroundColor: theme.colors.light.primary,
 						alignItems: "center",
@@ -72,9 +72,9 @@ function ClassTopTabs({ route, navigation }) {
 						flexDirection: 'row',
 					}}
 				>
-					{/*<TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Home')}>*/}
-					{/*	<Icon name="arrow-back" size={22} color="#fff" />*/}
-					{/*</TouchableOpacity>*/}
+					<TouchableOpacity activeOpacity={0.7} onPress={() => navigation.goBack()}>
+						<Icon name="arrow-back" size={22} color="#fff" />
+					</TouchableOpacity>
 					<CText style={{ fontSize: 16, fontWeight: "bold", color: "#fff", width: "80%", textAlign: 'center' }} numberOfLines={1}>
 						{classes?.CourseCode || "Class"} - {classes?.CourseName || "Class"}
 					</CText>
@@ -95,7 +95,7 @@ function ClassTopTabs({ route, navigation }) {
 							</CText>
 						),
 						tabBarScrollEnabled: true,
-						tabBarItemStyle: { width: Dimensions.get('window').width / 5 },
+						tabBarItemStyle: { width: Dimensions.get('window').width / 4 },
 						tabBarIndicatorStyle: {
 							backgroundColor: theme.colors.light.primary,
 							height: 3,
@@ -124,6 +124,7 @@ function ClassTopTabs({ route, navigation }) {
 								default: iconName = "ellipse-outline";
 							}
 							return <Icon name={iconName} size={18} color={color} />;
+							// return null;
 						},
 					})}
 				>

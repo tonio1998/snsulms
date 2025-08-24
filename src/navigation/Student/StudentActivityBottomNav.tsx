@@ -111,7 +111,7 @@ export default function StudentActivityBottomNav({route, navigation}) {
 					})}
 				>
 					<Tab.Screen name="Instruction" component={InstructionScreen}/>
-					{Type > 1 && <Tab.Screen name="Submission" component={SubmissionScreen}/>}
+					<Tab.Screen name="Submission" component={SubmissionScreen}/>
 				</Tab.Navigator>
 			</ActivityProvider>
 		</>

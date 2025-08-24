@@ -164,7 +164,9 @@ const SubmissionListScreen = ({ navigation }) => {
 				<ShimmerList
 					data={submissions}
 					// loading={loading}
-					keyExtractor={(item) => item.StudentActivityID.toString()}
+					keyExtractor={(item, index) =>
+						item?.StudentActivityID ? item.StudentActivityID.toString() : index.toString()
+					}
 					renderItem={renderSubmission}
 					refreshing={refreshing}
 					onRefresh={onRefresh}

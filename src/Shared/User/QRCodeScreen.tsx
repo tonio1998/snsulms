@@ -86,6 +86,7 @@ const QRCodeScreen = () => {
 
 	return (
 		<>
+			<BackHeader title={"My QR Code"} style={{ color: "#fff"}}/>
 			<SafeAreaView style={[globalStyles.safeArea2]}>
 				<BackHeader title="My QR Code" style={{ color: '#fff' }} />
 				<View style={{
