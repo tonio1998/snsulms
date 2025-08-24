@@ -28,3 +28,9 @@ export const deleteAttendance = async (id: number) => {
     const response = await api.delete(`/events/${id}`);
     return response.data;
 };
+
+export const saveLogs = async (form) => {
+    console.log("🔍 Saving attendance logs", form);
+    const response = await api.post('/events/attendance', form);
+    return response.data;
+};

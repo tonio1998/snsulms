@@ -82,8 +82,8 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
             />
             <LinearGradient
                 colors={[theme.colors.light.primary, theme.colors.light.secondary]}
-                start={{ x: 1, y: 3 }}
-                end={{ x: 1.4, y: 1 }}
+                start={{ x: 1, y: 2 }}
+                end={{ x: 1.3, y: 1 }}
                 style={styles.gradientBg}
             >
                 {circles.map(({ key, size, top, left }) => (

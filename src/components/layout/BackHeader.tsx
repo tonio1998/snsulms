@@ -83,7 +83,7 @@ const BackHeader = ({
 							<CText
 								fontStyle="SB"
 								fontSize={17}
-								style={{ color: '#000', width: '65%', textAlign: 'center' }}
+								style={[style, { width: '65%', textAlign: 'center' }]}
 								numberOfLines={1}
 								ellipsizeMode="middle"
 							>

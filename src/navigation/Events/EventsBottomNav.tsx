@@ -11,6 +11,8 @@ import WallScreen from "../../Shared/Wall/WallScreen.tsx";
 import ScanScreen from "../../Shared/Scanner/ScanScreen.tsx";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AttendanceDetails from "../../Shared/Attendance/AttendanceDetails.tsx";
+import ClassAttendanceScanScreen from "../../Shared/Scanner/ScanScreen.tsx";
+import AttendanceHistory from "../../Shared/Attendance/AttendanceHistory.tsx";
 
 const BottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -50,6 +52,8 @@ function InnerTabs({ AttendanceID }) {
 						case 'Information': iconName = focused ? 'information-circle' : 'information-circle-outline'; break;
 						case 'Activities': iconName = focused ? 'reader' : 'reader-outline'; break;
 						case 'Materials': iconName = focused ? 'book' : 'book-outline'; break;
+						case 'Scanner': iconName = focused ? 'qr-code-outline' : 'qr-code-outline'; break;
+						case 'History': iconName = focused ? 'calendar' : 'calendar-outline'; break;
 						default: iconName = 'ellipse'; break;
 					}
 					return <Icon name={iconName} size={22} color={color} />;
@@ -93,9 +97,10 @@ function InnerTabs({ AttendanceID }) {
 			/>
 			<BottomTab.Screen
 				name="Scanner"
-				component={ScanScreen}
+				component={ClassAttendanceScanScreen}
 				initialParams={{ AttendanceID }}
 			/>
+			<BottomTab.Screen name="History" component={AttendanceHistory} initialParams={{ AttendanceID }}/>
 		</BottomTab.Navigator>
 	);
 }

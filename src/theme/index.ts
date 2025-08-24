@@ -101,13 +101,13 @@ const fontSizes = {
 //     italic: 'Poppins-Italic',
 // };
 
-export const font = {
-    regular: 'MazzardSoftH-Regular',
-    medium: 'Poppins-Medium',
-    semiBold: 'MazzardSoftH-SemiBold',
-    bold: 'Poppins-Bold',
-    italic: 'Poppins-Italic',
-};
+// export const font = {
+//     regular: 'MazzardSoftH-Regular',
+//     medium: 'Poppins-Medium',
+//     semiBold: 'MazzardSoftH-SemiBold',
+//     bold: 'Poppins-Bold',
+//     italic: 'Poppins-Italic',
+// };
 
 // export const font = {
 //     regular: 'Roboto-Regular',
@@ -119,6 +119,18 @@ export const font = {
 //     thin: 'Roboto-Thin',
 //     black: 'Roboto-Black',
 // };
+
+export const font = {
+    regular: 'Montserrat-Regular',
+    medium: 'Montserrat-Medium',
+    semiBold: 'Montserrat-SemiBold',
+    bold: 'Montserrat-Bold',
+    italic: 'Montserrat-Italic',
+    light: 'Montserrat-Light',
+    thin: 'Montserrat-Thin',
+    black: 'Montserrat-Black',
+};
+
 
 export const FontFamily = 'MazzardSoftH-SemiBold';
 export const FontFamilyNormal = 'MazzardSoftH-Regular';

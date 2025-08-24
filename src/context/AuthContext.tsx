@@ -80,10 +80,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 	const loginAuth = async (userData: { user: any; token: string }) => {
 		try {
-			await AsyncStorage.setItem('roles', JSON.stringify(userData.roles));
-			await AsyncStorage.setItem('permissions', JSON.stringify(userData.permissions));
-			setRoles(userData.roles)
-			setPermissions(userData.permissions)
+			await AsyncStorage.setItem('EncryptedUserID', userData?.EncryptedUserID);
+			await AsyncStorage.setItem('roles', JSON.stringify(userData?.roles));
+			await AsyncStorage.setItem('permissions', JSON.stringify(userData?.permissions));
+			setRoles(userData?.roles)
+			setPermissions(userData?.permissions)
 			await Keychain.setGenericPassword(JSON.stringify(userData.user), userData.token);
 			setUser(userData.user);
 			await setAuthToken(userData.token);
@@ -142,8 +143,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			return false;
 			}
 
+			const EncryptedUserID = await AsyncStorage.getItem('EncryptedUserID');
+
 			const secureData = {
 			user,
+				EncryptedUserID,
 			token: storedToken,
 				roles: roles,
 				permissions: permissions
