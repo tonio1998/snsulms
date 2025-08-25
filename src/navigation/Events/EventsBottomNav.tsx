@@ -19,28 +19,29 @@ const BottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 export default function EventsBottomNav({ route }) {
-	const AttendanceID = route.params.AttendanceID;
+	const AttendanceID = route.params?.AttendanceID;
+	const ClassID = route.params?.ClassID || 0;
 	return (
 		<ClassProvider AttendanceID={AttendanceID}>
-			<InnerTabs AttendanceID={AttendanceID} />
+			<InnerTabs AttendanceID={AttendanceID} ClassID={ClassID} />
 		</ClassProvider>
 	);
 }
 
 function InformationStack({ route }) {
-	const { AttendanceID } = route.params;
+	const { AttendanceID, ClassID } = route.params;
 	return (
 		<Stack.Navigator screenOptions={{ headerShown: false }}>
 			<Stack.Screen
 				name="InformationHome"
 				component={AttendanceDetails}
-				initialParams={{ AttendanceID }}
+				initialParams={{ AttendanceID, ClassID }}
 			/>
 		</Stack.Navigator>
 	);
 }
 
-function InnerTabs({ AttendanceID }) {
+function InnerTabs({ AttendanceID, ClassID }) {
 	const insets = useSafeAreaInsets();
 	const { hasRole } = useAccess();
 
@@ -94,14 +95,14 @@ function InnerTabs({ AttendanceID }) {
 			<BottomTab.Screen
 				name="Information"
 				component={InformationStack}
-				initialParams={{ AttendanceID }}
+				initialParams={{ AttendanceID, ClassID }}
 			/>
 			<BottomTab.Screen
 				name="Session"
 				component={AttendanceDays}
-				initialParams={{ AttendanceID }}
+				initialParams={{ AttendanceID, ClassID }}
 			/>
-			<BottomTab.Screen name="History" component={AttendanceHistory} initialParams={{ AttendanceID }}/>
+			<BottomTab.Screen name="History" component={AttendanceHistory} initialParams={{ AttendanceID, ClassID }}/>
 		</BottomTab.Navigator>
 	);
 }

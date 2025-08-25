@@ -39,7 +39,7 @@ export const SummaryCard = ({
 
             <View style={{ padding: 16 }}>
                 {title && (
-                    <CText fontSize={18} fontStyle="B" style={{ color: textColor, marginBottom: 12 }}>
+                    <CText fontSize={15} fontStyle="B" style={{ color: textColor, marginBottom: 12 }}>
                         {title}
                     </CText>
                 )}
@@ -48,7 +48,7 @@ export const SummaryCard = ({
                     {stats.map((stat, index) => (
                         <View key={index} style={{ flex: 1 }}>
                             {stat.label && (
-                                <CText fontSize={14} fontStyle="M" numberOfLines={1} style={{ color: textColor }}>
+                                <CText fontSize={12} fontStyle="M" numberOfLines={1} style={{ color: textColor }}>
                                     {stat.label}
                                 </CText>
                             )}
@@ -61,7 +61,7 @@ export const SummaryCard = ({
                                     autoRun
                                 />
                             ) : (
-                                <CText fontSize={24} fontStyle="B" style={{ color: textColor }}>
+                                <CText fontSize={28} fontStyle="B" style={{ color: textColor }}>
                                     {formatNumber(stat.value)}
                                 </CText>
                             )}

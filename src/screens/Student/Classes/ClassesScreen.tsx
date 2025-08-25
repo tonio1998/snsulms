@@ -239,8 +239,8 @@ const styles = StyleSheet.create({
 	viewButton: {
 		paddingHorizontal: 14,
 		paddingVertical: 8,
-		borderRadius: theme.radius.md,
-		backgroundColor: theme.colors.light.primary + '18',
+		borderRadius: theme.radius.sm,
+		backgroundColor: theme.colors.light.primary + '15',
 	},
 	container: {
 		flex: 1,

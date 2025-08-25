@@ -35,7 +35,7 @@ const AttendanceMasterlistScreen = ({ navigation, route }) => {
     const loadLocal = async () => {
         try {
             setLoading(true);
-            const { data, date } = await loadEventToLocal(user?.id);
+            const { data, date } = await loadEventToLocal(user?.id, ClassID);
             if (data) {
                 setAttendances(data);
                 setLastUpdated(date);
@@ -54,7 +54,7 @@ const AttendanceMasterlistScreen = ({ navigation, route }) => {
             setLoading(true);
             const res = await getAttendanceByClass({ ClassID });
             console.log("🔍 Fetched attendance list", res.data);
-            const now = await saveEventToLocal(user?.id, res.data);
+            const now = await saveEventToLocal(user?.id, ClassID, res.data);
             setLastUpdated(now);
             setAttendances(res.data || []);
         } catch (error) {
@@ -101,6 +101,7 @@ const AttendanceMasterlistScreen = ({ navigation, route }) => {
             onPress={() =>
                 navigation.navigate("Events", {
                     AttendanceID: item.id,
+                    ClassID: ClassID
                 })
             }
             activeOpacity={0.7}
@@ -112,14 +113,14 @@ const AttendanceMasterlistScreen = ({ navigation, route }) => {
 
                 <View
                     style={{
-                        backgroundColor: theme.colors.light.primary,
+                        backgroundColor: theme.colors.light.primary+'22',
                         paddingHorizontal: 10,
                         paddingVertical: 4,
-                        borderRadius: 20,
+                        borderRadius: theme.radius.sm,
                     }}
                 >
-                    <CText fontSize={12} style={{ color: "#fff" }}>
-                        📝 {item.logs?.length ?? 0}
+                    <CText fontSize={theme.fontSizes.sm} fontStyle={'SB'} style={{ color: theme.colors.light.primary }}>
+                        {item.logs?.length ?? 0} logs
                     </CText>
                 </View>
             </View>

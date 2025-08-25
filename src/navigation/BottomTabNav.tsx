@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dimensions, Platform, StatusBar, View } from 'react-native';
+import { Dimensions, Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
@@ -20,6 +20,7 @@ import ClassesScreen from '../screens/Student/Classes/ClassesScreen.tsx';
 import ActivitiesScreen from '../screens/Student/Classes/ActivitiesScreen.tsx';
 import ClassesListScreen from '../screens/Faculty/Classes/ClassesListScreen.tsx';
 import CustomHeader2 from "../components/layout/CustomHeader2.tsx";
+import {BlurView} from "@react-native-community/blur";
 
 const Tab = createBottomTabNavigator();
 const ClassesStack = createNativeStackNavigator();
@@ -166,10 +167,13 @@ function FacultyClassesStack() {
 function FacultyClassesTopTabs() {
 	return (
 		<View style={{ flex: 1 }}>
+			<StatusBar
+				barStyle="light-content"
+			/>
 			<View
 				style={{
 					paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 44,
-					paddingBottom: 70,
+					paddingBottom: 66,
 					backgroundColor: colors.card,
 					alignItems: "center",
 					justifyContent: "center",

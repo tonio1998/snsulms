@@ -117,7 +117,7 @@ const AddClassScreen = ({ navigation, route }) => {
                 <View style={styles.container}>
                     <CText fontStyle="SB" style={styles.label}>Course Code</CText>
                     <TextInput
-                        style={styles.input}
+                        style={globalStyles.input}
                         value={form.CourseCode}
                         onChangeText={(text) => handleChange('CourseCode', text)}
                         autoCapitalize="characters"
@@ -125,20 +125,20 @@ const AddClassScreen = ({ navigation, route }) => {
 
                     <CText fontStyle="SB" style={styles.label}>Course Name</CText>
                     <TextInput
-                        style={styles.input}
+                        style={globalStyles.input}
                         value={form.CourseName}
                         onChangeText={(text) => handleChange('CourseName', text)}
                     />
 
                     <CText fontStyle="SB" style={styles.label}>Section</CText>
                     <TextInput
-                        style={styles.input}
+                        style={globalStyles.input}
                         value={form.Section}
                         onChangeText={(text) => handleChange('Section', text)}
                         autoCapitalize="characters"
                     />
 
-                    <CText fontStyle="SB" style={styles.label}>Campus ID</CText>
+                    <CText fontStyle="SB" style={styles.label}>Campus</CText>
                     {/*<TextInput*/}
                     {/*    style={styles.input}*/}
                     {/*    value={form.CampusID}*/}

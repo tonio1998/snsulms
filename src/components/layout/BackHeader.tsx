@@ -75,14 +75,14 @@ const BackHeader = ({
 			<GestureDetector gesture={blockSwipeGesture}>
 				<View style={styles.headerWrapper}>
 					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-						<Icon name={icon} size={25} color={"#fff"} />
+						<Icon name={icon} size={25} color={"#000"} />
 					</TouchableOpacity>
 
 					{title && (
 						<View style={styles.titleContainer}>
 							<CText
 								fontStyle="SB"
-								fontSize={17}
+								fontSize={theme.fontSizes.lg}
 								style={[style, { width: '65%', textAlign: 'center' }]}
 								numberOfLines={1}
 								ellipsizeMode="middle"
@@ -128,10 +128,10 @@ const styles = StyleSheet.create({
 		width: 40,
 		height: 40,
 		borderRadius: 8,
-		backgroundColor: theme.colors.light.primary,
+		backgroundColor: "#E8E8E8",
 		alignItems: 'center',
 		justifyContent: 'center',
-		elevation: 2,
+		elevation: 0,
 		shadowColor: theme.colors.light.primary
 	},
 

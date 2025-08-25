@@ -105,7 +105,7 @@ const StudentMaterialScreen = ({ navigation, route }) => {
 
 		return (
 			<TouchableOpacity
-				style={styles.card}
+				style={globalStyles.card}
 				onPress={() => handleViewAct(item.StudentActivityID, item.activity.Title)}
 				activeOpacity={0.9}
 			>
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
 		padding: 8,
 	},
 	cardInner: {
-		padding: 16,
+		padding: 0,
 	},
 	desc: {
 		color: '#444',

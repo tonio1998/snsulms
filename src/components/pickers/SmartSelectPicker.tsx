@@ -151,6 +151,6 @@ const styles = StyleSheet.create({
 	pickerSelectStyles: {
 		borderColor: '#ccc',
 		borderRadius: 8,
-		minHeight: 47,
+		minHeight: 46,
 	},
 });

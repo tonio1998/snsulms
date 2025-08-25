@@ -142,7 +142,7 @@ export const globalStyles = StyleSheet.create({
     card: {
         backgroundColor: '#fff',
         borderRadius: theme.radius.sm,
-        padding: 16,
+        padding: 18,
         marginBottom: 14,
         marginHorizontal: 2,
         elevation: 0,
@@ -217,7 +217,7 @@ export const globalStyles = StyleSheet.create({
         color: '#555',
     },
     input: {
-        height: 50,
+        height: 47,
         borderRadius: theme.radius.sm,
         borderWidth: 1,
         borderColor: '#ccc',
@@ -225,7 +225,7 @@ export const globalStyles = StyleSheet.create({
         marginBottom: 8,
         fontSize: 16,
         fontFamily: theme.font.regular,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: '#fff',
         color: "#000"
     },
     

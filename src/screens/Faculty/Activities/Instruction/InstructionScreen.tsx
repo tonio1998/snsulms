@@ -10,7 +10,7 @@ import {
 	StyleSheet,
 	ActivityIndicator,
 	Linking,
-	Alert, ToastAndroid,
+	Alert, ToastAndroid, StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -26,7 +26,7 @@ import { CText } from '../../../../components/common/CText.tsx';
 import { formatDate } from '../../../../utils/dateFormatter';
 import { handleApiError } from '../../../../utils/errorHandler.ts';
 import { fetchClassAttachments } from '../../../../api/modules/activitiesApi.ts';
-import { getFileSize, formatNumber } from '../../../../utils/format.ts';
+import {getFileSize, formatNumber, fileIcon} from '../../../../utils/format.ts';
 import { viewFile } from '../../../../utils/viewFile.ts';
 import { useAlert } from '../../../../components/CAlert.tsx';
 import { useFacActivity } from '../../../../context/FacSharedActivityContext.tsx';
@@ -35,6 +35,7 @@ import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator
 import {SubmissionModal} from "../../../../components/SubmissionModal.tsx";
 import {pick} from "@react-native-documents/picker";
 import {uploadStudentSubmission} from "../../../../api/modules/submissionApi.ts";
+import HeaderBackground from "../../../../components/halfBg.tsx";
 
 const InstructionScreen = ({ navigation, route }) => {
 	const { activity, refreshFromOnline } = useFacActivity();
@@ -90,16 +91,16 @@ const InstructionScreen = ({ navigation, route }) => {
 		const isWebLink = item.Link.startsWith('http');
 		return (
 			<TouchableOpacity
-				style={styles.submissionCard}
+				style={[globalStyles.card, globalStyles.cardRow, globalStyles.p_2, globalStyles.mb_5]}
 				onPress={() => {
 					if (isWebLink) Linking.openURL(item.Link).catch(() => Alert.alert('Error', 'Failed to open link'));
 					else viewFile(item.Link, item.Title);
 				}}
 			>
-				<Icon name="document-outline" size={22} color={theme.colors.light.primary} />
+				<Icon name={fileIcon(item.Thumbnail)} size={22} color={theme.colors.light.text+'88'} />
 				<View style={{ marginLeft: 12, flex: 1 }}>
 					<CText fontSize={16} fontStyle="SB" numberOfLines={1} style={{ color: '#000' }}>{item.Title}</CText>
-					{item.FileSize && <Text style={styles.subText}>Size: {getFileSize(item.FileSize)}</Text>}
+					{item.FileSize && <Text style={styles.subText}>Size: {getFileSize(item.FileSize)} / {item.Thumbnail}</Text>}
 				</View>
 			</TouchableOpacity>
 		);
@@ -276,7 +277,15 @@ const InstructionScreen = ({ navigation, route }) => {
 	return (
 		<>
 			<BackHeader title="Instruction" />
+			<StatusBar
+				barStyle="light-content"
+				translucent
+				backgroundColor="transparent"
+			/>
 			<SafeAreaView style={globalStyles.safeArea}>
+				<HeaderBackground heightRatio={0.25} style={{
+					backgroundColor: theme.colors.light.primary + '22',
+				}} />
 				<FlatList
 					data={submissions}
 					keyExtractor={(item, i) => `${item.id}-${i}`}

@@ -11,8 +11,8 @@
 //         secondary_soft: '#02801C',
 
 // SNSU GREEN
-// primary: '#1A4E07',
-//     secondary: '#138808',
+// primary: '#006400',
+//     secondary: '#228B22',
 
 // BLUE
 // primary: '#0951C7',
@@ -21,19 +21,20 @@
 const colors = {
     light: {
         // Backgrounds
-        background: '#F1F1F1',
-        surface: '#EEF4FA',
+        background: '#F3F4F6',   // light gray background
+        surface: '#F9FAFB',      // softer background for sections
         card: '#FFFFFF',
         muted: '#F5F5F5',
         muted_soft: '#E0E0E0',
 
         // Text & Borders
-        text: '#1A1D1F',
+        text: '#1F2937',         // neutral dark gray
         border: '#D1D5DB',
         inputBackground: '#FFFFFF',
 
-        primary: '#006400',
-        secondary: '#228B22',
+        // Brand Colors (LMS Green Theme)
+        primary: '#006400',      // Deep green (focus, stability)
+        secondary: '#228B22',    // Emerald accent (fresh, engaging)
 
         // Status Colors
         success: '#22C55E',
@@ -46,8 +47,8 @@ const colors = {
         info_soft: '#DBEAFE',
 
         // Accents
-        link: '#2563EB',
-        highlight: '#FACC15',
+        link: '#059669',         // Greenish link color
+        highlight: '#FACC15',    // Yellow for highlights/important
     },
 
 
@@ -121,15 +122,26 @@ const fontSizes = {
 //     black: 'Roboto-Black',
 // };
 
+// export const font = {
+//     regular: 'Montserrat-Regular',
+//     medium: 'Montserrat-Medium',
+//     semiBold: 'Montserrat-SemiBold',
+//     bold: 'Montserrat-Bold',
+//     italic: 'Montserrat-Italic',
+//     light: 'Montserrat-Light',
+//     thin: 'Montserrat-Thin',
+//     black: 'Montserrat-Black',
+// };
+
 export const font = {
-    regular: 'Montserrat-Regular',
-    medium: 'Montserrat-Medium',
-    semiBold: 'Montserrat-SemiBold',
-    bold: 'Montserrat-Bold',
-    italic: 'Montserrat-Italic',
-    light: 'Montserrat-Light',
-    thin: 'Montserrat-Thin',
-    black: 'Montserrat-Black',
+    regular: 'Urbanist-Regular',
+    medium: 'Urbanist-Medium',
+    semiBold: 'Urbanist-SemiBold',
+    bold: 'Urbanist-Bold',
+    italic: 'Urbanist-Italic',
+    light: 'Urbanist-Light',
+    thin: 'Urbanist-Thin',
+    black: 'Urbanist-Black',
 };
 
 

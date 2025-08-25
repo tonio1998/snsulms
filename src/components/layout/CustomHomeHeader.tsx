@@ -21,6 +21,7 @@ import { formatAcad } from '../../utils/format';
 import Icon from "react-native-vector-icons/Ionicons";
 import {BlurView} from "@react-native-community/blur";
 import {isTablet} from "../../utils/responsive";
+import {getGreeting} from "../../utils/greetings";
 
 const generateCircles = (count = 3) => {
     const fixedPositions = [
@@ -36,6 +37,7 @@ const generateCircles = (count = 3) => {
         return { key: `circle-${index}`, size, top, left };
     });
 };
+
 
 const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null }) => {
     const navigation = useNavigation();
@@ -135,8 +137,8 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
                             />
                         </TouchableOpacity>
                         <View style={{ marginLeft: 10 }}>
-                            <CText fontSize={14} style={{ color: '#fff'}} fontStyle="SB">Hello 👋</CText>
-                            <CText fontSize={15} style={{ color: '#fff'}} fontStyle="SB">{user?.name}</CText>
+                            <CText fontSize={14} style={{ color: '#fff'}} fontStyle="SB">{getGreeting()}👋</CText>
+                            <CText fontSize={20} style={{ color: '#fff'}} fontStyle="SB">{user?.name?.split(" ")[0]}</CText>
                         </View>
                     </View>
 

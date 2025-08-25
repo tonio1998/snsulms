@@ -74,7 +74,7 @@ const HomeHeader = ({
 			<GestureDetector gesture={blockSwipeGesture}>
 				<View style={styles.headerWrapper}>
 					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-						<Icon name={icon} size={22} color={"#fff"} />
+						<Icon name={icon} size={22} color={"#000"} />
 					</TouchableOpacity>
 
 					{title && (
@@ -127,10 +127,10 @@ const styles = StyleSheet.create({
 		width: 40,
 		height: 40,
 		borderRadius: 8,
-		backgroundColor: theme.colors.light.primary,
+		backgroundColor: "#E8E8E8",
 		alignItems: 'center',
 		justifyContent: 'center',
-		elevation: 2,
+		elevation: 1,
 		shadowColor: theme.colors.light.primary
 	},
 

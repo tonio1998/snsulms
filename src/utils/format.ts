@@ -99,3 +99,36 @@ export const formatMMSS = (seconds) => {
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, "0")}`;
 };
+
+
+export const fileIcon = (fileType: string): string => {
+  switch (fileType) {
+    case 'pdf':
+      return 'document-text';
+    case 'doc':
+    case 'docx':
+      return 'document-text';
+    case 'xls':
+    case 'xlsx':
+      return 'grid';
+    case 'ppt':
+    case 'pptx':
+      return 'easel';
+    case 'txt':
+      return 'document';
+    case 'zip':
+      return 'archive';
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+      return 'image';
+    case 'mp4':
+      return 'videocam';
+    case 'mp3':
+    case 'wav':
+      return 'musical-notes';
+    default:
+      return 'link';
+  }
+};
