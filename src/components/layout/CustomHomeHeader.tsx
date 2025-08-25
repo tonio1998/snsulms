@@ -22,7 +22,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import {BlurView} from "@react-native-community/blur";
 import {isTablet} from "../../utils/responsive";
 
-const generateCircles = (count = 5) => {
+const generateCircles = (count = 3) => {
     const fixedPositions = [
         { top: 20, left: 20 },
         { top: 20, left: 100 },
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     },
     header: {
         position: 'absolute',
-        top: Platform.OS === 'android' ? ((StatusBar.currentHeight + 5) || 24) : 44,
+        top: Platform.OS === 'android' ? ((StatusBar.currentHeight) || 24) : 44,
         left: '3%',
         right: '3%',
         paddingHorizontal: 10,

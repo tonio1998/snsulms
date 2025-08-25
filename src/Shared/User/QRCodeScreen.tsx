@@ -28,13 +28,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const QRCodeScreen = () => {
 	const { user } = useAuth();
-	const { hideLoading } = useLoading();
 	const { showAlert } = useAlert();
 	const qrRef = useRef<ViewShot>(null);
 	const [userID, setUserID] = useState<string>('');
+	const { showLoading, hideLoading } = useLoading();
 
 	useEffect(() => {
 		const loadUserID = async () => {
+			showLoading('Generating QR Code...')
 			try {
 				if (user?.id) {
 					const storedID = await AsyncStorage.getItem('EncryptedUserID');
@@ -44,6 +45,8 @@ const QRCodeScreen = () => {
 				}
 			} catch (error) {
 				handleApiError(error, 'Failed to load user ID');
+			} finally {
+				hideLoading();
 			}
 		};
 
@@ -86,6 +89,7 @@ const QRCodeScreen = () => {
 
 	return (
 		<>
+			<BackHeader title={"My QR Code"} style={{ color: "#fff"}}/>
 			<SafeAreaView style={[globalStyles.safeArea2]}>
 				<BackHeader title="My QR Code" style={{ color: '#fff' }} />
 				<View style={{
@@ -120,6 +124,17 @@ const QRCodeScreen = () => {
 							</CText>
 						</View>
 					</ViewShot>
+					<View style={{ marginHorizontal: 16, marginTop: 16}}>
+						<CText
+							style={{
+								padding: 0,
+								borderRadius: 12,
+							}}
+						>
+							Show this QR code to your teacher during class for attendance scanning.
+						</CText>
+					</View>
+
 
 					<View style={styles.actions}>
 						<TouchableOpacity style={styles.actionBtn} onPress={handleShare}>

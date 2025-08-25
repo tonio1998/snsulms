@@ -164,6 +164,7 @@ const WallScreen = ({ navigation }) => {
 
 	const PostCard = ({ item, handleReaction }) => (
 		<View style={styles.postCard}>
+			{/* HEADER */}
 			<View style={styles.postHeader}>
 				<Image
 					source={
@@ -174,11 +175,16 @@ const WallScreen = ({ navigation }) => {
 					style={styles.avatar}
 				/>
 				<View style={{ marginLeft: 10, flex: 1 }}>
-					<CText fontSize={14.5} fontStyle="SB">{item.created_by?.name.toUpperCase()}</CText>
-					<CText fontSize={11} color="#777">{formatDate(item.created_at, 'relative')}</CText>
+					<CText fontSize={15} fontStyle="SB" numberOfLines={1}>
+						{item.created_by?.name}
+					</CText>
+					<CText fontSize={12} color="#777">
+						{formatDate(item.created_at, 'MMM dd, yyyy • hh:mm a')}
+					</CText>
 				</View>
 			</View>
 
+			{/* BODY */}
 			{item.body && (
 				<RenderHtml
 					contentWidth={Dimensions.get('window').width - 40}
@@ -186,30 +192,47 @@ const WallScreen = ({ navigation }) => {
 					baseStyle={styles.postBody}
 				/>
 			)}
-
-			<View style={[styles.postActions, { justifyContent: 'space-between' }]}>
-				<View style={[globalStyles.cardRow, { justifyContent: 'space-between', width: 80 }]}>
+			<View style={styles.postFooter}>
+				{item.MeetLink && (
+					<TouchableOpacity
+						style={styles.gmeetJoinButton}
+						onPress={() => Linking.openURL(item.MeetLink)}
+					>
+						<Icon name="videocam" size={18} color={theme.colors.light.primary} />
+						<CText fontSize={12} style={{ marginLeft: 6, color: theme.colors.light.primary }}>
+							Join
+						</CText>
+					</TouchableOpacity>
+				)}
+				<View style={styles.actionsLeft}>
 					<TouchableOpacity style={styles.actionBtn} onPress={() => handleReaction(item.id)}>
 						<Animated.View style={{ transform: [{ scale: getHeartScale(item.id) }] }}>
-							<Icon name={item.is_react_by_you ? 'heart' : 'heart-outline'} size={20} color={item.is_react_by_you ? theme.colors.light.primary : '#ccc'} />
+							<Icon
+								name={item.is_react_by_you ? 'heart' : 'heart-outline'}
+								size={20}
+								color={item.is_react_by_you ? theme.colors.light.primary : '#aaa'}
+							/>
 						</Animated.View>
-						<CText fontSize={14} style={styles.reactionCount}>{item.reactions_count > 0 ? item.reactions_count : ''}</CText>
+						{item.reactions_count > 0 && (
+							<CText fontSize={13} style={styles.reactionCount}>
+								{item.reactions_count}
+							</CText>
+						)}
 					</TouchableOpacity>
 
 					<TouchableOpacity style={styles.actionBtn} onPress={() => handleComment(item.id)}>
 						<Icon name="chatbubble-outline" size={20} color="#aaa" />
-						<CText fontSize={14} style={styles.reactionCount}>{item.comments?.length > 0 ? item.comments.length : ''}</CText>
+						{item.comments?.length > 0 && (
+							<CText fontSize={13} style={styles.reactionCount}>
+								{item.comments.length}
+							</CText>
+						)}
 					</TouchableOpacity>
 				</View>
-
-				{item.MeetLink && (
-					<TouchableOpacity style={styles.gmeetJoinButton} onPress={() => Linking.openURL(item.MeetLink)}>
-						<Icon name="videocam" size={18} color={theme.colors.light.primary} />
-					</TouchableOpacity>
-				)}
 			</View>
 		</View>
 	);
+
 
 	const handleSelect = (value: string) => {
 		console.log("Selected:", value);
@@ -269,44 +292,57 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		padding: 15,
 		marginHorizontal: 10,
-		marginVertical: 5,
+		marginVertical: 8,
 		borderRadius: theme.radius.md,
 		shadowColor: '#000',
-		shadowOpacity: 0.08,
-		shadowRadius: 3,
+		shadowOpacity: 0.05,
+		shadowRadius: 4,
 		elevation: 2,
 	},
 	postHeader: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginBottom: 10,
+		marginBottom: 8,
 	},
 	avatar: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
+		width: 42,
+		height: 42,
+		borderRadius: 21,
 		backgroundColor: '#ccc',
 	},
 	postBody: {
 		fontSize: 14,
 		color: '#333',
-		marginBottom: 10,
+		lineHeight: 20,
+		marginBottom: 12,
 	},
-	postActions: {
+	postFooter: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		borderTopWidth: 1,
+		borderTopColor: '#eee',
+		paddingTop: 10,
+	},
+	actionsLeft: {
 		flexDirection: 'row',
 		alignItems: 'center',
 	},
 	actionBtn: {
 		flexDirection: 'row',
 		alignItems: 'center',
+		marginRight: 16,
 	},
 	reactionCount: {
 		marginLeft: 4,
-		color: '#999',
+		color: '#666',
 	},
 	gmeetJoinButton: {
-		backgroundColor: theme.colors.light.primary + '18',
-		padding: 8,
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: theme.colors.light.primary + '15',
+		paddingHorizontal: 10,
+		paddingVertical: 6,
 		borderRadius: 8,
 	},
 	floatingButton: {

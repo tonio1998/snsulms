@@ -141,7 +141,7 @@ export const globalStyles = StyleSheet.create({
 
     card: {
         backgroundColor: '#fff',
-        borderRadius: theme.radius.md,
+        borderRadius: theme.radius.sm,
         padding: 16,
         marginBottom: 14,
         marginHorizontal: 2,
@@ -149,10 +149,12 @@ export const globalStyles = StyleSheet.create({
         shadowColor: theme.colors.light.primary,
         shadowOpacity: 0.1,
         shadowOffset: { width: 5, height: 4 },
-        shadowRadius: theme.radius.md,
+        shadowRadius: theme.radius.sm,
+        borderWidth: 1,
+        borderColor: '#E3E3E3'
     },
     cardInner: {},
-    cardTitle: { fontSize: 17, color: '#111', marginBottom: 6 },
+    cardTitle: {  color: '#111', marginBottom: 6 },
     cardDesc: { fontSize: 14, color: '#555', lineHeight: 20 },
     cardFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
     cardMeta: { fontSize: 12, color: '#888' },

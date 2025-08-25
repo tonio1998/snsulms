@@ -164,12 +164,12 @@ const InstructionScreen = ({ navigation }) => {
 			/>
 
 			<ScrollView
-				contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+				contentContainerStyle={{ padding: 10, paddingBottom: 40 }}
 				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
 			>
 				{loading && <ActivityIndicator2 />}
 
-				<View style={styles.card}>
+				<View style={[globalStyles.card, { marginHorizontal: 0}]}>
 					{activity?.activity?.topic?.Title && (
 						<CText fontSize={13} style={styles.topicLabel}>
 							Topic: {activity.activity.topic.Title}
@@ -234,7 +234,7 @@ const InstructionScreen = ({ navigation }) => {
 				<CText fontSize={16} fontStyle="SB" style={{ marginBottom: 12 }}>
 					Instructor
 				</CText>
-				<View style={[styles.card, styles.instructorCard]}>
+				<View style={[globalStyles.card, { marginHorizontal: 0}]}>
 					{!activity?.activity?.teacher?.users?.name ? (
 						<View style={styles.profileRow}>
 							<View style={[styles.avatar, styles.avatarPlaceholder]} />

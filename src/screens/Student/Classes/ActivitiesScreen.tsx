@@ -80,7 +80,7 @@ const ActivitiesScreen = ({ navigation }) => {
 		if (!currentAcad || !currentAcadRaw || loading) return;
 		try {
 			setLoading(true);
-			showLoading('Loading activities...');
+			// showLoading('Loading activities...');
 
 			if (!forceOnline && !query) {
 				const local = await loadAllStudentActivitiesToLocal(user?.id);
@@ -111,7 +111,7 @@ const ActivitiesScreen = ({ navigation }) => {
 			handleApiError(err, 'Failed to load activities');
 		} finally {
 			setLoading(false);
-			hideLoading();
+			// hideLoading();
 		}
 	};
 
@@ -153,7 +153,7 @@ const ActivitiesScreen = ({ navigation }) => {
 
 	const renderActivityItem = ({ item }) => (
 		<TouchableOpacity
-			style={styles.activityItem}
+			style={[globalStyles.card, { marginHorizontal: 0}]}
 			onPress={() => handleViewAct(item.StudentActivityID, item.Title, item.ActivityID)}
 		>
 			<CText fontStyle="B" fontSize={14} style={{ marginBottom: 6 }}>{item.Title}</CText>
@@ -234,11 +234,6 @@ const ActivitiesScreen = ({ navigation }) => {
 							</TouchableOpacity>
 						) : null}
 					</View>
-
-					<LastUpdatedBadge
-						date={lastUpdated}
-						onReload={handleRefresh}
-					/>
 
 					{!searchQuery && (
 						<View style={styles.tabWrapper}>

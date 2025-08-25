@@ -138,7 +138,7 @@ const ClassesScreen = ({ navigation }) => {
 		const submissionRate = totalActivities > 0 ? (submittedCount / totalActivities) * 100 : 0;
 
 		return (
-			<View style={styles.accordionCard}>
+			<View style={[globalStyles.card, {padding: 8}]}>
 				<TouchableOpacity style={[styles.accordionHeader, globalStyles.p_2]} onPress={() => toggleAccordion(item.ClassStudentID)}>
 					<View style={{ flex: 1 }}>
 						<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

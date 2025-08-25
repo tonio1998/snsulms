@@ -32,8 +32,8 @@ const colors = {
         border: '#D1D5DB',
         inputBackground: '#FFFFFF',
 
-        primary: '#1A4E07',
-        secondary: '#138808',
+        primary: '#006400',
+        secondary: '#228B22',
 
         // Status Colors
         success: '#22C55E',
@@ -84,6 +84,7 @@ const spacing = {
 };
 
 const fontSizes = {
+    xxs: 8,
     xs: 12,
     sm: 14,
     md: 16,

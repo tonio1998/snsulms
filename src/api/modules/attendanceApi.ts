@@ -14,7 +14,6 @@ export const getAttendanceById = async (AttendanceID: number) => {
 };
 
 export const addAttendance = async (form: any) => {
-    console.log("🔍 Adding attendance", form);
     const response = await api.post('/events/store', form);
     return response.data;
 };
@@ -30,7 +29,7 @@ export const deleteAttendance = async (id: number) => {
 };
 
 export const saveLogs = async (form) => {
-    console.log("🔍 Saving attendance logs", form);
+    console.log("form: ", form)
     const response = await api.post('/events/attendance', form);
     return response.data;
 };

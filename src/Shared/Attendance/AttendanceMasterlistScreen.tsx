@@ -100,31 +100,52 @@ const AttendanceMasterlistScreen = ({ navigation, route }) => {
             style={[globalStyles.card, { padding: 14, marginBottom: 12 }]}
             onPress={() =>
                 navigation.navigate("Events", {
-                    AttendanceID: item.id
+                    AttendanceID: item.id,
                 })
             }
+            activeOpacity={0.7}
         >
-            <View style={{ flex: 1 }}>
-                <CText fontStyle="SB" fontSize={16} style={{ marginBottom: 4 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <CText fontStyle="SB" fontSize={16} numberOfLines={1}>
                     {item.Title}
                 </CText>
 
-                <CText fontSize={14} style={styles.description} numberOfLines={2}>
+                <View
+                    style={{
+                        backgroundColor: theme.colors.light.primary,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 20,
+                    }}
+                >
+                    <CText fontSize={12} style={{ color: "#fff" }}>
+                        📝 {item.logs?.length ?? 0}
+                    </CText>
+                </View>
+            </View>
+
+            {item.Description?.trim() !== "" && (
+                <CText fontSize={14} style={{ color: "#555", marginTop: 6 }} numberOfLines={2}>
                     {item.Description}
                 </CText>
+            )}
 
-                <View style={{ flexDirection: "row", marginTop: 10, justifyContent: "space-between" }}>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <CText fontSize={13} style={{ color: "#555" }}>
-                            📅 {formatDate(item.DateofEvent, "MMM dd, yyyy")}
-                        </CText>
-                    </View>
-
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <CText fontSize={13} style={{ color: "#555" }}>
-                            📝 {item.logs.length ?? 0} {item.logs.length === 1 ? "log" : "logs"}
-                        </CText>
-                    </View>
+            <View
+                style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginTop: 10,
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: "#ddd",
+                    paddingTop: 6,
+                }}
+            >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <Icon name="calendar-outline" size={14} color="#555" />
+                    <CText fontSize={13} style={{ color: "#555" }}>
+                        {formatDate(item.StartDate, "MMM dd, yyyy")} - {formatDate(item.EndDate, "MMM dd, yyyy")}
+                    </CText>
                 </View>
             </View>
         </TouchableOpacity>

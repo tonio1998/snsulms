@@ -75,7 +75,7 @@ const BackHeader = ({
 			<GestureDetector gesture={blockSwipeGesture}>
 				<View style={styles.headerWrapper}>
 					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-						<Icon name={icon} size={25} color="#000" />
+						<Icon name={icon} size={25} color={"#fff"} />
 					</TouchableOpacity>
 
 					{title && (
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
 		width: 40,
 		height: 40,
 		borderRadius: 8,
-		backgroundColor: '#fff',
+		backgroundColor: theme.colors.light.primary,
 		alignItems: 'center',
 		justifyContent: 'center',
 		elevation: 2,
