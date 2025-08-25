@@ -42,6 +42,7 @@ import SNSULogoDraw from "../components/loaders/SNSULogo.tsx";
 import SNSULoading from "../components/loaders/SNSULoading.tsx";
 import {LastUpdatedBadge} from "../components/common/LastUpdatedBadge";
 import FacebookFeed from "../components/FacebookFeed.tsx";
+import LottieView from "lottie-react-native";
 
 const HomeScreen = () => {
 	const network = useContext(NetworkContext);

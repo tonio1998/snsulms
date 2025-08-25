@@ -115,30 +115,30 @@ const ActivityScreen = ({ navigation, route }) => {
 
 		return (
 			<TouchableOpacity
-				style={styles.card}
+				style={globalStyles.card}
 				onPress={() => toggleExpand(item.StudentActivityID)}
 				activeOpacity={0.9}
 			>
 				<View style={styles.cardInner}>
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-						<CText fontSize={16} fontStyle="SB">{act?.Title}</CText>
+						<CText fontSize={theme.fontSizes.md} fontStyle="SB">{act?.Title}</CText>
 						<View>
 							{submitted && (
 								<Icon name="checkmark-circle" size={22} color={theme.colors.light.success} />
 							)}
 						</View>
 					</View>
-					<CText fontSize={14} style={styles.desc}>{act?.Description}</CText>
+					<CText fontSize={theme.fontSizes.sm} style={styles.desc}>{act?.Description}</CText>
 					{isExpanded && (
 						<>
 							<View style={[styles.dateRow, { marginTop: 6 }]}>
-								<CText fontSize={13} fontStyle={'SB'} style={{ color: submitted ? theme.colors.light.success : theme.colors.light.danger }}>
+								<CText fontSize={theme.fontSizes.xs} fontStyle={'SB'} style={{ color: submitted ? theme.colors.light.success : theme.colors.light.danger }}>
 									{submissionText}{submittedDate}
 								</CText>
 							</View>
 							<View style={styles.dateRow}>
-								{act?.DueDate && <CText fontSize={12} style={styles.date}>Due: {formatDate(act?.DueDate)}</CText>}
-								{act?.created_at && <CText fontSize={12} style={styles.date}>Created: {formatDate(act?.created_at, 'relative')}</CText>}
+								{act?.DueDate && <CText fontSize={theme.fontSizes.xs} style={styles.date}>Due: {formatDate(act?.DueDate)}</CText>}
+								{act?.created_at && <CText fontSize={theme.fontSizes.xs} style={styles.date}>Created: {formatDate(act?.created_at, 'relative')}</CText>}
 							</View>
 							<TouchableOpacity
 								style={styles.viewBtn}
@@ -205,14 +205,14 @@ const ActivityScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
 	card: {
 		backgroundColor: theme.colors.light.card,
-		borderRadius: theme.radius.md,
+		borderRadius: theme.radius.sm,
 		marginBottom: 14,
 		borderWidth: 1,
 		borderColor: '#e2e2e2',
 		elevation: 1,
 	},
 	cardInner: {
-		padding: 16,
+		padding: 0,
 	},
 	desc: {
 		color: '#444',
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
 		borderColor: '#e1e1e1',
 		paddingHorizontal: 14,
 		paddingVertical: 8,
-		borderRadius: 20,
+		borderRadius: theme.radius.sm,
 		minHeight: 35,
 		justifyContent: 'center',
 	},
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
 		marginTop: 10,
 		paddingVertical: 6,
 		paddingHorizontal: 12,
-		borderRadius: theme.radius.xs,
+		borderRadius: theme.radius.sm,
 		borderWidth: 1,
 		borderColor: theme.colors.light.primary,
 		alignSelf: 'flex-start',

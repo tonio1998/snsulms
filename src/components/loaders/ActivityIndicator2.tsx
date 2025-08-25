@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, Easing, StyleSheet } from 'react-native';
 import { theme } from "../../theme";
+import LottieView from "lottie-react-native";
 
 export default function ActivityIndicator2() {
     const distance = 20; // travel distance

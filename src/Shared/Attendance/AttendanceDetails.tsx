@@ -20,11 +20,12 @@ import { SummaryBox } from "../../components/common/SummaryBox.tsx";
 import { LastUpdatedBadge } from "../../components/common/LastUpdatedBadge";
 import {formatDate} from "../../utils/dateFormatter";
 import CButton from "../../components/buttons/CButton.tsx";
+import {theme} from "../../theme";
 
 const AttendanceDetails = ({ navigation, route }) => {
     const { user } = useAuth();
     const { showAlert } = useAlert();
-    const { AttendanceID } = route.params;
+    const { AttendanceID, ClassID } = route.params;
 
     const [loading, setLoading] = useState(true);
     const [attendance, setAttendance] = useState(null);
@@ -35,7 +36,7 @@ const AttendanceDetails = ({ navigation, route }) => {
         const fetchDetails = async () => {
             try {
                 setLoading(true);
-                const cache = await loadEventToLocal(user?.id);
+                const cache = await loadEventToLocal(user?.id, ClassID);
                 if (cache?.data) {
                     const cachedEvent = cache.data.find((e) => e.id === AttendanceID);
                     if (cachedEvent) {
@@ -71,7 +72,7 @@ const AttendanceDetails = ({ navigation, route }) => {
     if (loading) {
         return (
             <SafeAreaView style={[globalStyles.safeArea, { justifyContent: "center", alignItems: "center" }]}>
-                <ActivityIndicator size="large" color="#004D1A" />
+                <ActivityIndicator size="large" color={theme.colors.light.primary} />
                 <CText fontStyle="SB" fontSize={14} style={{ marginTop: 12 }}>
                     Loading details...
                 </CText>

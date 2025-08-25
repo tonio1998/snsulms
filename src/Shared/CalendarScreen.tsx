@@ -24,6 +24,7 @@ import CustomHeader2 from "../components/layout/CustomHeader2.tsx";
 import ActivityIndicator2 from "../components/loaders/ActivityIndicator2.tsx";
 import {LastUpdatedBadge} from "../components/common/LastUpdatedBadge";
 import {CText} from "../components/common/CText.tsx";
+import HeaderBackground from "../components/halfBg.tsx";
 
 LocaleConfig.locales['en'] = {
 	monthNames: [
@@ -249,6 +250,9 @@ const CalendarScreen = () => {
 		<>
 			<CustomHeader2 />
 			<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 120}]}>
+				<HeaderBackground heightRatio={0.30} style={{
+					backgroundColor: theme.colors.light.primary + '22',
+				}} />
 				<View style={{paddingHorizontal: 16}}>
 					<LastUpdatedBadge date={lastFetched} onReload={onRefresh} />
 				</View>

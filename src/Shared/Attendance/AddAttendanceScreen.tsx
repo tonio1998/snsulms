@@ -21,6 +21,7 @@ import { globalStyles } from "../../theme/styles.ts";
 import { CText } from "../../components/common/CText.tsx";
 import CButton from "../../components/buttons/CButton.tsx";
 import BackHeader from "../../components/layout/BackHeader.tsx";
+import {theme} from "../../theme";
 
 const AddAttendanceScreen = ({ navigation, route }) => {
     const { ClassID } = route.params;
@@ -98,7 +99,7 @@ const AddAttendanceScreen = ({ navigation, route }) => {
             </CText>
             <TouchableOpacity style={styles.dateInput} onPress={() => setShowPicker(true)}>
                 <Text>{date.toDateString()}</Text>
-                <Icon name="calendar-outline" size={20} color="#007bff" />
+                <Icon name="calendar-outline" size={20} color={theme.colors.light.primary} />
             </TouchableOpacity>
             {showPicker && (
                 <DateTimePicker
@@ -131,7 +132,6 @@ const AddAttendanceScreen = ({ navigation, route }) => {
                         onChangeText={setTitle}
                     />
 
-                    {/* Description */}
                     <CText fontStyle="SB" fontSize={15} style={{ marginTop: 16 }}>
                         Description
                     </CText>
@@ -143,25 +143,29 @@ const AddAttendanceScreen = ({ navigation, route }) => {
                         multiline
                     />
 
-                    {/* Dates */}
-                    <DateInput
-                        label="Start Date"
-                        date={startDate}
-                        setDate={setStartDate}
-                        showPicker={showStartPicker}
-                        setShowPicker={setShowStartPicker}
-                    />
-                    <DateInput
-                        label="End Date"
-                        date={endDate}
-                        setDate={setEndDate}
-                        showPicker={showEndPicker}
-                        setShowPicker={setShowEndPicker}
-                        minDate={startDate}
-                    />
+                    <View style={[globalStyles.cardRow]}>
+                        <View>
+                            <DateInput
+                                label="Start Date"
+                                date={startDate}
+                                setDate={setStartDate}
+                                showPicker={showStartPicker}
+                                setShowPicker={setShowStartPicker}
+                            />
+                        </View>
+                        <View>
+                            <DateInput
+                                label="End Date"
+                                date={endDate}
+                                setDate={setEndDate}
+                                showPicker={showEndPicker}
+                                setShowPicker={setShowEndPicker}
+                                minDate={startDate}
+                            />
+                        </View>
+                    </View>
 
-                    {/* Sessions */}
-                    <CText fontStyle="SB" fontSize={15} style={{ marginTop: 16 }}>
+                    <CText fontStyle="SB" fontSize={15} style={{ marginTop: 16, marginBottom: 10 }}>
                         Sessions
                     </CText>
                     {sessions.map((s, idx) => (
@@ -179,7 +183,14 @@ const AddAttendanceScreen = ({ navigation, route }) => {
                                         value={s.isInOut}
                                         onValueChange={(v) => updateSession(idx, "isInOut", v)}
                                         style={{ marginLeft: 8 }}
+                                        trackColor={{
+                                            false: theme.colors.light.muted_soft,
+                                            true: theme.colors.light.primary,
+                                        }}
+                                        thumbColor={s.isInOut ? theme.colors.light.primary : theme.colors.light.muted_soft}
+                                        ios_backgroundColor={theme.colors.light.muted_soft}
                                     />
+
                                 </View>
                                 <TouchableOpacity onPress={() => removeSession(idx)}>
                                     <Icon name="trash-outline" size={22} color="#f55" />
@@ -190,7 +201,7 @@ const AddAttendanceScreen = ({ navigation, route }) => {
 
                     <CButton
                         title="Add Session"
-                        type="info"
+                        type="success"
                         onPress={() => setSessions([...sessions, { name: "", isInOut: false }])}
                         style={{ marginBottom: 24, padding: 12 }}
                     />

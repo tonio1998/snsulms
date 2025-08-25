@@ -20,6 +20,7 @@ import { getAcademicInfo } from '../../utils/getAcademicInfo';
 import { formatAcad } from '../../utils/format';
 import Icon from "react-native-vector-icons/Ionicons";
 import {BlurView} from "@react-native-community/blur";
+import {getGreeting} from "../../utils/greetings";
 
 const generateCircles = (count = 2) => {
     const fixedPositions = [
@@ -132,8 +133,8 @@ const CustomHeader2 = ({ title = '', leftContent = null, rightContent = null, st
                             />
                         </TouchableOpacity>
                         <View style={{ marginLeft: 10 }}>
-                            <CText fontSize={13} style={{ color: theme.colors.light.text}} fontStyle="SB">Hello 👋</CText>
-                            <CText fontSize={15} style={{ color: theme.colors.light.text}} fontStyle="SB">{user?.name}</CText>
+                            <CText fontSize={14} style={{ color: '#000'}} fontStyle="SB">{getGreeting()}👋</CText>
+                            <CText fontSize={20} style={{ color: '#000'}} fontStyle="SB">{user?.name?.split(" ")[0]}</CText>
                         </View>
                     </View>
 
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         zIndex: -9,
-        backgroundColor: theme.colors.light.primary,
+        // backgroundColor: theme.colors.light.primary,
         borderBottomLeftRadius: 10,
         borderBottomRightRadius: 10
     },

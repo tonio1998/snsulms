@@ -152,7 +152,7 @@ export default function LoginOptionsScreen() {
 				<ImageBackground
 					source={require('../../../assets/img/bg2.png')}
 					style={styles.container}
-					imageStyle={{ opacity: 0.8 }}
+					imageStyle={{ opacity: 0.7 }}
 					resizeMode="cover"
 				>
 					<View style={styles.wrapper}>
@@ -161,16 +161,16 @@ export default function LoginOptionsScreen() {
 								source={require('../../../assets/img/ic_launcher.png')}
 								style={styles.logo}
 							/>
-							<CText fontStyle="SB" fontSize={40} style={styles.appName}>
+							<CText fontStyle="B" fontSize={40} style={styles.appName}>
 								{APP_NAME}
 							</CText>
-							<CText fontStyle="R" fontSize={13} style={styles.tagline}>
+							<CText fontStyle="SB" fontSize={13} style={styles.tagline}>
 								{TAGLINE}
 							</CText>
 						</View>
 
 						<View style={styles.authSection}>
-							<CText style={styles.loginLabel}>Sign in to continue</CText>
+							<CText style={styles.loginLabel} fontStyle="SB" fontSize={16}>Sign in to continue</CText>
 
 							<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
 								<Icon name="logo-google" size={22} color="#DB4437" />
@@ -265,7 +265,6 @@ const styles = StyleSheet.create({
 	loginLabel: {
 		color: '#fff',
 		marginBottom: 10,
-		fontWeight: '500',
 	},
 	authButton: {
 		flexDirection: 'row',

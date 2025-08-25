@@ -171,57 +171,57 @@ const InstructionScreen = ({ navigation }) => {
 
 				<View style={[globalStyles.card, { marginHorizontal: 0}]}>
 					{activity?.activity?.topic?.Title && (
-						<CText fontSize={13} style={styles.topicLabel}>
+						<CText fontSize={theme.fontSizes.xs} style={styles.topicLabel}>
 							Topic: {activity.activity.topic.Title}
 						</CText>
 					)}
-					<CText fontSize={15} fontStyle="SB" style={styles.title}>
+					<CText fontSize={theme.fontSizes.md} fontStyle="SB" style={styles.title}>
 						{activity?.activity?.Title}
 					</CText>
 					{activity?.activity.ActivityTypeID > 1 && (
 						<>
 							{activity?.activity?.Description && (
 								<>
-									<CText fontSize={13} style={styles.sectionLabel}>
+									<CText fontSize={theme.fontSizes.xs} style={styles.sectionLabel}>
 										Instruction:
 									</CText>
-									<CText style={styles.description}>{activity.activity.Description}</CText>
+									<CText style={styles.description} fontStyle="SB">{activity.activity.Description}</CText>
 								</>
 							)}
 							{activity?.activity?.DueDate && (
 								<>
-									<CText fontSize={13} style={styles.sectionLabel}>
+									<CText fontSize={theme.fontSizes.xs} style={styles.sectionLabel}>
 										Due Date:
 									</CText>
-									<CText style={styles.description}>{formatDate(activity.activity.DueDate)}</CText>
+									<CText style={styles.description} fontStyle="SB">{formatDate(activity.activity.DueDate)}</CText>
 								</>
 							)}
 							{activity?.DateSubmitted && (
 								<>
-									<CText fontSize={13} style={styles.sectionLabel}>
+									<CText fontSize={theme.fontSizes.xs} style={styles.sectionLabel}>
 										Date Submitted
 									</CText>
-									<CText style={styles.description}>{formatDate(activity.DateSubmitted)}</CText>
+									<CText style={styles.description} fontStyle="SB">{formatDate(activity.DateSubmitted)}</CText>
 								</>
 							)}
 
 							<View style={styles.pointsContainer}>
 								{activity?.activity?.Points > 0 && (
 									<View style={styles.pointsBox}>
-										<CText fontSize={22} fontStyle="SB" style={{ color: theme.colors.light.primary }}>
+										<CText fontSize={theme.fontSizes.xl} fontStyle="B" style={{ color: theme.colors.light.primary }}>
 											{formatNumber(activity.activity.Points)}
 										</CText>
-										<CText fontSize={13} style={styles.pointsLabel}>
+										<CText fontSize={theme.fontSizes.xs} style={styles.pointsLabel}>
 											Points
 										</CText>
 									</View>
 								)}
 								{activity?.Grade > 0 && (
 									<View style={styles.pointsBox}>
-										<CText fontSize={22} fontStyle="SB" style={{ color: theme.colors.light.primary }}>
+										<CText fontSize={theme.fontSizes.xl} fontStyle="B" style={{ color: theme.colors.light.primary }}>
 											{formatNumber(activity.Grade)}
 										</CText>
-										<CText fontSize={13} style={styles.pointsLabel}>
+										<CText fontSize={theme.fontSizes.xs} style={styles.pointsLabel}>
 											Points Earned
 										</CText>
 									</View>

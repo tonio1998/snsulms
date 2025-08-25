@@ -13,6 +13,7 @@ import { CText } from "./common/CText";
 import Icon from "react-native-vector-icons/Ionicons";
 import { BlurView } from "@react-native-community/blur";
 import { theme } from "../theme";
+import {globalStyles} from "../theme/styles.ts";
 
 interface Option {
     label: string;
@@ -65,13 +66,13 @@ const OptionModal: React.FC<OptionModalProps> = ({
         <Modal transparent visible={showModal} animationType="none" statusBarTranslucent>
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
 
-            <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose}>
-                <BlurView
-                    style={StyleSheet.absoluteFill}
-                    blurType="dark"
-                    blurAmount={1}
-                    reducedTransparencyFallbackColor="rgba(0,0,0,0.5)"
-                />
+            <TouchableOpacity style={globalStyles.overlay} activeOpacity={1} onPress={onClose}>
+                {/*<BlurView*/}
+                {/*    style={StyleSheet.absoluteFill}*/}
+                {/*    blurType="dark"*/}
+                {/*    blurAmount={1}*/}
+                {/*    reducedTransparencyFallbackColor="rgba(0,0,0,0.5)"*/}
+                {/*/>*/}
             </TouchableOpacity>
 
             <View style={styles.bottomWrapper}>

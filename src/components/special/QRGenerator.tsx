@@ -12,10 +12,12 @@ const QRGenerator = ({ value, size = 200 }) => {
             <QRCode
                 value={value}
                 size={size}
+                backgroundColor="#FFFFFF"
                 logo={require('../../../assets/img/ic_launcher.png')}
                 logoSize={50}
-                logoBackgroundColor='transparent'
+                logoBackgroundColor="transparent"
                 logoMargin={2}
+                ecl="H"
             />
         </View>
     );

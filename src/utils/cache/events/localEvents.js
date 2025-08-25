@@ -1,13 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {handleApiError} from "../../errorHandler";
-const getCacheKeys = (UserID) => ({
-    CACHE_KEY: `events_cache_${UserID}`,
-    CACHE_DATE_KEY: `events_cache_date_${UserID}`,
+const getCacheKeys = (UserID, ClassID) => ({
+    CACHE_KEY: `events_cache_${UserID}_${ClassID}`,
+    CACHE_DATE_KEY: `events_cache_date_${UserID}_${ClassID}`,
 });
 
-export const saveEventToLocal = async (UserID, data) => {
+export const saveEventToLocal = async (UserID, ClassID, data) => {
     if (!UserID) return null;
-    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(UserID);
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(UserID, ClassID);
 
     try {
         const now = new Date();
@@ -20,9 +20,9 @@ export const saveEventToLocal = async (UserID, data) => {
     }
 };
 
-export const loadEventToLocal = async (UserID) => {
+export const loadEventToLocal = async (UserID, ClassID) => {
     if (!UserID) return { data: null, date: null };
-    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(UserID);
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(UserID, ClassID);
 
     try {
         const dataStr = await AsyncStorage.getItem(CACHE_KEY);
