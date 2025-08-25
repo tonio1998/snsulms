@@ -68,6 +68,7 @@ import CreateTestScreen from "./src/Shared/Survey/CreateTestScreen.tsx";
 import QRCodeScreen from "./src/Shared/User/QRCodeScreen.tsx";
 import AddAttendanceScreen from "./src/Shared/Attendance/AddAttendanceScreen.tsx";
 import EventsBottomNav from "./src/navigation/Events/EventsBottomNav.tsx";
+import QrCodeScannerScreen from "./src/Shared/Scanner/ScanScreen.tsx";
 
 const Stack = createNativeStackNavigator();
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
@@ -176,6 +177,7 @@ const AppNavigator = () => {
                             <Stack.Screen name="CreateTest" component={CreateTestScreen} />
                             <Stack.Screen name="myQR" component={QRCodeScreen} />
                             <Stack.Screen name="AddAttendanceScreen" component={AddAttendanceScreen} />
+                            <Stack.Screen name="ClassAttendanceScan" component={QrCodeScannerScreen}/>
                             {/*<Stack.Screen name="OutlineList" component={OutlineListScreen} options={{ headerShown: false }} />*/}
                             <Stack.Screen name="AddOutline" component={AddOutlineScreen} options={{ headerShown: false }} />
                             <Stack.Screen name="OutlineDetails" component={OutlineDetailsScreen} options={{ headerShown: false }} />

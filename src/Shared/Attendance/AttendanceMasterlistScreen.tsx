@@ -144,7 +144,7 @@ const AttendanceMasterlistScreen = ({ navigation, route }) => {
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                     <Icon name="calendar-outline" size={14} color="#555" />
                     <CText fontSize={13} style={{ color: "#555" }}>
-                        {formatDate(item.DateofEvent, "MMM dd, yyyy")}
+                        {formatDate(item.StartDate, "MMM dd, yyyy")} - {formatDate(item.EndDate, "MMM dd, yyyy")}
                     </CText>
                 </View>
             </View>

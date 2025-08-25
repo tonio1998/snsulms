@@ -264,7 +264,6 @@ const styles = StyleSheet.create({
 	},
 	loginLabel: {
 		color: '#fff',
-		fontSize: 16,
 		marginBottom: 10,
 		fontWeight: '500',
 	},

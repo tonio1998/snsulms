@@ -22,7 +22,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import {BlurView} from "@react-native-community/blur";
 import {isTablet} from "../../utils/responsive";
 
-const generateCircles = (count = 5) => {
+const generateCircles = (count = 3) => {
     const fixedPositions = [
         { top: 20, left: 20 },
         { top: 20, left: 100 },
@@ -86,23 +86,23 @@ const CustomHomeHeader = ({ title = '', leftContent = null, rightContent = null 
                 end={{ x: 1.3, y: 1 }}
                 style={styles.gradientBg}
             >
-                {/*{circles.map(({ key, size, top, left }) => (*/}
-                {/*    <Animated.View*/}
-                {/*        key={key}*/}
-                {/*        style={[*/}
-                {/*            styles.circle,*/}
-                {/*            {*/}
-                {/*                width: size,*/}
-                {/*                height: size,*/}
-                {/*                borderRadius: size / 2,*/}
-                {/*                top,*/}
-                {/*                left,*/}
-                {/*                opacity: fadeAnim,*/}
-                {/*                transform: [{ scale: scaleAnim }],*/}
-                {/*            },*/}
-                {/*        ]}*/}
-                {/*    />*/}
-                {/*))}*/}
+                {circles.map(({ key, size, top, left }) => (
+                    <Animated.View
+                        key={key}
+                        style={[
+                            styles.circle,
+                            {
+                                width: size,
+                                height: size,
+                                borderRadius: size / 2,
+                                top,
+                                left,
+                                opacity: fadeAnim,
+                                transform: [{ scale: scaleAnim }],
+                            },
+                        ]}
+                    />
+                ))}
             </LinearGradient>
 
             <View style={styles.headerWrapper}>

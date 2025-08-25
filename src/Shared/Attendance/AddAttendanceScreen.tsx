@@ -3,12 +3,16 @@ import {
     SafeAreaView,
     View,
     TextInput,
-    StyleSheet,
     ScrollView,
     Alert,
     Platform,
+    Switch,
+    TouchableOpacity,
+    Text,
+    StyleSheet,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import Icon from "react-native-vector-icons/Ionicons";
 import { useAlert } from "../../components/CAlert.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
 import { addAttendance } from "../../api/modules/attendanceApi.ts";
@@ -19,61 +23,105 @@ import CButton from "../../components/buttons/CButton.tsx";
 import BackHeader from "../../components/layout/BackHeader.tsx";
 
 const AddAttendanceScreen = ({ navigation, route }) => {
-    const { user } = useAuth();
     const { ClassID } = route.params;
-    const { data } = route.params;
     const { showAlert } = useAlert();
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [dateOfEvent, setDateOfEvent] = useState(new Date());
-    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [eventType] = useState("class");
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [showStartPicker, setShowStartPicker] = useState(false);
+    const [showEndPicker, setShowEndPicker] = useState(false);
+    const [sessions, setSessions] = useState([
+        { name: "Morning", isInOut: true },
+        { name: "Afternoon", isInOut: true },
+    ]);
     const [loading, setLoading] = useState(false);
 
+    const updateSession = (i, field, val) => {
+        const tmp = [...sessions];
+        tmp[i][field] = val;
+        setSessions(tmp);
+    };
+
+    const removeSession = (i) => {
+        setSessions(sessions.filter((_, idx) => idx !== i));
+    };
+
     const onSubmit = async () => {
-        if (!title.trim()) {
-            Alert.alert("Validation", "Please enter a title");
-            return;
+        if (!title.trim() || !description.trim()) {
+            return Alert.alert("Validation", "Fill all fields");
         }
-        if (!description.trim()) {
-            Alert.alert("Validation", "Please enter a description");
-            return;
-        }
-        if (!dateOfEvent) {
-            Alert.alert("Validation", "Please select a date");
-            return;
+        if (!startDate || !endDate) {
+            return Alert.alert("Validation", "Select dates");
         }
 
         try {
             setLoading(true);
+
+            const eventDays = [];
+            let cur = new Date(startDate);
+
+            while (cur <= endDate) {
+                eventDays.push({
+                    EventDate: cur.toISOString().split("T")[0],
+                    Sessions: sessions.map((s) => ({ SessionName: s.name, isInOut: s.isInOut })),
+                });
+                cur.setDate(cur.getDate() + 1);
+            }
+
             await addAttendance({
-                ClassID,
                 Title: title,
                 Description: description,
-                DateOfEvent: dateOfEvent.toISOString().split("T")[0], // YYYY-MM-DD
+                EventType: eventType,
+                ClassID: ClassID || null,
+                EventDays: eventDays,
+                StartDate: startDate,
+                EndDate: endDate
             });
 
-            showAlert("success", "Success", "Attendance added successfully.");
+            showAlert("success", "Success", "Attendance added");
             navigation.goBack();
-        } catch (error) {
-            handleApiError(error, "Failed to add attendance");
-            showAlert(
-                "error",
-                "Error",
-                error?.response?.data?.message || "Something went wrong"
-            );
+        } catch (e) {
+            handleApiError(e);
+            showAlert("error", "Error", e?.response?.data?.message || "Something went wrong");
         } finally {
             setLoading(false);
         }
     };
 
+    const DateInput = ({ label, date, setDate, showPicker, setShowPicker, minDate }) => (
+        <>
+            <CText fontStyle="SB" fontSize={15} style={{ marginBottom: 8, marginTop: 16 }}>
+                {label}
+            </CText>
+            <TouchableOpacity style={styles.dateInput} onPress={() => setShowPicker(true)}>
+                <Text>{date.toDateString()}</Text>
+                <Icon name="calendar-outline" size={20} color="#007bff" />
+            </TouchableOpacity>
+            {showPicker && (
+                <DateTimePicker
+                    value={date}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    minimumDate={minDate || new Date()}
+                    onChange={(e, d) => {
+                        setShowPicker(false);
+                        if (d) setDate(d);
+                    }}
+                />
+            )}
+        </>
+    );
+
     return (
         <>
             <BackHeader title="Add Attendance" />
-            <SafeAreaView style={[globalStyles.safeArea]}>
+            <SafeAreaView style={globalStyles.safeArea}>
                 <ScrollView contentContainerStyle={{ padding: 16 }}>
                     {/* Title */}
-                    <CText fontStyle="SB" fontSize={15} style={{ marginBottom: 12 }}>
+                    <CText fontStyle="SB" fontSize={15}>
                         Title
                     </CText>
                     <TextInput
@@ -84,7 +132,7 @@ const AddAttendanceScreen = ({ navigation, route }) => {
                     />
 
                     {/* Description */}
-                    <CText fontStyle="SB" fontSize={15} style={{ marginBottom: 12, marginTop: 12 }}>
+                    <CText fontStyle="SB" fontSize={15} style={{ marginTop: 16 }}>
                         Description
                     </CText>
                     <TextInput
@@ -95,39 +143,69 @@ const AddAttendanceScreen = ({ navigation, route }) => {
                         multiline
                     />
 
-                    {/* Date of Event */}
-                    <CText fontStyle="SB" fontSize={15} style={{ marginBottom: 12, marginTop: 12 }}>
-                        Date of Event
-                    </CText>
-                    <CButton
-                        title={dateOfEvent.toDateString()}
-                        type="info"
-                        onPress={() => setShowDatePicker(true)}
-                        icon="calendar-outline"
-                        style={{ padding: 12 }}
+                    {/* Dates */}
+                    <DateInput
+                        label="Start Date"
+                        date={startDate}
+                        setDate={setStartDate}
+                        showPicker={showStartPicker}
+                        setShowPicker={setShowStartPicker}
                     />
-                    {showDatePicker && (
-                        <DateTimePicker
-                            value={dateOfEvent}
-                            mode="date"
-                            display={Platform.OS === "ios" ? "spinner" : "default"}
-                            minimumDate={new Date()}
-                            onChange={(event, selectedDate) => {
-                                setShowDatePicker(false);
-                                if (selectedDate) setDateOfEvent(selectedDate);
-                            }}
-                        />
-                    )}
+                    <DateInput
+                        label="End Date"
+                        date={endDate}
+                        setDate={setEndDate}
+                        showPicker={showEndPicker}
+                        setShowPicker={setShowEndPicker}
+                        minDate={startDate}
+                    />
+
+                    {/* Sessions */}
+                    <CText fontStyle="SB" fontSize={15} style={{ marginTop: 16 }}>
+                        Sessions
+                    </CText>
+                    {sessions.map((s, idx) => (
+                        <View key={idx} style={styles.sessionCard}>
+                            <TextInput
+                                style={[styles.input, { flex: 1 }]}
+                                placeholder="Session name"
+                                value={s.name}
+                                onChangeText={(t) => updateSession(idx, "name", t)}
+                            />
+                            <View style={styles.sessionActions}>
+                                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                    <CText fontSize={13}>IN/OUT</CText>
+                                    <Switch
+                                        value={s.isInOut}
+                                        onValueChange={(v) => updateSession(idx, "isInOut", v)}
+                                        style={{ marginLeft: 8 }}
+                                    />
+                                </View>
+                                <TouchableOpacity onPress={() => removeSession(idx)}>
+                                    <Icon name="trash-outline" size={22} color="#f55" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    ))}
 
                     <CButton
-                        title={"Submit"}
-                        type={"success"}
-                        onPress={onSubmit}
-                        icon={"save-outline"}
-                        style={{ marginTop: 24, padding: 12 }}
-                        loading={loading}
+                        title="Add Session"
+                        type="info"
+                        onPress={() => setSessions([...sessions, { name: "", isInOut: false }])}
+                        style={{ marginBottom: 24, padding: 12 }}
                     />
                 </ScrollView>
+
+                <View style={{ margin: 16 }}>
+                    <CButton
+                        title="Submit"
+                        type="success"
+                        onPress={onSubmit}
+                        icon="save-outline"
+                        style={{ padding: 12 }}
+                        loading={loading}
+                    />
+                </View>
             </SafeAreaView>
         </>
     );
@@ -141,6 +219,34 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderWidth: 1,
         borderColor: "#ddd",
+    },
+    dateInput: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 6,
+        backgroundColor: "#fff",
+    },
+    sessionCard: {
+        backgroundColor: "#f9f9f9",
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 12,
+        shadowColor: "#000",
+        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    sessionActions: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginTop: 8,
     },
 });
 

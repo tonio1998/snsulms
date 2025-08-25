@@ -68,12 +68,12 @@ export const CAlert: React.FC<{ children: ReactNode }> = ({ children }) => {
             {children}
             <Modal transparent visible={visible} animationType="fade" statusBarTranslucent>
                 <View style={styles.overlay}>
-                    <BlurView
-                        style={StyleSheet.absoluteFill}
-                        blurType="light"    // "light", "dark", "xlight"
-                        blurAmount={10}    // intensity
-                        reducedTransparencyFallbackColor="rgba(0,0,0,0.6)"
-                    />
+                    {/*<BlurView*/}
+                    {/*    style={StyleSheet.absoluteFill}*/}
+                    {/*    blurType="light"*/}
+                    {/*    blurAmount={10}  */}
+                    {/*    reducedTransparencyFallbackColor="rgba(0,0,0,0.6)"*/}
+                    {/*/>*/}
                     <Animated.View style={[styles.alertBox, { transform: [{ scale: scaleAnim }], opacity: opacityAnim }]}>
                         <View style={[styles.iconWrapper, { backgroundColor: bg }]}>
                             <Icon name={name} size={60} color={color} />
