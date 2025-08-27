@@ -92,6 +92,8 @@ const ClassesScreen = ({ navigation }) => {
 				return 0;
 			});
 
+			console.log(sortedClasses);
+
 			setAllClasses(sortedClasses);
 			setClasses(sortedClasses);
 			const savedTime = await saveClassesToLocal(user.id, sortedClasses, acad);
@@ -145,15 +147,15 @@ const ClassesScreen = ({ navigation }) => {
 							<CText fontStyle="SB" fontSize={14} style={styles.courseText} numberOfLines={1} ellipsizeMode={'middle'}>
 								{classInfo?.CourseCode} - {classInfo?.CourseName}
 							</CText>
-							<View style={{ padding: 10, position: 'absolute', top: -5, right: -12 }}>
-								<DonutProgress
-									percentage={submissionRate.toFixed(0)}
-									radius={16}
-									strokeWidth={4}
-									percentTextSize={8}
-									strokeColor={theme.colors.light.primary}
-								/>
-							</View>
+							{/*<View style={{ padding: 10, position: 'absolute', top: -5, right: -12 }}>*/}
+							{/*	<DonutProgress*/}
+							{/*		percentage={submissionRate.toFixed(0)}*/}
+							{/*		radius={16}*/}
+							{/*		strokeWidth={4}*/}
+							{/*		percentTextSize={8}*/}
+							{/*		strokeColor={theme.colors.light.primary}*/}
+							{/*	/>*/}
+							{/*</View>*/}
 						</View>
 						<View style={{ flexDirection: 'row', gap: 10 }}>
 							<Text style={styles.sectionText}>Section: {classInfo?.Section}</Text>

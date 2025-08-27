@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from "react";
 import {
 	View,
-	Text,
 	ScrollView,
 	TouchableOpacity,
 	RefreshControl,
@@ -11,126 +10,128 @@ import {
 	ActivityIndicator,
 	Linking,
 	Alert,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { useAuth } from '../../../../context/AuthContext.tsx';
-import { NetworkContext } from '../../../../context/NetworkContext.tsx';
-import { useLoading } from '../../../../context/LoadingContext.tsx';
-import { globalStyles } from '../../../../theme/styles.ts';
-import { theme } from '../../../../theme';
-import BackHeader from '../../../../components/layout/BackHeader.tsx';
-import { CText } from '../../../../components/common/CText.tsx';
-import { formatDate } from '../../../../utils/dateFormatter';
-import { handleApiError } from '../../../../utils/errorHandler.ts';
-import { fetchClassAttachments } from '../../../../api/modules/activitiesApi.ts';
-import { getFileSize, formatNumber } from '../../../../utils/format.ts';
-import { viewFile } from '../../../../utils/viewFile.ts';
-import { turninSubmission } from '../../../../api/modules/submissionApi.ts';
-import { useAlert } from '../../../../components/CAlert.tsx';
-import { useActivity } from '../../../../context/SharedActivityContext.tsx';
-import CButton from '../../../../components/buttons/CButton.tsx';
+} from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
+import { useAuth } from "../../../../context/AuthContext.tsx";
+import { NetworkContext } from "../../../../context/NetworkContext.tsx";
+import { useLoading } from "../../../../context/LoadingContext.tsx";
+import { globalStyles } from "../../../../theme/styles.ts";
+import { theme } from "../../../../theme";
+import BackHeader from "../../../../components/layout/BackHeader.tsx";
+import { CText } from "../../../../components/common/CText.tsx";
+import { formatDate } from "../../../../utils/dateFormatter";
+import { handleApiError } from "../../../../utils/errorHandler.ts";
+import { getFileSize, formatNumber } from "../../../../utils/format.ts";
+import { viewFile } from "../../../../utils/viewFile.ts";
+import { turninSubmission } from "../../../../api/modules/submissionApi.ts";
+import { useAlert } from "../../../../components/CAlert.tsx";
+import { useStudActivity } from "../../../../context/StudSharedActivityContext.tsx";
+import CButton from "../../../../components/buttons/CButton.tsx";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
 
 const InstructionScreen = ({ navigation }) => {
-	const { activity, refreshFromOnline } = useActivity();
-	const [ActivityID, setActivityID] = useState(0);
-	const StudentActivityID = activity?.StudentActivityID;
+	const { activity, refreshFromOnline } = useStudActivity();
+	const ActivityID = activity?.ActivityID;
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
-	const [refreshing, setRefreshing] = useState(false);
-	const [loading, setLoading] = useState(false);
-	const [submissions, setSubmissions] = useState([]);
 	const { showAlert } = useAlert();
-	const [submissionState, setSubmissionState] = useState(null);
 
-	const SUBMISSION_KEY = 'submission_' + StudentActivityID +'_'+user?.id;
+	const [submissions, setSubmissions] = useState([]);
+	const [submissionState, setSubmissionState] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
+
+	const SUBMISSION_KEY = `submission_${ActivityID}_${user?.id}`;
 
 	const loadSubmissions = async () => {
 		setLoading(true);
 		try {
 			const res = activity?.files || [];
 			setSubmissions(res);
-			// await AsyncStorage.removeItem(SUBMISSION_KEY);
-			setSubmissionState(await AsyncStorage.getItem(SUBMISSION_KEY) || 'Not Submitted');
+			const savedState =
+				(await AsyncStorage.getItem(SUBMISSION_KEY)) || "Not Submitted";
+			setSubmissionState(savedState);
 		} catch (err) {
-			handleApiError(err, 'Fetch');
+			await refreshFromOnline();
+			handleApiError(err, "Fetch submissions");
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	useEffect(() => {
-		if (activity?.ActivityID > 0) {
-			setActivityID(activity.ActivityID);
-		}
-	}, [activity]);
-
-	useEffect(() => {
-		if (ActivityID > 0) {
-			loadSubmissions();
-		}
+		loadSubmissions();
 	}, [ActivityID]);
 
 	const handleRefresh = async () => {
-		setLoading(true);
-		// console.log("🔍 Refreshing submissions from APsssI", activity?.SubmissionType);
-		await refreshFromOnline();
-		if (ActivityID) {
-			const isSubmitted = activity?.SubmissionType === 'Submitted';
-			const newStatesss = isSubmitted ? 'Submitted' : 'Not Submitted';
-			await AsyncStorage.setItem(SUBMISSION_KEY, newStatesss);
-			setSubmissionState(newStatesss);
+		setRefreshing(true);
+		try {
+			await refreshFromOnline();
+			const newState =
+				activity?.mysubmission?.SubmissionType === "Submitted"
+					? "Submitted"
+					: "";
+
+			await AsyncStorage.setItem(SUBMISSION_KEY, newState);
+			setSubmissionState(newState);
 			await loadSubmissions();
+		} catch (err) {
+			handleApiError(err, "Refresh failed");
+		} finally {
+			setRefreshing(false);
 		}
-		setLoading(false);
 	};
 
 	const handleAction = async () => {
 		try {
-			const isSubmitted = submissionState === 'Submitted';
-			showLoading(isSubmitted ? 'Withdrawing...' : 'Submitting...');
-			const res = await turninSubmission({ StudentActivityID });
+			const isSubmitted = submissionState === "Submitted";
+			showLoading(isSubmitted ? "Withdrawing..." : "Submitting...");
+			const res = await turninSubmission({ActivityID});
 
 			if (res) {
-				const newState = isSubmitted ? 'Not Submitted' : 'Submitted';
+				const newState = isSubmitted ? "Not Submitted" : "Submitted";
 				await AsyncStorage.setItem(SUBMISSION_KEY, newState);
 				setSubmissionState(newState);
 				showAlert(
-					'success',
-					isSubmitted ? 'Withdrawn' : 'Submitted',
-					isSubmitted ? 'Submission has been withdrawn.' : 'Submitted successfully.'
+					"success",
+					isSubmitted ? "Withdrawn" : "Submitted",
+					isSubmitted
+						? "Submission has been withdrawn."
+						: "Submitted successfully."
 				);
-				navigation.goBack();
+				// navigation.goBack();
 			} else {
-				showAlert('error', 'Error', res.message || 'Something went wrong');
+				showAlert("error", "Error", res.message || "Something went wrong");
 			}
 		} catch (e) {
-			handleApiError(e, 'Submission failed');
+			handleApiError(e, "Submission failed");
 		} finally {
 			hideLoading();
 		}
 	};
 
 	const handleConfirmAction = () => {
-		const isSubmitted = submissionState === 'Submitted';
+		const isSubmitted = submissionState === "Submitted";
 		Alert.alert(
-			isSubmitted ? 'Withdraw Submission?' : 'Submit?',
+			isSubmitted ? "Withdraw Submission?" : "Submit?",
 			isSubmitted
-				? 'Are you sure you want to withdraw your submission?'
-				: 'Are you sure you want to submit?',
+				? "Are you sure you want to withdraw your submission?"
+				: "Are you sure you want to submit?",
 			[
-				{ text: 'Cancel', style: 'cancel' },
-				{ text: isSubmitted ? 'Withdraw' : 'Submit', onPress: handleAction },
+				{ text: "Cancel", style: "cancel" },
+				{ text: isSubmitted ? "Withdraw" : "Submit", onPress: handleAction },
 			]
 		);
 	};
 
 	const openAttachment = (item) => {
-		const isWebLink = item.Link.startsWith('http');
+		const isWebLink = item.Link.startsWith("http");
 		if (isWebLink) {
-			Linking.openURL(item.Link).catch(() => Alert.alert('Error', 'Failed to open link'));
+			Linking.openURL(item.Link).catch(() =>
+				Alert.alert("Error", "Failed to open link")
+			);
 		} else {
 			viewFile(item.Link, item.Title);
 		}
@@ -141,75 +142,92 @@ const InstructionScreen = ({ navigation }) => {
 			<BackHeader
 				title="Instruction"
 				rightButton={
-					!activity?.Grade && activity?.activity?.ActivityTypeID > 1 && (
-						<TouchableOpacity
-							style={[
-								globalStyles.button,
-								{
-									backgroundColor:
-										submissionState === 'Submitted'
-											? theme.colors.light.danger
-											: theme.colors.light.primary,
-								},
-							]}
-							onPress={handleConfirmAction}
-							activeOpacity={0.7}
+					<TouchableOpacity
+						style={[
+							globalStyles.button,
+							{
+								backgroundColor:
+									submissionState === "Submitted"
+										? theme.colors.light.danger
+										: theme.colors.light.primary,
+							},
+						]}
+						onPress={handleConfirmAction}
+						activeOpacity={0.7}
+					>
+						<CText
+							fontStyle="SB"
+							fontSize={14}
+							style={{ color: "#fff", marginLeft: 6 }}
 						>
-							<CText fontStyle="SB" fontSize={14} style={{ color: '#fff', marginLeft: 6 }}>
-								{submissionState === 'Submitted' ? 'Withdraw' : 'Turn In'}
-							</CText>
-						</TouchableOpacity>
-					)
+							{submissionState === "Submitted" ? "Withdraw" : "Turn In"}
+						</CText>
+					</TouchableOpacity>
 				}
 			/>
 
 			<ScrollView
 				contentContainerStyle={{ padding: 10, paddingBottom: 40 }}
-				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+				refreshControl={
+					<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+				}
 			>
 				{loading && <ActivityIndicator2 />}
 
-				<View style={[globalStyles.card, { marginHorizontal: 0}]}>
-					{activity?.activity?.topic?.Title && (
+				<View style={[globalStyles.card, { marginHorizontal: 0 }]}>
+					{activity?.topic?.Title && (
 						<CText fontSize={theme.fontSizes.xs} style={styles.topicLabel}>
-							Topic: {activity.activity.topic.Title}
+							Topic: {activity.topic.Title}
 						</CText>
 					)}
 					<CText fontSize={theme.fontSizes.md} fontStyle="SB" style={styles.title}>
-						{activity?.activity?.Title}
+						{activity?.Title}
 					</CText>
-					{activity?.activity.ActivityTypeID > 1 && (
+
+					{activity?.ActivityTypeID > 1 && (
 						<>
-							{activity?.activity?.Description && (
+							{activity?.Description && (
 								<>
 									<CText fontSize={theme.fontSizes.xs} style={styles.sectionLabel}>
 										Instruction:
 									</CText>
-									<CText style={styles.description} fontStyle="SB">{activity.activity.Description}</CText>
+									<CText style={styles.description} fontStyle="SB">
+										{activity.Description}
+									</CText>
 								</>
 							)}
-							{activity?.activity?.DueDate && (
+
+							{activity?.DueDate && (
 								<>
 									<CText fontSize={theme.fontSizes.xs} style={styles.sectionLabel}>
 										Due Date:
 									</CText>
-									<CText style={styles.description} fontStyle="SB">{formatDate(activity.activity.DueDate)}</CText>
+									<CText style={styles.description} fontStyle="SB">
+										{formatDate(activity.DueDate)}
+									</CText>
 								</>
 							)}
+
 							{activity?.DateSubmitted && (
 								<>
 									<CText fontSize={theme.fontSizes.xs} style={styles.sectionLabel}>
 										Date Submitted
 									</CText>
-									<CText style={styles.description} fontStyle="SB">{formatDate(activity.DateSubmitted)}</CText>
+									<CText style={styles.description} fontStyle="SB">
+										{formatDate(activity.DateSubmitted)}
+									</CText>
 								</>
 							)}
 
 							<View style={styles.pointsContainer}>
-								{activity?.activity?.Points > 0 && (
+								{activity?.Points > 0 && (
 									<View style={styles.pointsBox}>
-										<CText fontSize={theme.fontSizes.xl} fontStyle="B" style={{ color: theme.colors.light.primary }}>
-											{formatNumber(activity.activity.Points)}
+										<CText
+											fontSize={theme.fontSizes.xl}
+											fontStyle="B"
+											style={{ color: theme.colors.light.primary }}
+										>
+											{formatNumber(activity.Points)}
 										</CText>
 										<CText fontSize={theme.fontSizes.xs} style={styles.pointsLabel}>
 											Points
@@ -218,7 +236,11 @@ const InstructionScreen = ({ navigation }) => {
 								)}
 								{activity?.Grade > 0 && (
 									<View style={styles.pointsBox}>
-										<CText fontSize={theme.fontSizes.xl} fontStyle="B" style={{ color: theme.colors.light.primary }}>
+										<CText
+											fontSize={theme.fontSizes.xl}
+											fontStyle="B"
+											style={{ color: theme.colors.light.primary }}
+										>
 											{formatNumber(activity.Grade)}
 										</CText>
 										<CText fontSize={theme.fontSizes.xs} style={styles.pointsLabel}>
@@ -231,16 +253,24 @@ const InstructionScreen = ({ navigation }) => {
 					)}
 				</View>
 
+				{/* Instructor */}
 				<CText fontSize={16} fontStyle="SB" style={{ marginBottom: 12 }}>
 					Instructor
 				</CText>
-				<View style={[globalStyles.card, { marginHorizontal: 0}]}>
-					{!activity?.activity?.teacher?.users?.name ? (
+				<View style={[globalStyles.card, { marginHorizontal: 0 }]}>
+					{!activity?.teacher?.users?.name ? (
 						<View style={styles.profileRow}>
 							<View style={[styles.avatar, styles.avatarPlaceholder]} />
 							<View style={{ marginLeft: 14, flex: 1 }}>
-								<View style={[styles.shimmerPlaceholder, { width: 160, height: 18, marginBottom: 8 }]} />
-								<View style={[styles.shimmerPlaceholder, { width: 120, height: 14 }]} />
+								<View
+									style={[
+										styles.shimmerPlaceholder,
+										{ width: 160, height: 18, marginBottom: 8 },
+									]}
+								/>
+								<View
+									style={[styles.shimmerPlaceholder, { width: 120, height: 14 }]}
+								/>
 							</View>
 						</View>
 					) : (
@@ -248,100 +278,102 @@ const InstructionScreen = ({ navigation }) => {
 							<Image
 								source={{
 									uri:
-										activity.activity.teacher.users.avatar ||
+										activity?.teacher.users.avatar ||
 										`https://ui-avatars.com/api/?name=${encodeURIComponent(
-											activity.activity.teacher.users.name || 'User'
+											activity?.teacher.users.name || "User"
 										)}`,
 								}}
 								style={styles.avatar}
 							/>
 							<View style={{ marginLeft: 14, flex: 1 }}>
-								<CText fontSize={17} fontStyle="SB" style={{ color: '#222' }}>
-									{activity.activity.teacher.users.name}
+								<CText fontSize={17} fontStyle="SB" style={{ color: "#222" }}>
+									{activity?.teacher.users.name}
 								</CText>
-								<CText fontSize={14} style={{ color: '#555', marginTop: 2 }}>
-									{activity.activity.teacher.users.email}
+								<CText fontSize={14} style={{ color: "#555", marginTop: 2 }}>
+									{activity?.teacher.users.email}
 								</CText>
 							</View>
 						</View>
 					)}
 				</View>
 
-				<CText fontSize={16} fontStyle="SB" style={{ marginBottom: 12, marginTop: 8 }}>
+				{/* Attachments */}
+				<CText
+					fontSize={16}
+					fontStyle="SB"
+					style={{ marginBottom: 12, marginTop: 8 }}
+				>
 					Attachments
 				</CText>
 
-				{activity?.activity?.QuizID > 0 && (
+				{activity?.QuizID > 0 && (
 					<View style={{ marginBottom: 16 }}>
 						<CButton
-							type={'success'}
+							type={"success"}
 							title="Go to Quiz"
 							style={{ padding: 12 }}
-							onPress={() => navigation.navigate('QuizScreen', { QuizID: activity.activity.QuizID })}
+							onPress={() =>
+								navigation.navigate("QuizScreen", { QuizID: activity.QuizID })
+							}
 						/>
 					</View>
 				)}
 
-				{loading ? (
-					<ActivityIndicator size="large" color={theme.colors.light.primary} style={{ marginTop: 20 }} />
-				) : submissions.length === 0 ? (
-					<CText style={{ color: '#888', fontStyle: 'italic' }}>No attachments found.</CText>
-				) : (
-					submissions.map((item) => (
-						<TouchableOpacity
-							key={item?.UploadID}
-							style={styles.attachmentRow}
-							activeOpacity={0.7}
-							onPress={() => openAttachment(item)}
-						>
-							<Icon name="document-outline" size={22} color={theme.colors.light.primary} />
-							<View style={styles.attachmentInfo}>
-								<CText numberOfLines={1} style={styles.attachmentTitle}>
-									{item?.Title}
-								</CText>
-								<CText style={styles.attachmentDetails}>
-									{item?.provider.toUpperCase()} • {getFileSize(item?.FileSize)}
-								</CText>
-							</View>
-							<Icon name="chevron-forward" size={20} color="#bbb" />
-						</TouchableOpacity>
-					))
-				)}
+				{submissions.map((item) => (
+					<TouchableOpacity
+						key={item?.UploadID}
+						style={styles.attachmentRow}
+						activeOpacity={0.7}
+						onPress={() => openAttachment(item)}
+					>
+						<Icon
+							name="document-outline"
+							size={22}
+							color={theme.colors.light.primary}
+						/>
+						<View style={styles.attachmentInfo}>
+							<CText numberOfLines={1} style={styles.attachmentTitle}>
+								{item?.Title}
+							</CText>
+							<CText style={styles.attachmentDetails}>
+								{item?.provider.toUpperCase()} • {getFileSize(item?.FileSize)}
+							</CText>
+						</View>
+						<Icon name="chevron-forward" size={20} color="#bbb" />
+					</TouchableOpacity>
+				))}
 			</ScrollView>
 		</SafeAreaView>
 	);
 };
 
 const styles = StyleSheet.create({
-	card: {
-		backgroundColor: '#fff',
-		padding: 20,
-		borderRadius: 8,
-		marginBottom: 20,
-		shadowColor: '#000',
-		shadowOpacity: 0.07,
-		shadowRadius: 8,
-		shadowOffset: { width: 0, height: 4 },
-		elevation: 2,
+	topicLabel: { color: "#666", marginBottom: 6 },
+	title: { color: "#222", marginBottom: 10 },
+	sectionLabel: {
+		color: "#444",
+		marginTop: 12,
+		marginBottom: 6,
+		fontWeight: "600",
 	},
-	topicLabel: { color: '#666', marginBottom: 6 },
-	title: { color: '#222', marginBottom: 10 },
-	sectionLabel: { color: '#444', marginTop: 12, marginBottom: 6, fontWeight: '600' },
-	description: { color: '#444', lineHeight: 20 },
-	pointsContainer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
-	pointsBox: { alignItems: 'center' },
-	pointsLabel: { color: '#666' },
-	instructorCard: { paddingVertical: 16 },
-	profileRow: { flexDirection: 'row', alignItems: 'center' },
-	avatar: { width: 45, height: 45, borderRadius: 28, backgroundColor: '#ddd' },
-	avatarPlaceholder: { backgroundColor: '#ccc' },
-	shimmerPlaceholder: { backgroundColor: '#eee', borderRadius: 8 },
+	description: { color: "#444", lineHeight: 20 },
+	pointsContainer: {
+		flexDirection: "row",
+		justifyContent: "space-around",
+		marginTop: 20,
+	},
+	pointsBox: { alignItems: "center" },
+	pointsLabel: { color: "#666" },
+	profileRow: { flexDirection: "row", alignItems: "center" },
+	avatar: { width: 45, height: 45, borderRadius: 28, backgroundColor: "#ddd" },
+	avatarPlaceholder: { backgroundColor: "#ccc" },
+	shimmerPlaceholder: { backgroundColor: "#eee", borderRadius: 8 },
 	attachmentRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
+		flexDirection: "row",
+		alignItems: "center",
 		paddingVertical: 14,
 		paddingHorizontal: 16,
-		backgroundColor: '#fafafa',
+		backgroundColor: "#fafafa",
 		borderRadius: 8,
 		marginBottom: 12,
 		shadowColor: theme.colors.light.primary,
@@ -349,11 +381,11 @@ const styles = StyleSheet.create({
 		shadowRadius: 4,
 		shadowOffset: { width: 0, height: 1 },
 		borderWidth: 1,
-		borderColor: '#e1e1e1',
+		borderColor: "#e1e1e1",
 	},
 	attachmentInfo: { flex: 1, marginLeft: 12 },
-	attachmentTitle: { color: '#222', fontWeight: '600', fontSize: 15 },
-	attachmentDetails: { color: '#777', marginTop: 2, fontSize: 13 },
+	attachmentTitle: { color: "#222", fontWeight: "600", fontSize: 15 },
+	attachmentDetails: { color: "#777", marginTop: 2, fontSize: 13 },
 });
 
 export default InstructionScreen;

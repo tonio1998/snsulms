@@ -107,7 +107,6 @@ const ActivityScreen = ({ navigation }) => {
 	const fetchActivities = useCallback(async () => {
 		setLoading(true);
 		try {
-			// simulate slight delay so loading spinner is visible
 			await new Promise(resolve => setTimeout(resolve, 500));
 
 			const res = classes?.activities || [];

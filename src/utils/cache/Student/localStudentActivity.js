@@ -1,13 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {handleApiError} from "../../errorHandler";
-const getCacheKeys = (StudentActivityID) => ({
-    CACHE_KEY: `student_activity_cache_${StudentActivityID}`,
-    CACHE_DATE_KEY: `student_activity_date_cache_${StudentActivityID}`,
+const getCacheKeys = (ActivityID) => ({
+    CACHE_KEY: `student_activity_cache_${ActivityID}`,
+    CACHE_DATE_KEY: `student_activity_date_cache_${ActivityID}`,
 });
 
-export const saveStudentActivityToLocal = async (StudentActivityID, data) => {
-    if (!StudentActivityID) return null;
-    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(StudentActivityID);
+export const saveStudentActivityToLocal = async (ActivityID, data) => {
+    if (!ActivityID) return null;
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(ActivityID);
 
     try {
         const now = new Date();
@@ -20,9 +20,9 @@ export const saveStudentActivityToLocal = async (StudentActivityID, data) => {
     }
 };
 
-export const loadStudentActivityToLocal = async (StudentActivityID) => {
-    if (!StudentActivityID) return { data: null, date: null };
-    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(StudentActivityID);
+export const loadStudentActivityToLocal = async (ActivityID) => {
+    if (!ActivityID) return { data: null, date: null };
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(ActivityID);
 
     try {
         const dataStr = await AsyncStorage.getItem(CACHE_KEY);
@@ -39,13 +39,13 @@ export const loadStudentActivityToLocal = async (StudentActivityID) => {
     }
 };
 
-export const updateStudentActivitySubmission = async (StudentActivityID, newSubmission) => {
-    if (!StudentActivityID) {
+export const updateStudentActivitySubmission = async (ActivityID, newSubmission) => {
+    if (!ActivityID) {
         console.warn("Missing StudentActivityID");
         return null;
     }
 
-    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(StudentActivityID);
+    const { CACHE_KEY, CACHE_DATE_KEY } = getCacheKeys(ActivityID);
 
     try {
         const dataStr = await AsyncStorage.getItem(CACHE_KEY);

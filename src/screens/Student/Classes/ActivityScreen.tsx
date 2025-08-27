@@ -40,8 +40,8 @@ const ActivityScreen = ({ navigation, route }) => {
 
 	const filterActivities = (type, list = allActivities) => {
 		setActType(type);
-		const filtered = list.filter(i => i.activity?.ActivityTypeID !== 1);
-		setActivities(type ? filtered.filter(i => i.activity?.ActivityTypeID == type) : filtered);
+		const filtered = list.filter(i => i?.ActivityTypeID !== 1);
+		setActivities(type ? filtered.filter(i => i?.ActivityTypeID == type) : filtered);
 		setExpandedId(null);
 	};
 
@@ -51,6 +51,8 @@ const ActivityScreen = ({ navigation, route }) => {
 			setLoading(true);
 			const res = await getStudentActivities({ page: 1, search: '', ClassID });
 			const list = res?.data ?? [];
+
+			console.log("🔍 Fetched activities", list);
 
 			setAllActivities(list);
 			filterActivities(actType, list);
@@ -97,26 +99,29 @@ const ActivityScreen = ({ navigation, route }) => {
 		setExpandedId(prev => (prev === id ? null : id));
 	};
 
-	const handleView = (id, title, actId, ActivityTypeID) => {
-		navigation.navigate('ActivityDetails', {
-			StudentActivityID: id,
-			Title: title,
-			ActivityID: actId,
-			ActivityTypeID:ActivityTypeID
-		});
-	};
+	// const handleView = (id, title, actId, ActivityTypeID) => {
+	// 	navigation.navigate('ActivityDetails', {
+	// 		StudentActivityID: id,
+	// 		Title: title,
+	// 		ActivityID: actId,
+	// 		ActivityTypeID:ActivityTypeID
+	// 	});
+	// };
+
+	const handleView = (Title, ActivityID) =>
+		navigation.navigate('StudActivityDetails', { Title, ActivityID });
 
 	const renderItem = ({ item }) => {
-		const act = item.activity;
-		const isExpanded = expandedId === item.StudentActivityID;
-		const submitted = item?.SubmissionType === 'Submitted';
-		const submissionText = item?.SubmissionType ?? 'Not Submitted';
-		const submittedDate = item?.DateSubmitted ? ` • ${formatDate(item.DateSubmitted)}` : '';
+		const act = item;
+		const isExpanded = expandedId === item.ActivityID;
+		const submitted = item?.mysubmission?.SubmissionType === 'Submitted';
+		const submissionText = item?.mysubmission?.SubmissionType ?? 'Not Submitted';
+		const submittedDate = item?.mysubmission?.DateSubmitted ? ` • ${formatDate(item?.mysubmission?.DateSubmitted)}` : '';
 
 		return (
 			<TouchableOpacity
 				style={globalStyles.card}
-				onPress={() => toggleExpand(item.StudentActivityID)}
+				onPress={() => toggleExpand(item.ActivityID)}
 				activeOpacity={0.9}
 			>
 				<View style={styles.cardInner}>
@@ -129,23 +134,25 @@ const ActivityScreen = ({ navigation, route }) => {
 						</View>
 					</View>
 					<CText fontSize={theme.fontSizes.sm} style={styles.desc}>{act?.Description}</CText>
+					<View style={[styles.dateRow, { marginTop: 6 }]}>
+						<CText fontSize={theme.fontSizes.xs} fontStyle={'SB'} style={{ color: submitted ? theme.colors.light.success : theme.colors.light.danger }}>
+							{submissionText}{submittedDate}
+						</CText>
+					</View>
 					{isExpanded && (
 						<>
-							<View style={[styles.dateRow, { marginTop: 6 }]}>
-								<CText fontSize={theme.fontSizes.xs} fontStyle={'SB'} style={{ color: submitted ? theme.colors.light.success : theme.colors.light.danger }}>
-									{submissionText}{submittedDate}
-								</CText>
-							</View>
 							<View style={styles.dateRow}>
 								{act?.DueDate && <CText fontSize={theme.fontSizes.xs} style={styles.date}>Due: {formatDate(act?.DueDate)}</CText>}
 								{act?.created_at && <CText fontSize={theme.fontSizes.xs} style={styles.date}>Created: {formatDate(act?.created_at, 'relative')}</CText>}
 							</View>
-							<TouchableOpacity
-								style={styles.viewBtn}
-								onPress={() => handleView(item.StudentActivityID, act?.Title, act?.ActivityID, item?.activity?.ActivityTypeID)}
-							>
-								<CText fontStyle="SB" style={{ color: theme.colors.light.primary }}>View Activity</CText>
-							</TouchableOpacity>
+							<View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 12 }}>
+								<TouchableOpacity
+									style={styles.viewBtn}
+									onPress={() => handleView(item?.Title, item?.ActivityID)}
+								>
+									<CText fontStyle="SB" style={{ color: theme.colors.light.primary }}>View Activity</CText>
+								</TouchableOpacity>
+							</View>
 						</>
 					)}
 				</View>
@@ -261,11 +268,10 @@ const styles = StyleSheet.create({
 	},
 	viewBtn: {
 		marginTop: 10,
-		paddingVertical: 6,
+		paddingVertical: 8,
 		paddingHorizontal: 12,
 		borderRadius: theme.radius.sm,
-		borderWidth: 1,
-		borderColor: theme.colors.light.primary,
+		backgroundColor: theme.colors.light.primary + '15',
 		alignSelf: 'flex-start',
 	},
 });

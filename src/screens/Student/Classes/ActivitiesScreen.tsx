@@ -100,6 +100,8 @@ const ActivitiesScreen = ({ navigation }) => {
 			};
 
 			const res = await getMyActivities(params);
+			console.log("🔍 Fetched activities", res);
+			// return;
 			setAllActivities(res ?? []);
 			setData(res ?? []);
 
@@ -147,14 +149,15 @@ const ActivitiesScreen = ({ navigation }) => {
 		setLoading(false);
 	};
 
-	const handleViewAct = (StudentActivityID, Title, ActivityID) => {
-		navigation.navigate('ActivityDetails', { StudentActivityID, Title, ActivityID });
+	const handleViewAct = (Title, ActivityID) => {
+		// navigation.navigate('ActivityDetails', { StudentActivityID, Title, ActivityID });
+		navigation.navigate('StudActivityDetails', { Title, ActivityID });
 	};
 
 	const renderActivityItem = ({ item }) => (
 		<TouchableOpacity
 			style={[globalStyles.card, { marginHorizontal: 0}]}
-			onPress={() => handleViewAct(item.StudentActivityID, item.Title, item.ActivityID)}
+			onPress={() => handleViewAct(item.Title, item.ActivityID)}
 		>
 			<CText fontStyle="B" fontSize={14} style={{ marginBottom: 6 }}>{item.Title}</CText>
 			{item.Description && <CText fontSize={14} color="#666">{item.Description}</CText>}
@@ -167,13 +170,13 @@ const ActivitiesScreen = ({ navigation }) => {
 				fontSize={13}
 				fontStyle="SB"
 				style={{
-					color: item.SubmissionType === 'Submitted'
+					color: item?.mysubmission?.SubmissionType === 'Submitted'
 						? theme.colors.light.success
 						: theme.colors.light.danger,
 				}}
 			>
-				{item.SubmissionType ?? 'Not Submitted'}{' '}
-				{item.DateSubmitted ? `• ${formatDate(item.DateSubmitted)}` : ''}
+				{item?.mysubmission?.SubmissionType ?? 'Not Submitted'}{' '}
+				{item?.mysubmission?.DateSubmitted ? `• ${formatDate(item?.mysubmission?.DateSubmitted)}` : ''}
 			</CText>
 		</TouchableOpacity>
 	);
@@ -206,7 +209,7 @@ const ActivitiesScreen = ({ navigation }) => {
 		return (
 			<View style={{ marginBottom: 20 }}>
 				<CText fontStyle="B" fontSize={15} style={{ marginBottom: 8 }}>
-					{item.CourseCode} - {item.CourseName}
+					{item?.CourseCode} - {item?.CourseName}
 				</CText>
 				{filtered.map((act, idx) => (
 					<View key={idx}>{renderActivityItem({ item: act })}</View>

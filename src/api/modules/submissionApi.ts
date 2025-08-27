@@ -30,9 +30,10 @@ export const getActivityResponses = async ({ ActivityID }) => {
 };
 
 
-export const turninSubmission = async ({ StudentActivityID }) => {
+export const turninSubmission = async ({ ActivityID }) => {
+    console.log("🔍 Turning in submission", ActivityID);
     const response = await api.get('/lms/submission/turnin', {
-        params: { StudentActivityID }
+        params: { ActivityID }
     });
     return response.data;
 };
