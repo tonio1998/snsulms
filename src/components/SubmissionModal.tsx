@@ -16,13 +16,13 @@ export const SubmissionModal = ({
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>Choose Submission Type</Text>
-
-                    <TouchableOpacity style={styles.optionBtn} onPress={onFileSelect} disabled={uploading}>
-                        <Icon name="document-text-outline" size={20} color="#333" />
-                        <Text style={styles.optionText}>
-                            {uploading ? 'Uploading...' : 'Upload PDF or Image (max 10MB)'}
-                        </Text>
-                    </TouchableOpacity>
+                    {/*onPress={onFileSelect}*/}
+                    {/*<TouchableOpacity style={styles.optionBtn} disabled={uploading}>*/}
+                    {/*    <Icon name="document-text-outline" size={20} color="#333" />*/}
+                    {/*    <Text style={styles.optionText}>*/}
+                    {/*        {uploading ? 'Uploading...' : ''}*/}
+                    {/*    </Text>*/}
+                    {/*</TouchableOpacity>*/}
 
                     <View style={{ marginTop: 20 }}>
                         <Text style={styles.linkLabel}>Or submit a link:</Text>
@@ -37,6 +37,10 @@ export const SubmissionModal = ({
                             <Text style={styles.submitBtnText}>Submit Link</Text>
                         </TouchableOpacity>
                     </View>
+
+                    <Text style={styles.optionText}>
+                        {uploading ? 'Uploading...' : ''}
+                    </Text>
 
                     <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
                         <Text style={styles.cancelText}>Cancel</Text>

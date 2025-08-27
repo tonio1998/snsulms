@@ -36,7 +36,7 @@ const StudentMaterialScreen = ({ navigation, route }) => {
 	];
 
 	const filterActivities = (type, list = allActivities) => {
-		setActivities(list.filter(item => item.activity.ActivityTypeID === 1));
+		setActivities(list.filter(item => item?.ActivityTypeID === 1));
 	};
 
 	const fetchActivities = async () => {
@@ -45,7 +45,7 @@ const StudentMaterialScreen = ({ navigation, route }) => {
 			setLoading(true);
 			const res = await getStudentActivities({ page: 1, search: '', ClassID });
 			const list = res?.data ?? [];
-			console.log("🔍 Fetched activities", list);
+			console.log("🔍 Fetched activitiesssss", list);
 			setAllActivities(list);
 			filterActivities(actType, list);
 			const date = await saveStudentClassActivitiesCache(ClassID, user?.id, list);
@@ -97,7 +97,7 @@ const StudentMaterialScreen = ({ navigation, route }) => {
 	};
 
 	const renderItem = ({ item }) => {
-		const act = item.activity;
+		const act = item;
 		const isExpanded = expandedId === item.StudentActivityID;
 		const submitted = item?.SubmissionType === 'Submitted';
 		const submissionText = item?.SubmissionType ?? 'Not Submitted';

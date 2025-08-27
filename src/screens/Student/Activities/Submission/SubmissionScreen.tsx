@@ -40,12 +40,11 @@ import {
 import {LastUpdatedBadge} from "../../../../components/common/LastUpdatedBadge";
 import {useLoading2} from "../../../../context/Loading2Context.tsx";
 import ActivityIndicator2 from "../../../../components/loaders/ActivityIndicator2.tsx";
+import {useStudActivity} from "../../../../context/StudSharedActivityContext.tsx";
 
 export default function SubmissionScreen({ navigation, route }) {
-	const { activity, refreshFromOnline } = useActivity();
-
-	const [ActivityID, setActivityID] = useState(0);
-	const [StudentActivityID, setStudentActivityID] = useState(0);
+	const { activity, refreshFromOnline } = useStudActivity();
+	const ActivityID = activity?.ActivityID;
 	const network = useContext(NetworkContext);
 	const { user } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
@@ -61,14 +60,9 @@ export default function SubmissionScreen({ navigation, route }) {
 	const loadLocalSubmissions = async () => {
 		showLoading2('Loading submissions...');
 		try {
-			const { data, date } = await loadStudentActivityToLocal(StudentActivityID);
-			console.log("data", data);
-			if (data?.student_info) {
-				setLastFetched(date);
-				setSubmissions(data?.st_attachments || []);
-			} else {
-				await loadSubmissions();
-			}
+			// const { data, date } = await loadStudentActivityToLocal(ActivityID);
+			const data = activity?.s_attachments || [];
+			setSubmissions(data || []);
 		} catch (error) {
 		} finally {
 			hideLoading2();
@@ -88,11 +82,9 @@ export default function SubmissionScreen({ navigation, route }) {
 
 	useEffect(() => {
 		if (activity?.ActivityID > 0) {
-			setActivityID(activity.ActivityID);
-			setStudentActivityID(activity.StudentActivityID);
 			loadLocalSubmissions();
 		}
-	}, [activity]);
+	}, []);
 
 	const handleFileSelect = async () => {
 		try {
@@ -113,7 +105,6 @@ export default function SubmissionScreen({ navigation, route }) {
 				type: file.type,
 				name: file.name,
 			});
-			formData.append('StudentActivityID', StudentActivityID.toString());
 			formData.append('ActivityID', ActivityID.toString());
 
 			setUploading(true);
@@ -141,7 +132,7 @@ export default function SubmissionScreen({ navigation, route }) {
 
 		const formData = new FormData();
 		formData.append('link', link);
-		formData.append('StudentActivityID', StudentActivityID.toString());
+		// formData.append('StudentActivityID', StudentActivityID.toString());
 		formData.append('ActivityID', ActivityID.toString());
 
 		try {
@@ -188,7 +179,7 @@ export default function SubmissionScreen({ navigation, route }) {
 	};
 
 	const handleConfirmAction = () => {
-		const isSubmitted = activity?.SubmissionType === 'Submitted';
+		const isSubmitted = activity?.mysubmission?.SubmissionType === 'Submitted';
 
 		Alert.alert(
 			isSubmitted ? 'Withdraw Submission?' : 'Submit?',
@@ -259,7 +250,7 @@ export default function SubmissionScreen({ navigation, route }) {
 					renderItem={renderItem}
 				/>
 
-				{activity?.SubmissionType !== 'Submitted' && (
+				{activity?.mysubmission?.SubmissionType !== 'Submitted' && (
 					<TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
 						<Icon name="cloud-upload-outline" size={28} color="#fff" />
 					</TouchableOpacity>
