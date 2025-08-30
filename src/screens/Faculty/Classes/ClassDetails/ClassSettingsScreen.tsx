@@ -4,7 +4,7 @@ import {
 	SafeAreaView,
 	ScrollView,
 	Switch,
-	StyleSheet, ActivityIndicator,
+	StyleSheet, ActivityIndicator, TouchableOpacity,
 } from 'react-native';
 import { globalStyles } from '../../../../theme/styles.ts';
 import { theme } from '../../../../theme';
@@ -13,15 +13,17 @@ import { handleApiError } from '../../../../utils/errorHandler.ts';
 import BackHeader from '../../../../components/layout/BackHeader.tsx';
 import { CText } from '../../../../components/common/CText.tsx';
 import { NetworkContext } from '../../../../context/NetworkContext.tsx';
-import { getClassInfo, updateClassSetting } from '../../../../api/modules/classesApi.ts';
+import {getClassInfo, updateClassCode, updateClassSetting} from '../../../../api/modules/classesApi.ts';
 import {useLoading2} from "../../../../context/Loading2Context.tsx";
 import {useClass} from "../../../../context/SharedClassContext.tsx";
 import HomeHeader from "../../../../components/layout/HomeHeader.tsx";
+import {useAlert} from "../../../../components/CAlert.tsx";
 
-const ClassSettingsScreen = ({ route }) => {
+const ClassSettingsScreen = ({ route, navigation }) => {
 	const { classes, refresh } = useClass();
 	const ClassID = classes?.ClassID;
 	const { showLoading2, hideLoading2 } = useLoading2();
+	const { showAlert } = useAlert();
 	const network = useContext(NetworkContext);
 
 	const [settings, setSettings] = useState({
@@ -82,6 +84,24 @@ const ClassSettingsScreen = ({ route }) => {
 		},
 	];
 
+
+	const handleResetCode = async () => {
+		try {
+			showLoading2('Resetting class code...');
+			const resetCode = await updateClassCode(ClassID);
+			if(resetCode) {
+				showAlert('success', 'Success', 'Class code has been reset.');
+				navigation.goBack();
+			}else{
+				showAlert('error', 'Error', 'Failed to reset class code.');
+			}
+		} catch (err) {
+			handleApiError(err, 'Failed to reset class code');
+		} finally {
+			hideLoading2();
+		}
+	};
+
 	return (
 		<>
 			{/*<BackHeader title="Class Settings" />*/}
@@ -104,6 +124,18 @@ const ClassSettingsScreen = ({ route }) => {
 							</View>
 						</View>
 					))}
+					<TouchableOpacity style={[globalStyles.card, {
+						backgroundColor: theme.colors.light.primary + '22',
+					}]}
+					onPress={handleResetCode}
+					>
+						<View style={styles.cardContent}>
+							<View style={{ flex: 1 }}>
+								<CText fontSize={16} fontStyle="SB">Reset Class Code ({classes?.ClassCode})</CText>
+								<CText fontSize={13} style={styles.descText}>This will reset the class code to a random value.</CText>
+							</View>
+						</View>
+					</TouchableOpacity>
 				</ScrollView>
 			</SafeAreaView>
 		</>

@@ -3,7 +3,6 @@ import {
 	View,
 	TextInput,
 	StyleSheet,
-	Text,
 	TouchableOpacity,
 	ActivityIndicator,
 	useColorScheme,
@@ -24,7 +23,7 @@ import { globalStyles } from '../../theme/styles.ts';
 import { theme } from '../../theme';
 import { CText } from '../../components/common/CText.tsx';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { GOOGLE_CLIENT_ID } from '../../../env.ts';
+import {APP_NAME, GOOGLE_CLIENT_ID} from '../../../env.ts';
 import { handleApiError } from '../../utils/errorHandler.ts';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import * as Keychain from 'react-native-keychain';
@@ -32,6 +31,7 @@ import { NetworkContext } from '../../context/NetworkContext.tsx';
 import bcrypt from 'bcryptjs';
 import checkBiometricSupport from '../../services/checkBiometricSupport.ts';
 import BackHeader from '../../components/layout/BackHeader.tsx';
+import {useAlert} from "../../components/CAlert.tsx";
 
 GoogleSignin.configure({
 	webClientId: GOOGLE_CLIENT_ID,
@@ -50,14 +50,15 @@ const SigninForm = ({ navigation }: any) => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [loading, setLoading] = useState(false);
+	const { showAlert } = useAlert();
 	const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 	const [emailError, setEmailError] = useState('');
 	const [passwordError, setPasswordError] = useState('');
+	const [showPassword, setShowPassword] = useState(false);
 
 	useEffect(() => {
 		(async () => {
-			// await initBiometric();
-			// await checkSession();
+			await initBiometric();
 		})();
 	}, []);
 
@@ -90,20 +91,17 @@ const SigninForm = ({ navigation }: any) => {
 		showLoading('Signing in...');
 		setEmailError('');
 		setPasswordError('');
-
 		try {
 			if (isOnline) {
 				try {
 					const response = await authLogin({ email, password });
-					console.log("response", response);
 					const sessionData = { ...response.data, password };
-
 					await loginAuth(response.data);
 					await AsyncStorage.setItem('isLoggedIn', 'true');
 					await AsyncStorage.setItem('mobile', sessionData.token);
 					await Keychain.setGenericPassword(JSON.stringify(sessionData), sessionData.token);
 				} catch (err) {
-					console.error('Login error:', err);
+					setEmailError('Incorrect credentials.');
 					handleApiError(err, 'Login');
 				}
 			} else {
@@ -111,7 +109,6 @@ const SigninForm = ({ navigation }: any) => {
 				if (cachedSession) {
 					const sessionData = JSON.parse(cachedSession.username);
 					const isMatch = await bcrypt.compare(password, sessionData.password);
-
 					if (sessionData.email === email && isMatch) {
 						await loginAuth({
 							user: sessionData,
@@ -122,8 +119,7 @@ const SigninForm = ({ navigation }: any) => {
 						await AsyncStorage.setItem('isLoggedIn', 'true');
 						await AsyncStorage.setItem('mobile', cachedSession.password);
 					} else {
-						setEmailError('Incorrect email.');
-						setPasswordError('Incorrect password.');
+						setEmailError('Incorrect credentials.');
 					}
 				} else {
 					setEmailError('No cached session available.');
@@ -157,8 +153,8 @@ const SigninForm = ({ navigation }: any) => {
 			const userInfo = await GoogleSignin.signIn();
 			const tokens = await GoogleSignin.getTokens();
 			const accessToken = tokens.accessToken;
-			const user = userInfo?.user;
-			const idToken = userInfo?.idToken;
+			const user = userInfo?.data?.user;
+			const idToken = userInfo?.data?.idToken;
 
 			showLoading('Logging in...');
 			await AsyncStorage.setItem(`googleAccessToken${user?.email}`, accessToken);
@@ -169,9 +165,16 @@ const SigninForm = ({ navigation }: any) => {
 				email: user?.email,
 				photo: user?.photo,
 			});
+
+			console.log("response", response);
+
 			await loginAuth(response.data);
 		} catch (error) {
-			Alert.alert('Login Failed', 'Something went wrong during Google login.');
+			const message =
+				error?.response?.data?.message ||
+				error?.message ||
+				'Something went wrong during Google login.';
+			showAlert('error', 'Error', message);
 			handleApiError(error, 'Google Login');
 		} finally {
 			hideLoading();
@@ -181,7 +184,6 @@ const SigninForm = ({ navigation }: any) => {
 	const setEmailOrPhone = (text: string) => {
 		const trimmed = text.trim();
 		const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
-
 		if (isEmail) {
 			setEmail(trimmed);
 		} else {
@@ -191,21 +193,16 @@ const SigninForm = ({ navigation }: any) => {
 	};
 
 	return (
-		<SafeAreaView style={[globalStyles.safeArea, {paddingTop: 0}]}>
+		<SafeAreaView style={[globalStyles.safeArea, { paddingTop: 0 }]}>
 			<KeyboardAvoidingView
 				style={{ flex: 1 }}
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 105}
 			>
-				<ImageBackground
-					source={require('../../../assets/img/bg.png')}
-					style={styles.container}
-					resizeMode="cover"
-				>
 					<BackHeader />
 					<View style={styles.topSection}>
-						<CText fontSize={40} fontStyle="B" style={{ color: colors.primary }}>
-							Sign In
+						<CText fontSize={40} fontStyle="B" style={{ color: theme.colors.light.primary }}>
+							{APP_NAME}
 						</CText>
 						<CText fontSize={16} style={{ color: '#000', marginTop: 6 }}>
 							Access your account
@@ -213,77 +210,97 @@ const SigninForm = ({ navigation }: any) => {
 					</View>
 
 					<View style={{ paddingHorizontal: 24, marginTop: 40 }}>
-						{/* Email */}
-						<CText fontSize={14} style={styles.label}>
-							Email or Phone
-						</CText>
-						<TextInput
-							placeholder="Enter email or phone"
-							placeholderTextColor="#AAA"
-							value={email}
-							onChangeText={(text) => { setEmailOrPhone(text); setEmailError(''); }}
-							style={[styles.input, emailError && styles.inputError]}
-							keyboardType="email-address"
-							autoCapitalize="none"
-						/>
-						{emailError && <CText style={styles.errorText}>{emailError}</CText>}
+						<CText fontSize={14} style={styles.label}>Email or Phone</CText>
+						<View style={styles.inputWrapper}>
+							<Icon name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+							<TextInput
+								placeholder="Enter email or phone"
+								placeholderTextColor="#AAA"
+								value={email}
+								onChangeText={(text) => { setEmailOrPhone(text); setEmailError(''); }}
+								style={[styles.input, emailError && styles.inputError]}
+								keyboardType="email-address"
+								autoCapitalize="none"
+							/>
+						</View>
+						{emailError && (
+							<View style={styles.errorRow}>
+								<Icon name="alert-circle" size={14} color="#FF4C4C" />
+								<CText style={styles.errorText}>{emailError}</CText>
+							</View>
+						)}
 
-						{/* Password */}
-						<CText fontSize={14} style={styles.label}>
-							Password
-						</CText>
-						<TextInput
-							placeholder="Enter password"
-							placeholderTextColor="#AAA"
-							secureTextEntry
-							value={password}
-							onChangeText={(text) => { setPassword(text); setPasswordError(''); }}
-							style={[styles.input, passwordError && styles.inputError]}
-							autoCapitalize="none"
-						/>
-						{passwordError && <CText style={styles.errorText}>{passwordError}</CText>}
+						<CText fontSize={14} style={styles.label}>Password</CText>
+						<View style={styles.inputWrapper}>
+							<Icon name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+							<TextInput
+								placeholder="Enter password"
+								placeholderTextColor="#AAA"
+								secureTextEntry={!showPassword}
+								value={password}
+								onChangeText={(text) => { setPassword(text); setPasswordError(''); }}
+								style={[styles.input, passwordError && styles.inputError]}
+								autoCapitalize="none"
+							/>
+							<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+								<Icon name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />
+							</TouchableOpacity>
+						</View>
+						{passwordError && (
+							<View style={styles.errorRow}>
+								<Icon name="alert-circle" size={14} color="#FF4C4C" />
+								<CText style={styles.errorText}>{passwordError}</CText>
+							</View>
+						)}
 
-						{/* Sign In Button */}
 						<TouchableOpacity
 							style={[styles.button, globalStyles.shadowBtn]}
 							onPress={handleLogin}
-							activeOpacity={0.8}
+							activeOpacity={0.9}
 							disabled={loading}
 						>
 							{loading ? <ActivityIndicator color="#fff" /> : <CText fontSize={16} style={styles.buttonText}>Sign In</CText>}
 						</TouchableOpacity>
 
-						{/* Divider */}
 						<View style={styles.dividerContainer}>
 							<View style={styles.divider} />
-							<CText fontSize={12} style={styles.dividerText}>
-								OR
-							</CText>
+							<CText fontSize={12} style={styles.dividerText}>OR</CText>
 							<View style={styles.divider} />
 						</View>
 
-						{/* Social & Biometric */}
-						<View style={styles.socialButtons}>
-							<TouchableOpacity onPress={handleGoogleLogin} style={[styles.socialBtn]}>
-								<Icon name="logo-google" size={28} color="#DB4437" />
-								<CText style={styles.socialLabel}>Google</CText>
-							</TouchableOpacity>
-
+						<View style={styles.authSection}>
 							{isBiometricEnabled && (
-								<TouchableOpacity onPress={handleBiometricLogin} style={[styles.socialBtn]}>
-									<Icon name="finger-print" size={32} color={colors.primary} />
+								<TouchableOpacity style={styles.authButton} onPress={handleBiometricLogin}>
+									<Icon name="finger-print-outline" size={22} color={theme.colors.light.primary} />
+									<CText style={styles.authTextWhite}>Fingerprint</CText>
 								</TouchableOpacity>
 							)}
+							<TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin}>
+								<Icon name="logo-google" size={22} color="#DB4437" />
+								<CText style={styles.authText}>Continue with Google</CText>
+							</TouchableOpacity>
+
+							<TouchableOpacity style={styles.authButton} onPress={() => navigation.navigate('Login')}>
+								<Icon name="key-outline" size={22} color={theme.colors.light.primary} />
+								<CText style={styles.authTextWhite}>Login with Password</CText>
+							</TouchableOpacity>
+
 						</View>
 					</View>
-				</ImageBackground>
-
 			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
 };
 
 const styles = StyleSheet.create({
+	authSection: {
+		alignItems: 'center',
+		gap: 10,
+	},
+	loginLabel: {
+		color: '#fff',
+		marginBottom: 10,
+	},
 	container: {
 		flex: 1,
 	},
@@ -292,52 +309,57 @@ const styles = StyleSheet.create({
 		marginTop: 120,
 		marginBottom: 20,
 	},
-	formContainer: {
-		marginHorizontal: 20,
-		padding: 24,
-		borderRadius: 20,
-		elevation: 5,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.15,
-		shadowRadius: 8,
-	},
-	input: {
-		height: 50,
-		backgroundColor: '#F5F5F5',
-		borderRadius: 12,
-		paddingHorizontal: 16,
-		fontSize: 16,
-		marginBottom: 14,
-		color: '#000',
-	},
-	inputError: {
-		borderWidth: 1,
-		borderColor: '#FF4C4C',
-		backgroundColor: '#FFF0F0',
-	},
 	label: {
 		color: '#333',
 		fontWeight: '600',
 		marginBottom: 6,
 	},
+	inputWrapper: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: '#F9F9F9',
+		borderRadius: theme.radius.sm,
+		paddingHorizontal: 12,
+		marginBottom: 14,
+		borderWidth: 1,
+		borderColor: '#E5E5E5',
+	},
+	inputIcon: {
+		marginRight: 8,
+	},
+	input: {
+		flex: 1,
+		height: 48,
+		fontSize: 15,
+		color: '#000',
+	},
+	inputError: {
+		borderColor: '#FF4C4C',
+		backgroundColor: '#FFF5F5',
+	},
+	errorRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 8,
+		marginTop: -8,
+	},
 	errorText: {
 		color: '#FF4C4C',
 		fontSize: 12,
-		marginBottom: 10,
-		marginTop: -8,
+		marginLeft: 4,
 	},
 	button: {
 		backgroundColor: theme.colors.light.primary,
 		paddingVertical: 14,
-		borderRadius: 12,
+		borderRadius: theme.radius.sm,
+		marginTop: 10,
 		marginBottom: 20,
 		alignItems: 'center',
 	},
 	buttonText: {
 		color: '#fff',
-		fontWeight: '800',
-		fontSize: 16,
+		fontWeight: '700',
+		letterSpacing: 0.5,
 	},
 	dividerContainer: {
 		flexDirection: 'row',
@@ -357,21 +379,77 @@ const styles = StyleSheet.create({
 	socialButtons: {
 		flexDirection: 'row',
 		justifyContent: 'center',
-		gap: 20,
+		gap: 16,
 	},
 	socialBtn: {
-		borderWidth: 1,
-		borderColor: '#ccc',
-		padding: 12,
-		borderRadius: 12,
+		flexDirection: 'row',
 		alignItems: 'center',
-		width: 100,
+		borderWidth: 1,
+		paddingVertical: 10,
+		paddingHorizontal: 18,
+		borderRadius: theme.radius.sm,
 	},
 	socialLabel: {
+		marginLeft: 8,
+		fontWeight: '600',
+		fontSize: 14,
 		color: '#333',
-		fontSize: 12,
-		fontWeight: 'bold',
-		marginTop: 5,
+	},
+	biometricBtn: {
+		borderWidth: 1,
+		borderColor: '#ccc',
+		borderRadius: 50,
+		padding: 14,
+		justifyContent: 'center',
+		alignItems: 'center',
+		width: 56,
+		height: 56,
+	},
+	authButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		backgroundColor: '#fff',
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		borderRadius: theme.radius.sm,
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.15,
+		shadowRadius: 6,
+		width: '100%',
+		borderWidth: 1,
+		borderColor: '#ccc',
+	},
+	authButtonOutline: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderColor: theme.colors.light.primary,
+		borderWidth: 1,
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		borderRadius: theme.radius.sm,
+	},
+	authText: {
+		marginLeft: 10,
+		fontWeight: '600',
+		color: theme.colors.light.primary,
+		fontSize: 15,
+	},
+	authTextWhite: {
+		marginLeft: 10,
+		fontWeight: '600',
+		color: theme.colors.light.primary,
+		fontSize: 15,
+	},
+	fingerprint: {
+		alignItems: 'center',
+		marginTop: 20,
+	},
+	bioText: {
+		marginTop: 8,
+		color: '#fff',
+		fontSize: 14,
 	},
 });
 
