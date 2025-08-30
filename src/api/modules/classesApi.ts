@@ -14,6 +14,13 @@ export const getFacClasses = async ({ page = 1, search = '', AcademicYear }) => 
     return response.data;
 };
 
+export const updateClassCode = async (ClassID) => {
+    const res = await api.put('/lms/myclasses/class-code', {
+        ClassID
+    });
+    return res.data;
+};
+
 export const addClass = async (form) => {
     const res = await api.post('/lms/class/add', form);
     return res.data;

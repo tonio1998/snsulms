@@ -184,7 +184,6 @@ const WallScreen = ({ navigation }) => {
 				</View>
 			</View>
 
-			{/* BODY */}
 			{item.body && (
 				<RenderHtml
 					contentWidth={Dimensions.get('window').width - 40}

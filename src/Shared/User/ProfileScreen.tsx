@@ -9,7 +9,7 @@ import {
 	ScrollView,
 	SafeAreaView,
 	RefreshControl,
-	ToastAndroid, Button,
+	ToastAndroid, Button, StatusBar,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { theme } from '../../theme';
@@ -33,6 +33,7 @@ import { getAcademicInfo } from '../../utils/getAcademicInfo.ts';
 import {useFocusEffect, useTheme} from '@react-navigation/native';
 import ActivityIndicator2 from "../../components/loaders/ActivityIndicator2.tsx";
 import CButton from "../../components/buttons/CButton.tsx";
+import HeaderBackground from "../../components/halfBg.tsx";
 
 export default function ProfileScreen({ navigation }) {
 	const { mode, toggleTheme, colors } = useTheme();
@@ -54,7 +55,6 @@ export default function ProfileScreen({ navigation }) {
 		logout,
 	} = useAuth();
 
-	// Load data from AsyncStorage cache
 	const loadFromCache = async () => {
 		try {
 			const storedRoles = await AsyncStorage.getItem('roles');
@@ -103,7 +103,6 @@ export default function ProfileScreen({ navigation }) {
 		}, [])
 	);
 
-	// Pull-to-refresh → always fetch online
 	const onRefresh = useCallback(async () => {
 		setLoading(true);
 		await fetchOnline();
@@ -159,10 +158,14 @@ export default function ProfileScreen({ navigation }) {
 			<BackHeader rightButton={
 				<TouchableOpacity onPress={handleLogout} style={{ borderRadius: 8, flexDirection: 'row', alignItems: 'center' }}>
 					<Icon name="log-out-outline" size={23} color={theme.colors.light.danger} />
-					<CText fontSize={15} style={{ marginLeft: 5, color: theme.colors.light.danger }}>Logout</CText>
+					<CText fontSize={15} fontStyle={'SB'} style={{ marginLeft: 5, color: theme.colors.light.danger }}>Logout</CText>
 				</TouchableOpacity>
 			}/>
 			<SafeAreaView style={[globalStyles.safeArea, { flex: 1, padding: 15 }]}>
+				{/*<HeaderBackground heightRatio={0.13}/>*/}
+				{/*<StatusBar*/}
+				{/*	barStyle="light-content"*/}
+				{/*/>*/}
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					contentContainerStyle={{ paddingBottom: 40 }}

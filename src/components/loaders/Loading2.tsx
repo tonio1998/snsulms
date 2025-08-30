@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { theme } from '../../theme';
+import ActivityIndicator2 from "./ActivityIndicator2.tsx";
 
 interface LoadingProps {
     loading: boolean;
@@ -76,6 +77,7 @@ const Loading: React.FC<LoadingProps> = ({
 
     return (
         <View style={[styles.progressContainer]}>
+            {/*<ActivityIndicator2 />*/}
             <Animated.View
                 style={[
                     styles.indicator,

@@ -190,7 +190,6 @@ export default function LoginOptionsScreen() {
 							)}
 						</View>
 
-						{/* Footer */}
 						<View style={styles.footer}>
 							<CText fontSize={11} style={styles.footerText}>Developed by SNSU - ICT fgWorkz</CText>
 							<CText fontSize={11} style={styles.footerText}>Version {version} • © 2025 All rights reserved</CText>

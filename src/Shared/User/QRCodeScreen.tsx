@@ -107,11 +107,30 @@ const QRCodeScreen = () => {
 					<ViewShot ref={qrRef} options={{ format: 'jpg', quality: 1.0, backgroundColor: '#fff' }}>
 						<View style={styles.qrCard}>
 							<View style={styles.logoContainer}>
-								<Image
-									source={require('../../../assets/img/qr_logo.png')}
-									style={styles.logo}
-									resizeMode="contain"
-								/>
+								<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+									<Image
+										source={require('../../../assets/img/ic_launcher.png')}
+										style={[styles.logo, { width: 50, height: 50, marginRight: 10 }]}
+										resizeMode="contain"
+									/>
+									<View>
+										<View>
+											<CText fontSize={30} fontStyle={'B'}>
+												{APP_NAME}
+											</CText>
+										</View>
+										<View>
+											<CText fontSize={10} style={styles.appName}>
+												Fast and Beyond Learning
+											</CText>
+										</View>
+										<View>
+											<CText fontSize={10} style={styles.appName}>
+												Management System
+											</CText>
+										</View>
+									</View>
+								</View>
 							</View>
 							<View style={styles.qrWrapper}>
 								<QRGenerator value={data} size={270} />
@@ -201,12 +220,13 @@ const styles = StyleSheet.create({
 		marginTop: 32,
 		position: 'absolute',
 		bottom: 20,
+		marginHorizontal: 10,
 	},
 	actionBtn: {
 		backgroundColor: theme.colors.light.primary,
 		flexDirection: 'row',
 		alignItems: 'center',
-		gap: 8,
+		gap: 30,
 		paddingHorizontal: 24,
 		paddingVertical: 12,
 		borderRadius: 8,
